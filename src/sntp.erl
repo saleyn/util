@@ -39,7 +39,7 @@ time_servers(Resolve) when is_boolean(Resolve) ->
     {ok, Bin} = file:read_file("/etc/ntp.conf"),
     IPs       = [resolve(Resolve, A) || [A] <-
                     re:run(Bin, <<"server\\s*([a-zA-Z0-9\\.-]+)">>,
-                        [{capture, [1], list}, global]),
+                        [{capture, [1], list}, global])],
     [ A || A <- IPs, A =/= nxdomain ].
 
 %%-------------------------------------------------------------------------
@@ -64,7 +64,8 @@ avg_time(ServerAddresses) ->
     {Min, Max, Sum, N} = 
         lists:foldl(
             fun(#sntp{offset=Offset}, {Min, Max, Sum, N}) ->
-                {min(Min, Offset), max(Max, Offset), Sum+Offset, N+1};
+                {erlang:min(Min, Offset),
+                 erlang:max(Max, Offset), Sum+Offset, N+1};
             (_, Acc) ->
                 Acc
             end,
@@ -152,11 +153,6 @@ now_to_sntp_time({_,_,USec} = Now) ->
     SecsSinceJan1900 = 16#80000000 bor
         (calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(Now)) - 59958230400),
     {SecsSinceJan1900, round(USec * (1 bsl 32) / 1000000)}.
-
-min(N, M) when N < M -> N;
-min(_, M)            -> M.
-max(N, M) when N > M -> N;
-max(_, M)            -> M.
 
 %% @spec (Resolve, Name) -> ip_address() | nxdomain
 resolve(_, {_, _, _, _} = IP) ->
