@@ -1,0 +1,9 @@
+{application, util,
+    [{description,"General utility modules"},
+     {vsn, git},
+     {modules,[]},
+     {registered,[]},
+     {applications,[kernel,stdlib]},
+     {env,[]}
+    ]
+}.
