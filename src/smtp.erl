@@ -28,34 +28,6 @@
 %%%               "Test Subject", "My Message",
 %%%               [{"file1.txt","text/plain","Attachment past as list"}]).
 %%% '''
-%%% @type smtp_options() = [SmtpOption]
-%%%         SmtpOption  = {server, Server::string()}
-%%%                     | {relay, Relay::string()}
-%%%                     | {port, Port::integer()}
-%%%                     | {auth, Auth :: always | never}
-%%%                     | {username, Username::string()}
-%%%                     | {password, Password::string()}
-%%%                     | {tls, Tls :: always | if_available}
-%%%                     | {domain, Domain::string()}
-%%%                     | {timeout, Millisec::integer()}
-%%%                     | {verbose, debug}
-%%%                     | {attachments, Attachments}
-%%%         Attachments = [
-%%%                         Filename::string() |
-%%%                         {Filename::string(), ContentType::string()}
-%%%                         {Filename::string(), ContentType::string(), Data::list()}
-%%%                       ]
-%%%         Options:
-%%%         --------
-%%%         * Server - server to connect to (no MX lookup)
-%%%         * Relay  - use `Relay' domain to do MX lookup of list of servers
-%%%         * Port   - optional port number (ssl def: 465; tcp def: 25)
-%%%         * Auth   - controls mandatory / optional authentication
-%%%         * Tls    - controls enabling of TLS protocol
-%%%         * Domain - name of the domain to include in the HELO handshake
-%%%         * Timeout - timeout to use (default 10000)
-%%%         * Verbose - controls debugging printout
-%%%         * Attachments - list of files to attach
 %%%
 %%% @author  Johan Bevemyr, Serge Aleynikov <saleyn@gmail.com>
 %%% @version $Rev: 263 $
@@ -72,6 +44,35 @@
 
 -include_lib("kernel/include/inet.hrl").
 
+-type smtp_options() :: [
+              {server, Server::string()}
+            | {relay, Relay::string()}
+            | {port, Port::integer()}
+            | {auth, Auth :: always | never}
+            | {username, Username::string()}
+            | {password, Password::string()}
+            | {tls, Tls :: always | if_available}
+            | {domain, Domain::string()}
+            | {timeout, Millisec::integer()}
+            | {verbose, debug}
+            | {attachments, [
+                 Filename::string() |
+                 {Filename::string(), ContentType::string()} |
+                 {Filename::string(), ContentType::string(), Data::list()}
+               ]}
+            ].
+%%%         Options:
+%%%         --------
+%%%         * Server - server to connect to (no MX lookup)
+%%%         * Relay  - use `Relay' domain to do MX lookup of list of servers
+%%%         * Port   - optional port number (ssl def: 465; tcp def: 25)
+%%%         * Auth   - controls mandatory / optional authentication
+%%%         * Tls    - controls enabling of TLS protocol
+%%%         * Domain - name of the domain to include in the HELO handshake
+%%%         * Timeout - timeout to use (default 10000)
+%%%         * Verbose - controls debugging printout
+%%%         * Attachments - list of files to attach
+
 %%-------------------------------------------------------------------------
 %% @spec send(Proto, From, To, Subject, Message) -> ok
 %%          Proto   = tcp | ssl
@@ -84,22 +85,22 @@
 %%      Use inet:format_error/1 to decode the Reason if it is an atom.
 %% @end
 %%-------------------------------------------------------------------------
+-spec send(Proto :: tcp | ssl, From :: string() | binary(),
+            To :: string() | binary(), Subj :: string() | binary(),
+            Msg :: string() | binary()) -> ok.
 send(Proto, From, To, Subject, Message) ->
     send(Proto, From, To, Subject, Message, []).
 
 %%-------------------------------------------------------------------------
-%% @spec send(Proto, From, To, Subj, Message, Opts::smtp_options()) -> ok
-%%          Proto   = tcp | ssl
-%%          From    = string() | binary()
-%%          To      = string() | binary()
-%%          Subj    = string() | binary()
-%%          Message = string() | binary()
 %% @doc Send a message to a list of recipients by connecting to an SMTP
 %%      server Server.  The message can contain attachments in the
 %%      Attachments list.  See examples on the top of this page.
 %%      Error is thrown if unable to send a message.
 %% @end
 %%-------------------------------------------------------------------------
+-spec send(Proto :: tcp | ssl, From :: string() | binary(),
+            To :: string() | binary(), Subj :: string() | binary(),
+            Msg :: string() | binary(), Opts :: smtp_options()) -> ok.
 send(Proto, From, To, Subj, Msg, Opts)
   when Proto =:= tcp; Proto =:= ssl ->
     Module = proto_module(Proto),
@@ -122,10 +123,10 @@ send(Proto, From, To, Subj, Msg, Opts)
 
 
 %%-------------------------------------------------------------------------
-%% @spec () -> binary().
 %% @doc Get domain that this host belongs to.
 %% @end
 %%-------------------------------------------------------------------------
+-spec domain() -> binary().
 domain() ->
     case lists:keyfind(domain, 1, inet:get_rc()) of
     {domain, D} when is_binary(D) -> D;

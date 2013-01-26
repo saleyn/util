@@ -18,23 +18,31 @@ clean-docs:
 	rm -f doc/*.{css,html,png} doc/edoc-info
 
 info:
-	FILES="$(shell git st -uall --porcelain | sed -n '/^??/{s/?? //p}'); \
-		if [ -n $$FILES ] ; then echo "Adding: $$FILES"; git add $$FILES ; fi
+	@FILES="$(shell git st -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}')"; \
+		if [ -n "$$FILES" ] ; then echo "Adding: $$FILES"; fi
 
 github-docs:
-	git checkout gh-pages
-	git checkout master src Makefile rebar.*
+	@if git branch | grep -q gh-pages ; then \
+		git checkout gh-pages; \
+	else \
+		git checkout -b gh-pages; \
+	fi
+	git checkout master src include Makefile rebar.*
 	make docs
 	make clean
-	rm -fr ebin src Makefile erl_crash.dump rebar.*
+	rm -fr ebin src include Makefile erl_crash.dump rebar.* README*
 	mv doc/*.* .
 	rm -fr doc
-	@for f in $(shell git st -uall --porcelain | sed -n '/^\?\?/{s/\?\? //p}') ; do \
+	@FILES="$(shell git st -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}')"; \
+	for f in $$FILES ; do \
 		echo "Adding $$f"; git add $$f; \
 	done
 	sh -c "ret=0; set +e; \
-		if git commit -a --amend; then git push origin +gh-pages; else ret=1; git reset --hard; fi; \
-		set -e; git checkout master; exit $$ret"
+		if   git commit -a --amend -m 'Documentation updated'; \
+		then git push origin +gh-pages; \
+		else ret=1; git reset --hard; \
+		fi; \
+		set -e; git checkout master; git branch -D gh-pages; exit $$ret"
 
 tar:
 	@rm -f $(TARBALL).tgz; \
