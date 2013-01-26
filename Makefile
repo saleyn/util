@@ -33,16 +33,16 @@ github-docs:
 	rm -fr ebin src include Makefile erl_crash.dump rebar.* README*
 	mv doc/*.* .
 	rm -fr doc
-	@FILES="$(shell git st -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}')"; \
+	@FILES=`git st -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
 	for f in $$FILES ; do \
 		echo "Adding $$f"; git add $$f; \
 	done
-	sh -c "ret=0; set +e; \
+	@sh -c "ret=0; set +e; \
 		if   git commit -a --amend -m 'Documentation updated'; \
-		then git push origin +gh-pages; \
+		then git push origin +gh-pages; echo 'Pushed gh-pages to origin'; \
 		else ret=1; git reset --hard; \
 		fi; \
-		set -e; git checkout master; git branch -D gh-pages; exit $$ret"
+		set -e; git checkout master && echo 'Switched to master'; exit $$ret"
 
 tar:
 	@rm -f $(TARBALL).tgz; \
