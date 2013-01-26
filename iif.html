@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module iif</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module iif</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Conditional expression functions.
+
+<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn(at)gmail(dot)com"><tt>saleyn(at)gmail(dot)com</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2><p>Conditional expression functions</p>
+  
+   <p>This module exports a parse transform and implements several   
+condition-checking functions.</p>
+  
+   When using this as a parse transform, include the <code>{parse_transform,iif}</code>
+   compiler option.  In this case for given expressions <code>A</code>,<code>B</code>,<code>C</code>, and <code>D</code>
+   the following code transforms will be done:
+   <pre>   iif(A, B, C)   -&gt; begin V = A, if V -&gt; B; true -&gt; C end end
+   iif(A,B,C,D)   -&gt; case A of B -&gt; C; _ -&gt; D end
+   nvl(A,B)       -&gt; case A of false -&gt; B; undefined -&gt; B; [] -&gt; B; _ -&gt; A end
+   nvl(A,B,C)     -&gt; case A of false -&gt; B; undefined -&gt; B; [] -&gt; B; _ -&gt; C end</pre>
+   For debugging the AST of the resulting transform, use <code>iif_debug</code>
+   command-line option:
+   <pre>   erlc -Diif_debug=1 ...    % Prints AST before the transform
+   erlc -Diif_debug=2 ...    % Prints AST after the transform
+   erlc -Diif_debug[=3] ...  % Prints AST before/after the transform</pre>
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#format_ne-3">format_ne/3</a></td><td>Format if first argument is not empty.</td></tr>
+<tr><td valign="top"><a href="#ife-2">ife/2</a></td><td>Return <code>Value</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#ife-3">ife/3</a></td><td>Return <code>Empty</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#ifne-2">ifne/2</a></td><td>Return <code>Value</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#ifne-3">ifne/3</a></td><td>Return <code>NotEmpty</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#iif-3">iif/3</a></td><td>Return <code>True</code> if first argument is <code>true</code> or return <code>False</code> if
+       the first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#iif-4">iif/4</a></td><td>Return <code>True</code> if first two arguments match.</td></tr>
+<tr><td valign="top"><a href="#nvl-2">nvl/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#parse_transform-2">parse_transform/2</a></td><td>Parse transform to be used by providing <code>{parse_transform, iif}</code> option.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="format_ne-3">format_ne/3</a></h3>
+<div class="spec">
+<p><tt>format_ne(True, Fmt, Args) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Format if first argument is not empty</p>
+
+<h3 class="function"><a name="ife-2">ife/2</a></h3>
+<div class="spec">
+<p><tt>ife(Test, Value) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Return <code>Value</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise return the value of the first argument.</p>
+
+<h3 class="function"><a name="ife-3">ife/3</a></h3>
+<div class="spec">
+<p><tt>ife(Value, Empty, NotEmpty) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Return <code>Empty</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise, if <code>NotEmpty</code> is <code>fun()</code>, evaluate it, or if it's <code>fun(Arg)</code>
+       evaluate it with <code>Value</code> argument.</p>
+
+<h3 class="function"><a name="ifne-2">ifne/2</a></h3>
+<div class="spec">
+<p><tt>ifne(Test, Value) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Return <code>Value</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise, if <code>Value</code> is <code>fun()</code>, evaluate it, or if it's <code>fun(Arg)</code>
+       evaluate it with <code>Test</code> argument.
+ If not empty</p>
+
+<h3 class="function"><a name="ifne-3">ifne/3</a></h3>
+<div class="spec">
+<p><tt>ifne(Value, NotEmpty, Empty) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Return <code>NotEmpty</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise, if <code>NotEmpty</code> is <code>fun()</code>, evaluate it, or if it's <code>fun(Arg)</code>
+       evaluate it with <code>Value</code> argument.</p>
+
+<h3 class="function"><a name="iif-3">iif/3</a></h3>
+<div class="spec">
+<p><tt>iif(X1, True, False) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Return <code>True</code> if first argument is <code>true</code> or return <code>False</code> if
+       the first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</p>
+
+<h3 class="function"><a name="iif-4">iif/4</a></h3>
+<div class="spec">
+<p><tt>iif(Value, Other, True, False) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Return <code>True</code> if first two arguments match</p>
+
+<h3 class="function"><a name="nvl-2">nvl/2</a></h3>
+<div class="spec">
+<p><tt>nvl(Value, IfNull) -&gt; any()</tt></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="parse_transform-2">parse_transform/2</a></h3>
+<div class="spec">
+<p><tt>parse_transform(Ast, Opts) -&gt; any()</tt></p>
+<p> </p>
+</div><p>Parse transform to be used by providing <code>{parse_transform, iif}</code> option.
+  <code>Opts</code> are compiler options passed from command line. E.g.:
+  <pre>  erlc -Diif_debug=N ...  -&gt;  Opts = [{d,debug,N}|_]
+  erlc -Diif_debug ...    -&gt;  Opts = [{d,debug}|_]</pre></p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module pot</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module pot</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Google Authenticator.
+<p>Copyright © Copyright (c) 2014-2017 Yüce Tekol
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+  and associated documentation files (the "Software"), to deal in the Software without
+  restriction, including without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or
+  substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+  BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  [https://github.com/yuce/pot]
+  POT is an Erlang library for generating one time passwords.
+  It supports both HMAC-based one time passwords (HOTP) and time based ones (TOTP).
+  The generated passwords are compatible with
+  [Google Authenticator](http://en.wikipedia.org/wiki/Google_Authenticator).
+ 
+  POT is an almost direct translation of the Python
+  [OneTimePass](https://github.com/tadeck/onetimepass) library.
+ 
+  POT should work with any recent version of
+  [Erlang/OTP](http://www.erlang.org/), [Elixir](http://elixir-lang.org/)
+  and other Erlang VM based languages.
+ 
+  In order to learn more about one time password generation, see the following
+  Wikipedia articles:</p>
+
+
+<h2><a name="description">Description</a></h2>Google Authenticator
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-proplist">proplist()</a></h3>
+<p><pre>proplist() = [<a href="#type-proplistitem">proplistitem()</a>] | []</pre></p>
+
+
+<h3 class="typedecl"><a name="type-proplistitem">proplistitem()</a></h3>
+<p><pre>proplistitem() = {atom(), term()}</pre></p>
+
+
+<h3 class="typedecl"><a name="type-secret">secret()</a></h3>
+<p><pre>secret() = binary()</pre></p>
+
+
+<h3 class="typedecl"><a name="type-time">time()</a></h3>
+<p><pre>time() = integer()</pre></p>
+
+
+<h3 class="typedecl"><a name="type-token">token()</a></h3>
+<p><pre>token() = binary()</pre></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#hotp-2">hotp/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#hotp-3">hotp/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#time_interval-1">time_interval/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#totp-1">totp/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#totp-2">totp/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#valid_hotp-2">valid_hotp/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#valid_hotp-3">valid_hotp/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#valid_token-1">valid_token/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#valid_token-2">valid_token/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#valid_totp-2">valid_totp/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#valid_totp-3">valid_totp/3</a></td><td></td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="hotp-2">hotp/2</a></h3>
+<div class="spec">
+<p><pre>hotp(Secret :: <a href="#type-secret">secret()</a>, IntervalsNo :: pos_integer()) -&gt; <a href="#type-token">token()</a></pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="hotp-3">hotp/3</a></h3>
+<div class="spec">
+<p><pre>hotp(Secret :: <a href="#type-secret">secret()</a>,
+     IntervalsNo :: pos_integer(),
+     Opts :: <a href="#type-proplist">proplist()</a>) -&gt;
+        <a href="#type-token">token()</a></pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="time_interval-1">time_interval/1</a></h3>
+<div class="spec">
+<p><pre>time_interval(Opts :: <a href="#type-proplist">proplist()</a>) -&gt; <a href="#type-time">time()</a></pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="totp-1">totp/1</a></h3>
+<div class="spec">
+<p><pre>totp(Secret :: <a href="#type-secret">secret()</a>) -&gt; <a href="#type-token">token()</a></pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="totp-2">totp/2</a></h3>
+<div class="spec">
+<p><pre>totp(Secret :: <a href="#type-secret">secret()</a>, Opts :: <a href="#type-proplist">proplist()</a>) -&gt; <a href="#type-token">token()</a></pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="valid_hotp-2">valid_hotp/2</a></h3>
+<div class="spec">
+<p><pre>valid_hotp(Token :: <a href="#type-token">token()</a>, Secret :: <a href="#type-secret">secret()</a>) -&gt; boolean()</pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="valid_hotp-3">valid_hotp/3</a></h3>
+<div class="spec">
+<p><pre>valid_hotp(Token :: <a href="#type-token">token()</a>,
+           Secret :: <a href="#type-secret">secret()</a>,
+           Opts :: <a href="#type-proplist">proplist()</a>) -&gt;
+              boolean()</pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="valid_token-1">valid_token/1</a></h3>
+<div class="spec">
+<p><pre>valid_token(Token :: <a href="#type-token">token()</a>) -&gt; boolean()</pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="valid_token-2">valid_token/2</a></h3>
+<div class="spec">
+<p><pre>valid_token(Token :: <a href="#type-token">token()</a>, Opts :: <a href="#type-proplist">proplist()</a>) -&gt; boolean()</pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="valid_totp-2">valid_totp/2</a></h3>
+<div class="spec">
+<p><pre>valid_totp(Token :: <a href="#type-token">token()</a>, Secret :: <a href="#type-secret">secret()</a>) -&gt; boolean()</pre></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="valid_totp-3">valid_totp/3</a></h3>
+<div class="spec">
+<p><pre>valid_totp(Token :: <a href="#type-token">token()</a>,
+           Secret :: <a href="#type-secret">secret()</a>,
+           Opts :: <a href="#type-proplist">proplist()</a>) -&gt;
+              boolean()</pre></p>
+<p> </p>
+</div>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

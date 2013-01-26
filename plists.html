@@ -1,0 +1,482 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module plists</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module plists</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>plists is a drop-in replacement for module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>, 
+making most list operations parallel.
+<p>Copyright © 2007 Stephen Marsh freeyourmind ++ [$@|gmail.com]</p>
+
+<p><b>Authors:</b> Stephen Marsh.</p>
+
+<h2><a name="description">Description</a></h2><p>plists is a drop-in replacement for module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>, 
+making most list operations parallel. It can operate on each element in 
+parallel, for IO-bound operations, on sublists in parallel, for 
+taking advantage of multi-core machines with CPU-bound operations, and 
+across erlang nodes, for parallizing inside a cluster. It handles 
+errors and node failures. It can be configured, tuned, and tweaked to 
+get optimal performance while minimizing overhead.</p>
+
+ <p>Almost all the functions are 
+identical to equivalent functions in lists, returning exactly the same 
+result, and having both a form with an identical syntax that operates on 
+each element in parallel and a form which takes an optional "malt", 
+a specification for how to parallize the operation.</p>
+
+ <p>fold is the one exception, parallel fold is different from linear fold. 
+This module also include a simple mapreduce implementation, and the 
+function runmany. All the other functions are implemented with runmany, 
+which is as a generalization of parallel list operations.</p>
+
+ <h3><a name="Malts">Malts</a></h3><p> 
+A malt specifies how to break a list into sublists, and can optionally 
+specify a timeout, which nodes to run on, and how many processes to start 
+per node.</p>
+
+ <p>Malt = MaltComponent | [MaltComponent]<br>
+ MaltComponent = SubListSize::integer() | {processes, integer()} |
+ {processes, schedulers} |
+ {timeout, Milliseconds::integer()} | {nodes, [NodeSpec]}<br> 
+NodeSpec = Node::atom() | {Node::atom(), NumProcesses::integer()} | 
+{Node::atom(), schedulers}</p>
+
+ <p>An integer can be given to specify the exact size for 
+sublists. 1 is a good choice for IO-bound operations and when 
+the operation on each list element is expensive. Larger numbers 
+minimize overhead and are faster for cheap operations.</p>
+
+ <p>If the integer is omitted, and 
+you have specified a {processes, X}, the list is 
+split into X sublists. This is only 
+useful when the time to process each element is close to identical and you 
+know exactly how many lines of execution are available to you.</p>
+
+ <p>If neither of the above applies, the sublist size defaults to 1.</p>
+
+ <p>You can use {processes, X} to have the list processed 
+by X processes on the local machine. A good choice for X is the number of 
+lines of execution (cores) the machine provides. This can be done 
+automatically with {processes, schedulers}, which sets 
+the number of processes to the number of schedulers in the erlang virtual 
+machine (probably equal to the number of cores).</p>
+
+ <p>{timeout, Milliseconds} specifies a timeout. This is a timeout for the entire 
+operation, both operating on the sublists and combining the results. 
+exit(timeout) is evaluated if the timeout is exceeded.</p>
+
+ <p>{nodes, NodeList} specifies that the operation should be done across nodes. 
+Every element of NodeList is of the form {NodeName, NumProcesses} or 
+NodeName, which means the same as {NodeName, 1}. plists runs 
+NumProcesses processes on NodeName concurrently. A good choice for 
+NumProcesses is the number of lines of execution (cores) a node provides 
+plus one. This ensures the node is completely busy even when 
+fetching a new sublist. This can be done automatically with 
+{NodeName, schedulers}, in which case 
+plists uses a cached value if it has one, and otherwise finds the number of 
+schedulers in the remote node and adds one. This will ensure at least one 
+busy process per core (assuming the node has a scheduler for each core).</p>
+
+ <p>plists is able to recover if a node goes down. 
+If all nodes go down, exit(allnodescrashed) is evaluated.</p>
+
+ <p>Any of the above may be used as a malt, or may be combined into a list. 
+{nodes, NodeList} and {processes, X} may not be combined.</p>
+
+ <h4><a name="Examples">Examples</a></h4><p>
+ % start a process for each element (1-element sublists)<br> 
+1</p>
+
+ <p>% start a process for each ten elements (10-element sublists)<br> 
+10</p>
+
+ <p>% split the list into two sublists and process in two processes<br> 
+{processes, 2}</p>
+
+ <p>% split the list into X sublists and process in X processes,<br>
+ % where X is the number of cores in the machine<br> 
+{processes, schedulers}</p>
+
+ <p>% split the list into 10-element sublists and process in two processes<br> 
+[10, {processes, 2}]</p>
+
+ <p>% timeout after one second. Assumes that a process should be started<br>
+ % for each element.<br> 
+{timeout, 1000}</p>
+
+ <p>% Runs 3 processes at a time on apple@desktop,
+ and 2 on orange@laptop<br>
+ % This is the best way to utilize all the CPU-power of a dual-core<br>
+ % desktop and a single-core laptop. Assumes that the list should be<br>
+ % split into 1-element sublists.<br> 
+{nodes, [{apple@desktop, 3}, {orange@laptop, 2}]}</p>
+
+ <p>Like above, but makes plists figure out how many processes to use. 
+{nodes, [{apple@desktop, schedulers}, {orange@laptop, schedulers}]}</p>
+
+ <p>% Gives apple and orange three seconds to process the list as<br>
+ % 100-element sublists.<br> 
+[100, {timeout, 3000}, {nodes, [{apple@desktop, 3}, {orange@laptop, 2}]}]</p>
+
+ <h4><a name="Aside:_Why_Malt?">Aside: Why Malt?</a></h4><p> 
+I needed a word for this concept, so maybe my subconsciousness gave me one by 
+making me misspell multiply. Maybe it is an acronym for Malt is A List 
+Tearing Specification. Maybe it is a beer metaphor, suggesting that code 
+only runs in parallel if bribed with spirits. It's jargon, learn it 
+or you can't be part of the in-group.</p>
+
+ <h3><a name="Messages_and_Errors">Messages and Errors</a></h3><p> 
+plists assures that no extraneous messages are left in or will later 
+enter the message queue. This is guaranteed even in the event of an error.</p>
+
+ <p>Errors in spawned processes are caught and propagated to the calling 
+process. If you invoke</p>
+
+ <p>plists:map(fun (X) -&gt; 1/X end, [1, 2, 3, 0]).</p>
+
+ <p>you get a badarith error, exactly like when you use lists:map.</p>
+
+ <p>plists uses monitors to watch the processes it spawns. It is not a good idea 
+to invoke plists when you are already monitoring processes. If one of them 
+does a non-normal exit, plists receives the 'DOWN' message believing it to be 
+from one of its own processes. The error propagation system goes into 
+effect, which results in the error occuring in the calling process.</p>
+
+ <h3><a name="License">License</a></h3><p> 
+The MIT License</p>
+
+ <p>Copyright (c) 2007 Stephen Marsh</p>
+
+ <p>Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights 
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is 
+furnished to do so, subject to the following conditions:</p>
+
+ <p>The above copyright notice and this permission notice shall be included in 
+all copies or substantial portions of the Software.</p>
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#all-2">all/2</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#all-3">all/3</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#any-2">any/2</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#any-3">any/3</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#filter-2">filter/2</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#filter-3">filter/3</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#fold-3">fold/3</a></td><td>Like below, but assumes 1 as the Malt.</td></tr>
+<tr><td valign="top"><a href="#fold-4">fold/4</a></td><td>Like below, but uses the Fun as the Fuse by default.</td></tr>
+<tr><td valign="top"><a href="#fold-5">fold/5</a></td><td>fold is more complex when made parallel.</td></tr>
+<tr><td valign="top"><a href="#foreach-2">foreach/2</a></td><td>Similiar to foreach in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>
+ except it makes no guarantee about the order it processes list elements.</td></tr>
+<tr><td valign="top"><a href="#foreach-3">foreach/3</a></td><td>Similiar to foreach in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>
+ except it makes no guarantee about the order it processes list elements.</td></tr>
+<tr><td valign="top"><a href="#map-2">map/2</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#map-3">map/3</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#mapreduce-2">mapreduce/2</a></td><td>Like below, assumes default MapMalt of 1.</td></tr>
+<tr><td valign="top"><a href="#mapreduce-3">mapreduce/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#mapreduce-5">mapreduce/5</a></td><td>This is a very basic mapreduce.</td></tr>
+<tr><td valign="top"><a href="#partition-2">partition/2</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#partition-3">partition/3</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#runmany-3">runmany/3</a></td><td>Like below, but assumes a Malt of 1,
+ meaning each element of the list is processed by a seperate process.</td></tr>
+<tr><td valign="top"><a href="#runmany-4">runmany/4</a></td><td>All of the other functions are implemented with runmany.</td></tr>
+<tr><td valign="top"><a href="#sort-1">sort/1</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#sort-2">sort/2</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#sort-3">sort/3</a></td><td>This version lets you specify your own malt for sort.</td></tr>
+<tr><td valign="top"><a href="#usort-1">usort/1</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#usort-2">usort/2</a></td><td>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</td></tr>
+<tr><td valign="top"><a href="#usort-3">usort/3</a></td><td>This version lets you specify your own malt for usort.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="all-2">all/2</a></h3>
+<div class="spec">
+<p><pre>all(Fun, List) -&gt; bool()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="all-3">all/3</a></h3>
+<div class="spec">
+<p><pre>all(Fun, List, Malt) -&gt; bool()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="any-2">any/2</a></h3>
+<div class="spec">
+<p><pre>any(Fun, List) -&gt; bool()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="any-3">any/3</a></h3>
+<div class="spec">
+<p><pre>any(Fun, List, Malt) -&gt; bool()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="filter-2">filter/2</a></h3>
+<div class="spec">
+<p><pre>filter(Fun, List) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="filter-3">filter/3</a></h3>
+<div class="spec">
+<p><pre>filter(Fun, List, Malt) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="fold-3">fold/3</a></h3>
+<div class="spec">
+<p><pre>fold(Fun, InitAcc, List) -&gt; term()</pre></p>
+<p> </p>
+</div><p>Like below, but assumes 1 as the Malt. This function is almost useless,
+ and is intended only to aid converting code from using lists to plists.</p>
+
+<h3 class="function"><a name="fold-4">fold/4</a></h3>
+<div class="spec">
+<p><pre>fold(Fun, InitAcc, List, Malt) -&gt; term()</pre></p>
+<p> </p>
+</div><p>Like below, but uses the Fun as the Fuse by default.</p>
+
+<h3 class="function"><a name="fold-5">fold/5</a></h3>
+<div class="spec">
+<p><pre>fold(Fun, Fuse, InitAcc, List, Malt) -&gt; term()</pre></p>
+<p> </p>
+</div><p><p>fold is more complex when made parallel. There is no foldl and foldr, 
+accumulators aren't passed in any defined order. 
+The list is split into sublists which are folded together. Fun is 
+identical to the function passed to lists:fold[lr], it takes 
+(an element, and the accumulator) and returns -&gt; a new accumulator. 
+It is used for the initial stage of folding sublists. Fuse fuses together 
+the results, it takes (Results1, Result2) and returns -&gt; a new result. 
+By default sublists are fused left to right, each result of a fuse being 
+fed into the first element of the next fuse. The result of the last fuse 
+is the result.</p>
+
+ <p>Fusing may also run in parallel using a recursive algorithm,
+ by specifying the fuse as {recursive, Fuse}. See
+ the discussion in <a docgen-rel="seemfa" docgen-href="#runmany/4" href="#runmany-4"><code>runmany/4</code></a>.</p>
+
+ Malt is the malt for the initial folding of sublists, and for the
+ possible recursive fuse.</p>
+
+<h3 class="function"><a name="foreach-2">foreach/2</a></h3>
+<div class="spec">
+<p><pre>foreach(Fun, List) -&gt; <a href="#type-void">void()</a></pre></p>
+<p> </p>
+</div><p>Similiar to foreach in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>
+ except it makes no guarantee about the order it processes list elements.</p>
+
+<h3 class="function"><a name="foreach-3">foreach/3</a></h3>
+<div class="spec">
+<p><pre>foreach(Fun, List, Malt) -&gt; <a href="#type-void">void()</a></pre></p>
+<p> </p>
+</div><p>Similiar to foreach in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>
+ except it makes no guarantee about the order it processes list elements.</p>
+
+<h3 class="function"><a name="map-2">map/2</a></h3>
+<div class="spec">
+<p><pre>map(Fun, List) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="map-3">map/3</a></h3>
+<div class="spec">
+<p><pre>map(Fun, List, Malt) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="mapreduce-2">mapreduce/2</a></h3>
+<div class="spec">
+<p><pre>mapreduce(MapFunc, List) -&gt; Dict</pre>
+<ul class="definitions"><li><pre>MapFunc = fun((term()) -&gt; DeepListOfKeyValuePairs)</pre></li><li><pre>DeepListOfKeyValuePairs = 
+    [DeepListOfKeyValuePairs] | {Key, Value}</pre></li></ul></p>
+<p> </p>
+</div><p>Like below, assumes default MapMalt of 1.</p>
+
+<h3 class="function"><a name="mapreduce-3">mapreduce/3</a></h3>
+<div class="spec">
+<p><tt>mapreduce(MapFunc, List, MapMalt) -&gt; any()</tt></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="mapreduce-5">mapreduce/5</a></h3>
+<div class="spec">
+<p><pre>mapreduce(MapFunc, List, InitState, ReduceFunc, MapMalt) -&gt; Dict</pre>
+<ul class="definitions"><li><pre>MapFunc = fun((term()) -&gt; DeepListOfKeyValuePairs)</pre></li><li><pre>DeepListOfKeyValuePairs = 
+    [DeepListOfKeyValuePairs] | {Key, Value}</pre></li><li><pre>ReduceFunc = fun((OldState, Key, Value) -&gt; NewState)</pre></li></ul></p>
+<p> </p>
+</div><p><p>This is a very basic mapreduce. You won't write a Google-rivaling 
+search engine with it. It has no equivalent in lists. Each 
+element in the list is run through the MapFunc, which produces either 
+a {Key, Value} pair, or a lists of key value pairs, or a list of lists of 
+key value pairs...etc. A reducer process runs in parallel with the mapping 
+processes, collecting the key value pairs. It starts with a state given by 
+InitState, and for each {Key, Value} pair that it receives it invokes 
+ReduceFunc(OldState, Key, Value) to compute its new state. mapreduce returns 
+the reducer's final state.</p>
+
+ <p>MapMalt is the malt for the mapping operation, with a default value of 1, 
+meaning each element of the list is mapped by a seperate process.</p>
+
+ mapreduce requires OTP R11B, or it may leave monitoring messages in the
+ message queue.</p>
+
+<h3 class="function"><a name="partition-2">partition/2</a></h3>
+<div class="spec">
+<p><pre>partition(Fun, List) -&gt; {list(), list()}</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="partition-3">partition/3</a></h3>
+<div class="spec">
+<p><pre>partition(Fun, List, Malt) -&gt; {list(), list()}</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="runmany-3">runmany/3</a></h3>
+<div class="spec">
+<p><pre>runmany(Fun, Fuse, List) -&gt; term()</pre></p>
+<p> </p>
+</div><p>Like below, but assumes a Malt of 1,
+ meaning each element of the list is processed by a seperate process.</p>
+
+<h3 class="function"><a name="runmany-4">runmany/4</a></h3>
+<div class="spec">
+<p><pre>runmany(Fun, Fuse, List, Malt) -&gt; term()</pre>
+<ul class="definitions"><li><pre>Fun = fun((list()) -&gt; term())</pre></li><li><pre>Fuse = FuseFunc | {recursive, FuseFunc}</pre></li><li><pre>FuseFunc = fun((term(), term()) -&gt; term())</pre></li></ul></p>
+<p> </p>
+</div><p><p>All of the other functions are implemented with runmany. runmany 
+takes a List, splits it into sublists, and starts processes to operate on 
+each sublist, all done according to Malt. Each process passes its sublist 
+into Fun and sends the result back.</p>
+
+ <p>The results are then fused together to get the final result. There are two 
+ways this can operate, lineraly and recursively. If Fuse is a function, 
+a fuse is done linearly left-to-right on the sublists, the results 
+of processing the first and second sublists being passed to Fuse, then 
+the result of the first fuse and processing the third sublits, and so on. If 
+Fuse is {reverse, FuseFunc}, then a fuse is done right-to-left, the results 
+of processing the second-to-last and last sublists being passed to FuseFunc, 
+then the results of processing the third-to-last sublist and 
+the results of the first fuse, and and so forth. 
+Both methods preserve the original order of the lists elements.</p>
+
+ <p>To do a recursive fuse, pass Fuse as {recursive, FuseFunc}. 
+The recursive fuse makes no guarantee about the order the results of 
+sublists, or the results of fuses are passed to FuseFunc. It 
+continues fusing pairs of results until it is down to one.</p>
+
+ <p>Recursive fuse is down in parallel with processing the sublists, and a 
+process is spawned to fuse each pair of results. It is a parallized 
+algorithm. Linear fuse is done after all results of processing sublists 
+have been collected, and can only run in a single process.</p>
+
+ Even if you pass {recursive, FuseFunc}, a recursive fuse is only done if
+ the malt contains {nodes, NodeList} or {processes, X}. If this is not the
+ case, a linear fuse is done.</p>
+
+<h3 class="function"><a name="sort-1">sort/1</a></h3>
+<div class="spec">
+<p><pre>sort(List) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="sort-2">sort/2</a></h3>
+<div class="spec">
+<p><pre>sort(Fun, List) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="sort-3">sort/3</a></h3>
+<div class="spec">
+<p><pre>sort(Fun, List, Malt) -&gt; list()</pre></p>
+<p> </p>
+</div><p><p>This version lets you specify your own malt for sort.</p>
+
+ sort splits the list into sublists and sorts them, and it merges the
+ sorted lists together. These are done in parallel. Each sublist is
+ sorted in a seperate process, and each merging of results is done in a
+ seperate process. Malt defaults to 100, causing the list to be split into
+ 100-element sublists.</p>
+
+<h3 class="function"><a name="usort-1">usort/1</a></h3>
+<div class="spec">
+<p><pre>usort(List) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="usort-2">usort/2</a></h3>
+<div class="spec">
+<p><pre>usort(Fun, List) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Same semantics as in module
+ <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.</p>
+
+<h3 class="function"><a name="usort-3">usort/3</a></h3>
+<div class="spec">
+<p><pre>usort(Fun, List, Malt) -&gt; list()</pre></p>
+<p> </p>
+</div><p><p>This version lets you specify your own malt for usort.</p>
+
+ <p>usort splits the list into sublists and sorts them, and it merges the 
+sorted lists together. These are done in parallel. Each sublist is 
+sorted in a seperate process, and each merging of results is done in a 
+seperate process. Malt defaults to 100, causing the list to be split into 
+100-element sublists.</p>
+
+ usort removes duplicate elments while it sorts.</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

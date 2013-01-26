@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module ssh_tunnel</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module ssh_tunnel</h1>
+<ul class="index"><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+
+
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-location">location()</a></h3>
+<p><pre>location() = {string(), integer()}</pre></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#connect-0">connect/0</a></td><td>Module for creating SSH tunnels using <code>ssh</code>.</td></tr>
+<tr><td valign="top"><a href="#connect-3">connect/3</a></td><td>Create a connetion to a remote host with the provided options.</td></tr>
+<tr><td valign="top"><a href="#direct_stream_local-2">direct_stream_local/2</a></td><td>Creates a ssh stream local-forward channel to a remote unix domain socket.</td></tr>
+<tr><td valign="top"><a href="#direct_tcpip-3">direct_tcpip/3</a></td><td>Creates a ssh directtcp-ip forwarded channel to a remote port.</td></tr>
+<tr><td valign="top"><a href="#open_channel-6">open_channel/6</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_tunnel-3">start_tunnel/3</a></td><td>Starts a SSHTunnel.Tunnel process.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="connect-0">connect/0</a></h3>
+<div class="spec">
+<p><tt>connect() -&gt; any()</tt></p>
+<p> </p>
+</div><p><p>Module for creating SSH tunnels using <code>ssh</code>.
+  <a href="https://github.com/drowzy/ssh_tunnel" target="_top"><tt>https://github.com/drowzy/ssh_tunnel</tt></a></p>
+ 
+  <p>It provides functions to create forwarded ssh channels, similair
+  to how other channels can be created using <code>ssh_connection</code>.
+  There are two type of channels supported
+  * <code>directtcp-ip` - Forwards a port from the client machine to the remote machine.
+    This is the same as `ssh -nNT -L 8080:forward.example.com:9000 user@sshserver.example.com</code>
+  * <code>direct-streamlocal</code> - Forwards to a unix domain socket.
+    This is the same as <code>ssh -nNT -L 8080:/var/lib/mysql/mysql.sock user@sshserver.example.com</code>
+  When using <code>direct_tcpip/3</code> or <code>direct_stream_local/2</code> directly there
+  will not be any local port or socket bound, this can either be done
+  using <code>ssh_tunnel</code> or by manually sending data with <code>ssh_connection.send/3</code>.
+  Although <code>connect/1</code> can be used to connect to the remote host, other
+  methods are supported.
+  One can use [SSHex](https://github.com/rubencaro/sshex), <code>ssh:connect/3</code>  
+for instance.</p>
+ 
+  <p>## Tunnels  
+Tunnels are on-demand TCP servers and are bound listeners to either a port  
+or a path. The tunnel will handle relaying TCP messages to the ssh  
+connection and back.</p>
+ 
+  ## Examples
+  <pre>    {ok, SshRef} = ssh_tunnel:connect("sshserver.example.com", 22, []),
+    {ok, Pid}    = ssh_tunnel:start_tunnel(Pid, {tcpip, {8080, {"192.168.90.15", 80}}}),
+    % Send a TCP message for instance HTTP
+    Resp = HTTPoison.get!("127.0.0.1:8080"),
+    io:format("Received body: ~p\n", [Resp])</pre></p>
+
+<h3 class="function"><a name="connect-3">connect/3</a></h3>
+<div class="spec">
+<p><pre>connect(Host :: list() | tuple(),
+        Port :: integer(),
+        Opts :: list()) -&gt;
+           {ok, pid()} | {error, term()}</pre></p>
+<p> </p>
+</div><p>Create a connetion to a remote host with the provided options.
+  This function is mostly used as convenience wrapper around <code>ssh_connect/3</code>
+  and does not support all options.
+  returns: <code>{ok, Connection}</code> or <code>{error, Reason}</code>.
+  <a href="https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html" target="_top"><tt>https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html</tt></a></p>
+
+<h3 class="function"><a name="direct_stream_local-2">direct_stream_local/2</a></h3>
+<div class="spec">
+<p><pre>direct_stream_local(Pid :: pid(), SocketPath :: string()) -&gt;
+                       {ok, integer()} | {error, term()}</pre></p>
+<p> </p>
+</div><p>Creates a ssh stream local-forward channel to a remote unix domain socket.
+  It sends the request that the server make a connection to its local Unix domain socket.
+  The returned channel together with a ssh connection reference (returned from <code>ssh:connect/4</code>)
+  can be used to send messages with <code>ssh_connection:send/3</code>.
+  returns: <code>{ok, Channel}` or `{error, Reason}</code>.
+  Ex:
+  <pre>  msg = "GET /images/json HTTP/1.1\r\nHost: /var/run/docker.sock\r\nAccept: */*\r\n\r\n"
+  {ok, Pid} = ssh_tunnel:connect("192.168.90.15", 22),
+  {ok, Ch}  = ssh_tunnel:direct_stream_local(Pid, "/var/run/docker.sock"),
+  ok = ssh_connection.send(Pid, Ch, Msg)</pre></p>
+
+<h3 class="function"><a name="direct_tcpip-3">direct_tcpip/3</a></h3>
+<div class="spec">
+<p><pre>direct_tcpip(Pid :: pid(), From :: <a href="#type-location">location()</a>, To :: <a href="#type-location">location()</a>) -&gt;
+                {ok, integer()} | {error, term()}</pre></p>
+<p> </p>
+</div><p>Creates a ssh directtcp-ip forwarded channel to a remote port.
+  The returned channel together with a ssh connection reference (returned
+  from <code>:ssh.connect/4</code>) can be used to send messages with <code>ssh_connection:send/3</code>
+  returns: <code>{ok, channel}</code> or <code>{error, reason}</code>.
+  ## Examples:
+      msg = "GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.47.0\r\nAccept: */*\r\n\r\n"
+      {ok, Pid} = ssh_tunnel:connect("192.168.1.10", 22),
+      {ok, Ch} = ssh_tunnel:direct_tcpip(Pid, {"127.0.0.1", 8080}, {"192.168.1.10", 80}),
+      ok = ssh_connection:send(Pid, Ch, Msg),
+      recieve do
+        {ssh_cm, _, {data, Channel, _, Data}} -&gt; io:format("Data: ~p\n", [Data])
+      end</p>
+
+<h3 class="function"><a name="open_channel-6">open_channel/6</a></h3>
+<div class="spec">
+<p><tt>open_channel(Pid, Type, Msg, WindowSize, MaxPktSz, Timeout) -&gt; any()</tt></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="start_tunnel-3">start_tunnel/3</a></h3>
+<div class="spec">
+<p><pre>start_tunnel(Pid :: pid(),
+             Transport :: tcp | local,
+             To :: tuple() | integer()) -&gt;
+                {ok, pid()} | {error, term()}</pre></p>
+<p> </p>
+</div><p>Starts a SSHTunnel.Tunnel process.
+  The tunnel will listen to either a local port or local path and handle
+  passing messages between the TCP client and ssh connection.
+  ## Examples
+      {ok, SSH} = ssh_tunnel:connect("sshserver.example.com", 22),
+      {ok, Pid} = ssh_tunnel:start_tunnel(Pid, tcp, {8080, {"192.168.90.15", 80}})
+      # Send a TCP message
+      %HTTPoison.Response{body: body} = HTTPoison.get!("127.0.0.1:8080")
+      IO.puts("Received body: #{body})</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

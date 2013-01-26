@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module util_log_formatter</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module util_log_formatter</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Log formatter  
+Derived from //kernel/logger/logger_formatter.
+
+
+<h2><a name="description">Description</a></h2><p>Log formatter  
+Derived from //kernel/logger/logger_formatter</p>
+ 
+  This implementation is copied from logger_fomatter.erl and adds the
+  following features:
+  <dl>
+  <dt>time_offset = none</dt>
+    <dd>when provided, no time zone offset will be written to the log.</dd>
+  <dt>time_unit = second | millisecond | microsecond</dt>
+    <dd>controls time stamp granularity in the log.</dd>
+  <dt>report_prefix = string()</dt>
+    <dd>inserts given prefix before <code>msg</code> for logging a report (default: "\n").</dd>
+  <dt>report_term_depth = integer()</dt>
+    <dd>max depth of terms included in the reports. Use <code>infinity</code> for
+        unlimited (default: 50)</dd>
+  </dl>
+ 
+  <p>Report printing is modified to align keys in a report to the right.</p>
+ 
+  Additional template formatting atoms:
+  <dl>
+    <dt>lev</dt>
+      <dd>prints "[X]" to the log to indicate the log level, where
+          <code>X` is the first capitalized letter of the log level.&lt;/dd&gt;
+    &lt;dt&gt;LEVEL&lt;/dt&gt;&lt;dd&gt;same as</code>level' but is printed in upper case.</dd>
+    <dt>modline</dt><dd>prints 'Module:Line' to the log.</dd>
+    <dt>regpid</dt><dd>prints:</dd>
+       <dl>
+             <dt><code>*</code></dt><dd>if the registered name of the caller's pid
+                      matches caller's module name.</dd>
+             <dt><code>RegisteredName</code></dt><dd>of the calling process</dd>
+             <dt><code>X.Y.Z</code></dt><dd>pid of the caller with leading <code>0.</code> stripped.</dd>
+       </dl>
+    <dt>regname</dt>
+       <dl>
+             <dd>prints <code>&lt;RegisteredName&gt;</code> of the process or its pid
+                 if the process is not registered</dd>
+       </dl>
+  </dl>
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-config">config()</a></h3>
+<p><pre>config() = 
+    #{chars_limit =&gt; pos_integer() | unlimited,
+      depth =&gt; pos_integer() | unlimited,
+      legacy_header =&gt; boolean(),
+      max_size =&gt; pos_integer() | unlimited,
+      report_cb =&gt; <a href="http://www.erlang.org/doc/man/kernel/doc/logger.html#type-report_cb">logger:report_cb()</a>,
+      single_line =&gt; boolean(),
+      template =&gt; <a href="#type-template">template()</a>,
+      time_designator =&gt; byte(),
+      time_offset =&gt; integer() | [byte()] | none,
+      time_unit =&gt; atom(),
+      report_prefix =&gt; boolean(),
+      report_term_depth =&gt; integer()}</pre></p>
+
+
+<h3 class="typedecl"><a name="type-metakey">metakey()</a></h3>
+<p><pre>metakey() = atom() | [atom()]</pre></p>
+
+
+<h3 class="typedecl"><a name="type-template">template()</a></h3>
+<p><pre>template() = 
+    [<a href="#type-metakey">metakey()</a> | {<a href="#type-metakey">metakey()</a>, <a href="#type-template">template()</a>, <a href="#type-template">template()</a>} | string()]</pre></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#check_config-1">check_config/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#format-2">format/2</a></td><td></td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="check_config-1">check_config/1</a></h3>
+<div class="spec">
+<p><pre>check_config(Config) -&gt; ok | {error, term()}</pre>
+<ul class="definitions"><li><pre>Config = <a href="#type-config">config()</a></pre></li></ul></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="format-2">format/2</a></h3>
+<div class="spec">
+<p><pre>format(LogEvent, Config) -&gt; <a href="http://www.erlang.org/doc/man/stdlib/doc/unicode.html#type-chardata">unicode:chardata()</a></pre>
+<ul class="definitions"><li><pre>LogEvent = <a href="http://www.erlang.org/doc/man/kernel/doc/logger.html#type-log_event">logger:log_event()</a></pre></li><li><pre>Config = <a href="#type-config">config()</a></pre></li></ul></p>
+<p> </p>
+</div>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

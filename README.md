@@ -1,4 +1,0 @@
-util
-====
-
-Erlang utility modules

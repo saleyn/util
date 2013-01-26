@@ -1,0 +1,36 @@
+@version 0.1-258-g9a2900b
+@doc
+
+== Erlang Utility Modules ==
+
+
+<a href="https://github.com/saleyn/util/actions/workflows/erlang.yml"><img src="https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg"/></a>
+
+== Content: ==
+
+<table class="tab">
+
+<tr class="tab"><th class="tab">Module</th><th class="tab">Description</th></tr>
+<tr class="tab"><td class="tab">decompiler</td><td class="tab">decompiles modules and functions (useful for verifying accuracy of code generation)</td></tr>
+<tr class="tab"><td class="tab">csv</td><td class="tab">CSV parsing and loading data to MySQL</td></tr>
+<tr class="tab"><td class="tab">env</td><td class="tab">environment variables substitution, path normalization</td></tr>
+<tr class="tab"><td class="tab">file_log_reader</td><td class="tab">Periodically read an append-only log file and parse newly added data</td></tr>
+<tr class="tab"><td class="tab">iif</td><td class="tab">Ternery if function including `iif/3', `iif/4', `ife/3', `ife/4' parse transforms</td></tr>
+<tr class="tab"><td class="tab">io_lib_pretty_limited</td><td class="tab">Print term to binary by constraining the output size</td></tr>
+<tr class="tab"><td class="tab">gin</td><td class="tab">Convenient parse transform for `in(Value, [A,B,C])' type of guards</td></tr>
+<tr class="tab"><td class="tab">hex</td><td class="tab">Hex to bin conversion</td></tr>
+<tr class="tab"><td class="tab">listx</td><td class="tab">Miscelaneous list handling functions</td></tr>
+<tr class="tab"><td class="tab">osx</td><td class="tab">Execution of os commands with returned stdout and exit status</td></tr>
+<tr class="tab"><td class="tab">pcap</td><td class="tab">reader/writer of packet capture files (tcpdump, wireshark)</td></tr>
+<tr class="tab"><td class="tab">restrict_remsh_mod</td><td class="tab">to be used for remote shells to restrict `q()', `init:stop()', `erlang:halt()', etc.</td></tr>
+<tr class="tab"><td class="tab">smtp</td><td class="tab">SMTP client supporting tcp and ssl protocols</td></tr>
+<tr class="tab"><td class="tab">sntp</td><td class="tab">simple SNTP client</td></tr>
+<tr class="tab"><td class="tab">str</td><td class="tab">stringification functions including `str/1' and `str/2' parse transforms</td></tr>
+<tr class="tab"><td class="tab">stringx</td><td class="tab">miscelaneous string functions</td></tr>
+<tr class="tab"><td class="tab">user_default</td><td class="tab">extending shell with useful debugging and profiling commands</td></tr>
+</table>
+
+== Documentation ==
+
+See project documentation: http://saleyn.github.io/util
+

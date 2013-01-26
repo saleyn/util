@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module csv</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module csv</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>CSV file parsing functions.
+<p>Copyright © 2021 Serge Aleynikov</p>
+
+<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2>CSV file parsing functions
+  
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-load_options">load_options()</a></h3>
+<p><pre>load_options() = 
+    [{batch_size, integer()} |
+     {blob_size, integer()} |
+     {save_create_sql_to_file, string()} |
+     {guess_types, boolean()} |
+     {guess_limit_rows, integer()} |
+     {max_nulls_pcnt, float()} |
+     {primary_key, PKColumns :: binary() | [binary() | list()]} |
+     {encoding, string() | atom()} |
+     {verbose, boolean()}]</pre></p>
+<p>  Options for loading data to a database.
+  <dl>
+  <dt>{batch_size, Size}</dt>
+    <dd>Number of records per SQL insert/update/replace call</dd>
+  <dt>{blob_size, Size}</dt>
+    <dd>Threshold in number of bytes at which a VARCHAR field is defined as BLOB</dd>
+  <dt>{save_create_sql_to_file, Filename::string()}</dt>
+    <dd>Save CREATE TABLE sql statement to a file</dd>
+  <dt>guess_types</dt>
+    <dd>When specified, the function will try to guess the type of data in columns
+        instead of treating all data as string fields. The possible data typed guessed:
+        integer, float, date, datetime, number, string</dd>
+  <dt>{guess_limit_rows, Limit}</dt>
+    <dd>Limit the number of rows for guessing the column data types</dd>
+  <dt>{max_nulls_pcnt, Percent}</dt>
+    <dd>A percentage threshold of permissible NULLs in a column (0-100), above which
+        the column data type is forced to be treated as <code>string</code></dd>
+  <dt>{primary_key, Fields}</dt>
+    <dd>Names of primary key fields in the created table</dd>
+  <dt>{encoding, Encoding}</dt>
+    <dd>The name of the encoding to use for storing data. For the list of permissible
+        values [see this
+        link](https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html)</dd>
+  <dt>verbose</dt>
+    <dd>Print additional details to stdout</dd>
+  </dl></p>
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#guess_data_type-1">guess_data_type/1</a></td><td>Guess the type of data by its value.</td></tr>
+<tr><td valign="top"><a href="#guess_data_types-2">guess_data_types/2</a></td><td>Guess data types of fields in the given CSV list of rows obtained by
+       parsing a CSV file with <code>parse(File,[fix_lengths])</code>.</td></tr>
+<tr><td valign="top"><a href="#load_to_mysql-4">load_to_mysql/4</a></td><td>Load CSV data from a <code>File</code> to a <code>MySQL</code> database.</td></tr>
+<tr><td valign="top"><a href="#max_field_lengths-2">max_field_lengths/2</a></td><td>Get max field lengths for a list obtained by parsing a CSV file with
+       <code>parse_csv_file(File,[fix_lengths])</code>.</td></tr>
+<tr><td valign="top"><a href="#parse-1">parse/1</a></td><td>Parse a CSV file using default options.</td></tr>
+<tr><td valign="top"><a href="#parse-2">parse/2</a></td><td>Parse a given CSV file.</td></tr>
+<tr><td valign="top"><a href="#parse_line-1">parse_line/1</a></td><td>Parse a CSV line.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="guess_data_type-1">guess_data_type/1</a></h3>
+<div class="spec">
+<p><pre>guess_data_type(S :: binary()) -&gt;
+                   {null | date | datetime | integer | float |
+                    string,
+                    term(),
+                    string()}</pre></p>
+<p> </p>
+</div><p>Guess the type of data by its value</p>
+
+<h3 class="function"><a name="guess_data_types-2">guess_data_types/2</a></h3>
+<div class="spec">
+<p><pre>guess_data_types(HasHeaderRow :: boolean(),
+                 Rows :: [Fields :: [binary()]]) -&gt;
+                    {Type ::
+                         string | integer | number | float |
+                         date | datetime,
+                     MaxFieldLen :: integer(),
+                     NumOfNulls :: integer()}</pre></p>
+<p> </p>
+</div><p>Guess data types of fields in the given CSV list of rows obtained by
+       parsing a CSV file with <code>parse(File,[fix_lengths])</code>.
+       The function returns a list of tuples <code>{Type, MaxFieldLen, NumOfNulls}</code>,
+       where the <code>Type</code> is a field type, <code>MaxFieldLen</code> is the max length of
+       data in this column, and <code>NumOfNulls</code> is the number of rows with empty
+       values in this column.</p>
+
+<h3 class="function"><a name="load_to_mysql-4">load_to_mysql/4</a></h3>
+<div class="spec">
+<p><pre>load_to_mysql(File :: string(),
+              Tab :: string(),
+              MySqlPid :: pid(),
+              Opts :: <a href="#type-load_options">load_options()</a>) -&gt;
+                 {Columns :: list(), RecCount :: integer()}</pre></p>
+<p> </p>
+</div><p><p>Load CSV data from a <code>File</code> to a <code>MySQL</code> database.
+  <code>Tab</code> is the name of a table where to load data.  <code>MySqlPid</code> is the pid of a
+  MySQL database connection returned by <code>mysql:start_link/1</code>.  
+The data from the file is loaded atomically - i.e. either the whole file  
+loading succeeds or fails.  This is accomplished by first loading data to a  
+temporary table, and then using the database's ACID properties to replace the  
+target table with the temporary table.</p>
+ 
+  <p>Presently the table is entirely replaced with the data from file.</p>
+ 
+  NOTE: this function requires <a href="https://github.com/mysql-otp/mysql-otp.git" target="_top"><tt>https://github.com/mysql-otp/mysql-otp.git</tt></a></p>
+
+<h3 class="function"><a name="max_field_lengths-2">max_field_lengths/2</a></h3>
+<div class="spec">
+<p><pre>max_field_lengths(HasHeaderRow :: boolean(),
+                  Rows :: [Fields :: list()]) -&gt;
+                     [Len :: integer()]</pre></p>
+<p> </p>
+</div><p>Get max field lengths for a list obtained by parsing a CSV file with
+       <code>parse_csv_file(File,[fix_lengths])</code>.</p>
+
+<h3 class="function"><a name="parse-1">parse/1</a></h3>
+<div class="spec">
+<p><pre>parse(File :: string()) -&gt; [[binary()]]</pre></p>
+<p> </p>
+</div><p>Parse a CSV file using default options.</p>
+
+<h3 class="function"><a name="parse-2">parse/2</a></h3>
+<div class="spec">
+<p><pre>parse(File :: binary() | string(),
+      Opts ::
+          [fix_lengths | binary | list | {open, Opts :: list()}]) -&gt;
+         [[string()]]</pre></p>
+<p> </p>
+</div><p>Parse a given CSV file.
+  Options:
+  <dl>
+    <dt>fix_lengths</dt><dd>if a record has a column count
+  greater than what's found in the header row, those extra columns will be
+  dropped, and if a row has fewer columns, empty columns will be added.</dd>
+    <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
+    <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
+    <dt>binary</dt><dd>Return fields as binaries (default)</dd>
+    <dt>list</dt><dd>Return fields as lists</dd>
+  </dl></p>
+
+<h3 class="function"><a name="parse_line-1">parse_line/1</a></h3>
+<div class="spec">
+<p><pre>parse_line(Line :: binary()) -&gt; list()</pre></p>
+<p> </p>
+</div><p>Parse a CSV line</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

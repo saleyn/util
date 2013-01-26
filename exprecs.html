@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Module exprecs</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module exprecs</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Parse transform for generating record access functions.
+
+<p><b>Authors:</b> : Ulf Wiger (<a href="mailto:ulf.wiger@ericsson.com"><tt>ulf.wiger@ericsson.com</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2>Parse transform for generating record access functions
+   <p>This parse transform can be used to reduce compile-time
+   dependencies in large systems.</p>
+   <p>In the old days, before records, Erlang programmers often wrote
+   access functions for tuple data. This was tedious and error-prone.
+   The record syntax made this easier, but since records were implemented
+   fully in the pre-processor, a nasty compile-time dependency was
+   introduced.</p>
+   <p>This module automates the generation of access functions for
+   records. While this method cannot fully replace the utility of
+   pattern matching, it does allow a fair bit of functionality on
+   records without the need for compile-time dependencies.</p>
+   <p>Whenever record definitions need to be exported from a module,
+   inserting a compiler attribute,
+   <code>export_records([RecName|...])</code> causes this transform
+   to lay out access functions for the exported records:</p>
+  
+   <pre>
+   -record(a, {a, b, c}).
+   -export_records([a]).
+   -export(['#info-'/2,
+            '#get-'/2, '#set-'/2,
+            '#new-a'/0, '#new-a'/1,
+            '#get-a'/2, '#set-a'/2,
+            '#info-a'/1]).
+  
+   '#info-'(Info, Rec) when is_record(Rec, a) -&gt;
+       '#info-a'(Info).
+  
+   '#get-'(Attrs, Rec) when is_record(Rec, a) -&gt;
+       '#get-a'(Attrs, Rec).
+  
+   '#set-'(Attrs, Rec) when is_record(Rec, a) -&gt;
+       '#set-a'(Attrs, Rec).
+  
+   '#new-a'() -&gt; #a{}.
+   '#new-a'(Vals) -&gt; '#set-a'(Vals, #a{}).
+  
+   '#get-a'(Attrs, R) when is_list(Attrs) -&gt;
+       ['#get-a'(A, R) || A &lt;- Attrs];
+   '#get-a'(a, R) -&gt; R#a.a;
+   '#get-a'(b, R) -&gt; R#a.b;
+   '#get-a'(c, R) -&gt; R#a.c.
+  
+   '#set-a'(Vals, Rec) -&gt;
+       F = fun ([], R, _F1) -&gt; R;
+               ([{a, V} | T], R, F1) -&gt; F1(T, R#a{a = V}, F1);
+               ([{b, V} | T], R, F1) -&gt; F1(T, R#a{b = V}, F1);
+               ([{c, V} | T], R, F1) -&gt; F1(T, R#a{c = V}, F1)
+           end,
+       F(Vals, Rec, F).
+  
+   '#info-a'(size) -&gt; record_info(size, a);
+   '#info-a'(fields) -&gt; record_info(fields, a).
+   </pre>
+   <p>The generated accessor functions are:</p>
+   <table border="1">
+   <tr><td><code>'#new-R'() -&gt; #R{}</code></td>
+       <td>Instantiates a new record of type <code>R</code>.</td></tr>
+   <tr><td><code>'#new-R'(Data) -&gt; #R{}</code></td>
+       <td>Exactly equivalent to calling
+           <code>'#set-R'(Data,'#new-R'())</code></td></tr>
+   <tr><td><code>'#info-R'(Info) -&gt;<br>
+                  [FldName]<br>
+                Info :: fields | size</code></td>
+       <td>Equivalent to <code>record_info(fields, R)</code> for the
+           given record type R.</td></tr>
+   <tr><td><code>'#info-'(Info, Rec) -&gt;<br>
+                   [FldName]</code></td>
+       <td>Detects the record type of <code>Rec</code>, and calls the corresponding
+           <code>'#info-R'/1</code> function.</td></tr>
+   <tr><td><code>'#get-R'(A, Rec) -&gt;<br>
+                   Value | [Value]</code></td>
+       <td>Returns the value (if <code>A</code> is an atom) of the given field,
+           in <code>Rec</code> (which must be a record of type <code>R</code>),
+           or a list of values (if <code>A</code> is a list of atoms).</td></tr>
+   <tr><td><code>'#get-'(A, Rec) -&gt;<br>
+                   Value | [Value]</code></td>
+       <td>Detects the record type of <code>Rec</code> and calls the corresponding
+           <code>'#get-R'(A, Rec)</code> function.</td></tr>
+   <tr><td><code>'#set-R'(Data, Rec) -&gt;<br>
+                   Data | [{Attr::atom(), Value}]</code></td>
+       <td>Takes a list of <code>{Attr,Value}</code> tuples and sets the corresponding
+           attributes in the record <code>Rec</code> (which must be of type <code>R</code>).
+           Each <code>Attr</code> in the list must correspond to an actual attribute
+           in the record <code>R</code>.</td></tr>
+   <tr><td><code>'#set-'(Data, Rec) -&gt;<br>
+                   Value | [Value]</code></td>
+       <td>Detects the record type of <code>Rec</code> and calls the corresponding
+           <code>'#set-R'(Data, Rec)</code> function.</td></tr>
+   </table>
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#context-2">context/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#format_error-1">format_error/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#parse_transform-2">parse_transform/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#transform-3">transform/3</a></td><td></td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="context-2">context/2</a></h3>
+<div class="spec">
+<p><tt>context(X1, Context) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="format_error-1">format_error/1</a></h3>
+<div class="spec">
+<p><tt>format_error(X1) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="parse_transform-2">parse_transform/2</a></h3>
+<div class="spec">
+<p><tt>parse_transform(Forms, Options) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="transform-3">transform/3</a></h3>
+<div class="spec">
+<p><tt>transform(Forms, F, Acc) -&gt; any()</tt></p>
+</div>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, May 9 2013, 08:41:15.</i></p>
+</body>
+</html>
