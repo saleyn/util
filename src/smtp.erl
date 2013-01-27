@@ -3,6 +3,17 @@
 %%%      recipients, using primary/backup SMTP servers.  Messages can
 %%%      contain attachments.
 %%%
+%%%      SNMP Options:
+%%%      -------------
+%%%      * Server - server to connect to (no MX lookup)
+%%%      * Relay  - domain to do MX lookup of list of servers
+%%%      * Port   - optional port number (ssl def: 465; tcp def: 25)
+%%%      * Auth   - controls mandatory / optional authentication
+%%%      * Tls    - controls enabling of TLS protocol
+%%%      * Domain - name of the domain to include in the HELO handshake
+%%%      * Timeout - timeout to use (default 10000)
+%%%      * Verbose - controls debugging printout
+%%%      * Attachments - list of files to attach
 %%% ```
 %%% Example:
 %%%     % Send a message to two recipients with a file attachment using
@@ -30,8 +41,6 @@
 %%% '''
 %%%
 %%% @author  Johan Bevemyr, Serge Aleynikov <saleyn@gmail.com>
-%%% @version $Rev: 263 $
-%%%          $Date: 2006-06-27 15:45:11 -0400 (Tue, 27 Jun 2006) $
 %%% @end
 %%%------------------------------------------------------------------------
 %%% Created 02/24/2004 Johan Bevemyr
@@ -45,41 +54,24 @@
 -include_lib("kernel/include/inet.hrl").
 
 -type smtp_options() :: [
-              {server, Server::string()}
-            | {relay, Relay::string()}
-            | {port, Port::integer()}
-            | {auth, Auth :: always | never}
-            | {username, Username::string()}
-            | {password, Password::string()}
-            | {tls, Tls :: always | if_available}
-            | {domain, Domain::string()}
-            | {timeout, Millisec::integer()}
-            | {verbose, debug}
-            | {attachments, [
-                 Filename::string() |
-                 {Filename::string(), ContentType::string()} |
-                 {Filename::string(), ContentType::string(), Data::list()}
-               ]}
-            ].
-%%%         Options:
-%%%         --------
-%%%         * Server - server to connect to (no MX lookup)
-%%%         * Relay  - use `Relay' domain to do MX lookup of list of servers
-%%%         * Port   - optional port number (ssl def: 465; tcp def: 25)
-%%%         * Auth   - controls mandatory / optional authentication
-%%%         * Tls    - controls enabling of TLS protocol
-%%%         * Domain - name of the domain to include in the HELO handshake
-%%%         * Timeout - timeout to use (default 10000)
-%%%         * Verbose - controls debugging printout
-%%%         * Attachments - list of files to attach
+          {server, Server::string()}
+        | {relay, Relay::string()}
+        | {port, Port::integer()}
+        | {auth, Auth :: always | never}
+        | {username, Username::string()}
+        | {password, Password::string()}
+        | {tls, Tls :: always | if_available}
+        | {domain, Domain::string()}
+        | {timeout, Millisec::integer()}
+        | {verbose, debug}
+        | {attachments, [
+             Filename::string() |
+             {Filename::string(), ContentType::string()} |
+             {Filename::string(), ContentType::string(), Data::list()}
+           ]}
+        ].
 
 %%-------------------------------------------------------------------------
-%% @spec send(Proto, From, To, Subject, Message) -> ok
-%%          Proto   = tcp | ssl
-%%          From    = string() | binary()
-%%          To      = string() | binary()
-%%          Subject = string() | binary()
-%%          Message = string() | binary()
 %% @doc Send a message to a list of `To' receipients using `localhost'.
 %%      Error is thrown if unable to send a message.
 %%      Use inet:format_error/1 to decode the Reason if it is an atom.
