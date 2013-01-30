@@ -1,12 +1,25 @@
 # See LICENSE for licensing information.
 
-PROJECT = $(notdir $(PWD))
-TARBALL = $(PROJECT)
+PROJECT := $(notdir $(PWD))
+TARBALL := $(PROJECT)
 
-REBAR = rebar
+REBAR   := rebar
+
+empty   :=
+space   := $(empty) $(empty)
+delim   := $(empty),\n        $(empty)
 
 all:
 	@$(REBAR) compile
+
+# This is just an example of using make instead of rebar to do fast compilation
+all-fast: $(patsubst src/%.app.src,ebin/%.app,$(wildcard src/*.app.src))
+
+ebin/%.app: src/%.app.src $(wildcard src/*.erl)
+	@sed 's!{modules, *\[.*\]!{modules, [\
+        $(subst $(space),$(delim),$(sort $(basename $(notdir $(filter-out $<,$^)))))]!' \
+		$< > $@
+	erlc +debug_info -I include -o ebin $(filter-out $<,$?)
 
 clean:
 	@$(REBAR) clean
@@ -16,10 +29,6 @@ docs: all clean-docs
 
 clean-docs:
 	rm -f doc/*.{css,html,png} doc/edoc-info
-
-info:
-	@FILES="$(shell git st -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}')"; \
-		if [ -n "$$FILES" ] ; then echo "Adding: $$FILES"; fi
 
 github-docs:
 	@if git branch | grep -q gh-pages ; then \
