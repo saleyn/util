@@ -3,17 +3,6 @@
 %%%      recipients, using primary/backup SMTP servers.  Messages can
 %%%      contain attachments.
 %%%
-%%%      SNMP Options:
-%%%      -------------
-%%%      * Server - server to connect to (no MX lookup)
-%%%      * Relay  - domain to do MX lookup of list of servers
-%%%      * Port   - optional port number (ssl def: 465; tcp def: 25)
-%%%      * Auth   - controls mandatory / optional authentication
-%%%      * Tls    - controls enabling of TLS protocol
-%%%      * Domain - name of the domain to include in the HELO handshake
-%%%      * Timeout - timeout to use (default 10000)
-%%%      * Verbose - controls debugging printout
-%%%      * Attachments - list of files to attach
 %%% ```
 %%% Example:
 %%%     % Send a message to two recipients with a file attachment using
@@ -53,6 +42,9 @@
 
 -include_lib("kernel/include/inet.hrl").
 
+-type proto() :: tcp | ssl.
+%% Protocol type.
+
 -type smtp_options() :: [
           {server, Server::string()}
         | {relay, Relay::string()}
@@ -67,9 +59,19 @@
         | {attachments, [
              Filename::string() |
              {Filename::string(), ContentType::string()} |
-             {Filename::string(), ContentType::string(), Data::list()}
-           ]}
-        ].
+             {Filename::string(), ContentType::string(), Data::list()}]}].
+%% SNMP Options
+%%     <ul>
+%%      <li>Server - server to connect to (no MX lookup)</li>
+%%      <li>Relay  - domain to do MX lookup of list of servers</li>
+%%      <li>Port   - optional port number (ssl def: 465; tcp def: 25)</li>
+%%      <li>Auth   - controls mandatory / optional authentication</li>
+%%      <li>Tls    - controls enabling of TLS protocol</li>
+%%      <li>Domain - name of the domain to include in the HELO handshake</li>
+%%      <li>Timeout - timeout to use (default 10000)</li>
+%%      <li>Verbose - controls debugging printout</li>
+%%      <li>Attachments - list of files to attach</li>
+%%     </ul>
 
 %%-------------------------------------------------------------------------
 %% @doc Send a message to a list of `To' receipients using `localhost'.
@@ -77,7 +79,7 @@
 %%      Use inet:format_error/1 to decode the Reason if it is an atom.
 %% @end
 %%-------------------------------------------------------------------------
--spec send(Proto :: tcp | ssl, From :: string() | binary(),
+-spec send(Proto :: proto(), From :: string() | binary(),
             To :: string() | binary(), Subj :: string() | binary(),
             Msg :: string() | binary()) -> ok.
 send(Proto, From, To, Subject, Message) ->
@@ -90,7 +92,7 @@ send(Proto, From, To, Subject, Message) ->
 %%      Error is thrown if unable to send a message.
 %% @end
 %%-------------------------------------------------------------------------
--spec send(Proto :: tcp | ssl, From :: string() | binary(),
+-spec send(Proto :: proto(), From :: string() | binary(),
             To :: string() | binary(), Subj :: string() | binary(),
             Msg :: string() | binary(), Opts :: smtp_options()) -> ok.
 send(Proto, From, To, Subj, Msg, Opts)
