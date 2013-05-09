@@ -1,5 +1,7 @@
 # See LICENSE for licensing information.
 
+.PHONY: all all-fast clean clean-docs github-docs tar
+
 PROJECT := $(notdir $(PWD))
 TARBALL := $(PROJECT)
 
@@ -23,9 +25,13 @@ ebin/%.app: src/%.app.src $(wildcard src/*.erl)
 
 clean:
 	@$(REBAR) clean
+	@rm -fr ebin doc
 
-docs: all clean-docs
+docs: doc ebin clean-docs
 	@$(REBAR) doc skip_deps=true
+
+doc ebin:
+	mkdir -p $@
 
 clean-docs:
 	rm -f doc/*.{css,html,png} doc/edoc-info
@@ -38,10 +44,9 @@ github-docs:
 	fi
 	git checkout master src include Makefile rebar.*
 	make docs
-	make clean
-	rm -fr ebin src include Makefile erl_crash.dump rebar.* README*
 	mv doc/*.* .
-	rm -fr doc
+	make clean
+	rm -fr src include Makefile erl_crash.dump rebar.* README*
 	@FILES=`git st -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
 	for f in $$FILES ; do \
 		echo "Adding $$f"; git add $$f; \
