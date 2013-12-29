@@ -1,20 +1,40 @@
 #!/usr/bin/env escript
 %%! -smp disable
 
+%%-------------------------------------------------------------------
+%% This script creates a release file given a release template file.
+%% The template should be in the standard *.rel file format. All
+%% versions of applications will be replaced by current versions
+%% of the applications found in the installed Erlang distribution.
+%%
+%% Assuming that you need to build a boot file containing
+%% applications found in "./ebin" and "deps/*/ebin" directories, you
+%% can include the following make targets for building the boot file:
+%%
+%% ```
+%% EBIN_DEPS=ebin $(wildcard deps/*/ebin)
+%% LIB_ARGS=$(EBIN_DEPS:%=-pa %)
+%%
+%% priv/release.es:
+%%     curl -s https://raw.github.com/saleyn/util/master/bin/release.es | \
+%%     awk '/^%%!/ { print "%%! $(LIB_ARGS)" } !/^%%!/ {print}' > $@
+%%
+%% priv/myapp.rel: src/myapp.template.rel priv/release.es
+%%     escript priv/release.es $< $@
+%%
+%% priv/myapp.boot: priv/myapp.rel
+%%     erlc $(LIB_ARGS) -o $(@D) $<
+%%-------------------------------------------------------------------
+
 -include_lib("sasl/src/systools.hrl").
 
-%%-------------------------------------------------------------------
-%% @doc Create a release file given a release template file.
-%% @see create_release_file/3
-%% @end
-%%-------------------------------------------------------------------
 main([TemplateRelFile, OutRelFile]) ->
     create_release_file(TemplateRelFile, OutRelFile, undefined);
 main(_) ->
 	io:format("Usage: ~s TemplateRelFile OutRelFile\n\n"
 	          "    Example:\n"
-			  "        ~s drp.rel.src ./ebin/drp.rel\n",
-			  [escript:script_name(), escript:script_name()]),
+		  "        ~s drp.rel.src ./ebin/drp.rel\n",
+		  [escript:script_name(), escript:script_name()]),
 	halt(1).
 
 %%-------------------------------------------------------------------
