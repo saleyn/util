@@ -24,6 +24,7 @@
 %%
 %% priv/myapp.boot: priv/myapp.rel
 %%     erlc $(LIB_ARGS) -o $(@D) $<
+%% ```
 %%-------------------------------------------------------------------
 
 -include_lib("sasl/src/systools.hrl").
@@ -67,7 +68,7 @@ create_release_file(TemplateRelFile, OutRelFile, Vsn) ->
 		Rel = get_release(TemplateRelFile),
 		write_file(TemplateRelFile, OutRelFile, Rel, Vsn)
 	catch _:Error ->
-		io:format("Error: ~p\n", [Error]),
+		io:format("Error: ~p\n  ~p\n", [Error, erlang:get_stacktrace()]),
 		halt(1)
 	end.
 
