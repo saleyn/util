@@ -1,5 +1,5 @@
 #!/usr/bin/env escript
-%%! -smp disable
+%%! -pa ebin -pa deps/lager/ebin -pa deps/util/ebin -pa deps/goldrush/ebin
 
 %%-------------------------------------------------------------------
 %% This script creates a release file given a release template file.
@@ -67,12 +67,12 @@ create_release_file(TemplateRelFile, OutRelFile, Vsn) ->
     Template = create_file_link(TemplateRelFile),
 	try
 		Rel = get_release(Template),
-		write_file(Template, OutRelFi`le, Rel, Vsn)
+		write_file(Template, OutRelFile, Rel, Vsn)
 	catch _:Error ->
 		io:format("Error: ~p\n  ~p\n", [Error, erlang:get_stacktrace()]),
 		init:stop(1)
-    after ->
-        remove_file_link(Link)
+    after
+        remove_file_link(Template)
 	end.
 
 write_file(TemplateRelFile, OutRelFile, Rel, Vsn) ->
@@ -160,7 +160,7 @@ create_file_link(Filename) ->
               File
     end.
 
-delete_file_link(File) ->
+remove_file_link(File) ->
     case file:read_link(File) of
     {ok, File} ->
         file:delete(File);
