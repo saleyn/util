@@ -64,8 +64,9 @@ main(_) ->
 %% @end
 %%-------------------------------------------------------------------
 create_release_file(TemplateRelFile, OutRelFile, Vsn) ->
-    Template = create_file_link(TemplateRelFile),
+    Template = strip_ext(TemplateRelFile),
 	try
+        create_file_link(Template, TemplateRelFile),
 		Rel = get_release(Template),
 		write_file(Template, OutRelFile, Rel, Vsn)
 	catch _:Error ->
@@ -97,10 +98,7 @@ write_file(TemplateRelFile, OutRelFile, Rel, Vsn) ->
     end.
 
 get_release(Filename) ->
-    File = filename:basename(filename:basename(Filename, ".src"), ".rel"),
-    Exists = filelib:is_file(File),
-    Exists orelse ok =:= file:make_link(Filename, File) orelse
-        throw({cannot_create_link, File, Filename}),
+    File = filename:basename(Filename, ".rel"),
     Dir  = [filename:dirname(Filename) | code:get_path()],
     {ok, Release, _} = systools_make:read_release(File, Dir),
     case systools_make:get_release(File, Dir) of
@@ -152,18 +150,26 @@ format_list([{App,Vsn,Type} | Tail], Acc, {LN, LA} = Len) ->
     Str = lists:flatten(io_lib:format("    {~-*w, ~-*s, ~p},~n", [LN, App, LA+2, [$"]++Vsn++[$"], Type])),
     format_list(Tail, lists:reverse(Str) ++ Acc, Len).
 
-create_file_link(Filename) ->
+strip_ext(Filename) ->
     case filename:extension(Filename) of
-    ".rel" -> Filename;
-    ".src" -> File = filename:basename(Filename),
-              file:make_link(Filename, File),
-              File
+    ".rel" ->
+        Filename;
+    ".src" ->
+        filename:join(
+            filename:dirname(Filename),
+            filename:basename(Filename, ".src"))
+    end.
+
+create_file_link(Filename, Filename) ->
+    ok;
+create_file_link(File, Filename) ->
+    case file:read_link(File) of
+    {ok, _} -> ok;
+    _       -> [] = os:cmd("ln -s -r " ++ Filename ++ " " ++ File), ok
     end.
 
 remove_file_link(File) ->
     case file:read_link(File) of
-    {ok, File} ->
-        file:delete(File);
-    _ ->
-        ok
+    {ok, _} -> file:delete(File);
+    _       -> ok
     end.
