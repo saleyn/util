@@ -37,7 +37,7 @@ time_servers() ->
 %%-------------------------------------------------------------------------
 time_servers(Resolve) when is_boolean(Resolve) ->
     {ok, Bin} = file:read_file("/etc/ntp.conf"),
-    Res = re:run(Bin, <<"(?:^|\\n)[^#]\\s*server\\s+([a-zA-Z0-9\\.-]+)">>,
+    Res = re:run(Bin, <<"(?:^|\\n)[^#]\\s*erver\\s+([a-zA-Z0-9\\.-]+)">>,
             [{capture, [1], list}, global]),
     case Res of
     {match, Servers} ->
