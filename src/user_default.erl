@@ -32,7 +32,7 @@
 -module(user_default).
 -author('saleyn@gmail.com').
 
--export([help/0,dbgtc/1, dbgon/1, dbgon/2,
+-export([help/0, histexp/1, dbgtc/1, dbgon/1, dbgon/2,
          dbgadd/1, dbgadd/2, dbgdel/1, dbgdel/2, dbgoff/0,
          p/1, l/0, nl/0, mm/0, tc/2, tc/4]).
 
@@ -41,6 +41,7 @@
 help() ->
     shell_default:help(),
     format("** user extended commands **~n"),
+    format("histexp(File) -- export command history to a file\n"),
     format("dbgtc(File)   -- use dbg:trace_client() to read data from File\n"),
     format("dbgon(M)      -- enable dbg tracer on all funs in module M\n"),
     format("dbgon(M,Fun)  -- enable dbg tracer for module M and function F\n"),
@@ -181,6 +182,23 @@ find_module_file(Path) ->
         end
     end.
 
+histexp(File) ->
+    {ok, Io} = file:open(File, [write, read, delayed_write]),
+    GetHist = fun() ->
+        {links, [Shell|_]} = hd(process_info(self(), [links])),
+        Shell ! {shell_req, self(), get_cmd},
+        receive {shell_rep, Shell, R} -> R end
+    end,
+    Commands = lists:sort([{N,Cmd} || {{command, N}, Cmd} <- GetHist()]),
+    [case Trees of 
+     []     -> ok;
+     [T]    -> io:format(Io, "~s.\n", [erl_prettypr:format(T)]);
+     [T|Ts] -> io:format(Io, "~s~s.\n", [
+                erl_prettypr:format(T), [", "++erl_prettypr:format(Tree) || Tree <- Ts]
+               ])
+     end || {_N, Trees} <- Commands],
+    file:close(Io).
+    
 % Profiling functions inspired by Ulf Wiger post:
 % http://www.erlang.org/pipermail/erlang-questions/2007-August/028462.html
 
