@@ -197,7 +197,8 @@ saveh(File) ->
          [T|Ts] -> io:format(Io, "~s~s.\n", [
                     erl_prettypr:format(T), [", "++erl_prettypr:format(Tree) || Tree <- Ts]
                    ])
-         end || {_, Trees} <- Commands]
+         end || {_, Trees} <- Commands],
+        ok
     after 
         file:close(Io)
     end.
