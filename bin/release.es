@@ -1,5 +1,5 @@
 #!/usr/bin/env escript
-%%! -pa ebin -pa deps/lager/ebin -pa deps/util/ebin -pa deps/goldrush/ebin
+%%! -smp disable -env ERL_CRASH_DUMP /dev/null +sbtu +A0 -mode minimal -boot start_clean -pa ebin -pa deps/lager/ebin -pa deps/util/ebin -pa deps/goldrush/ebin
 
 %%-------------------------------------------------------------------
 %% This script creates a release file given a release template file.
