@@ -34,7 +34,7 @@ main([TemplateRelFile, OutRelFile]) ->
 main(_) ->
 	io:format("Usage: ~s TemplateRelFile OutRelFile\n\n"
 	          "    Example:\n"
-		  "        ~s drp.rel.src ./ebin/drp.rel\n",
+		  "        ~s myapp.rel.src ./ebin/myapp.rel\n",
 		  [escript:script_name(), escript:script_name()]),
 	halt(1).
 
@@ -59,7 +59,7 @@ main(_) ->
 %%      ``TemplateRelFile'' will be used.
 %% ```
 %% Example:
-%%   lama:create_release_file("drp.rel.src", "./ebin/drp.rel").
+%%   create_release_file("myapp.rel.src", "./ebin/myapp.rel").
 %% '''
 %% @end
 %%-------------------------------------------------------------------
