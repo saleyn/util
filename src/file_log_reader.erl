@@ -13,7 +13,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/3, start/3, stop/1]).
+-export([start_link/3, start/3, stop/1, position/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
@@ -73,6 +73,14 @@ start(File, Consumer, Options) when is_function(Consumer, 1) ->
     gen_server:start(?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
+%% @doc Report last processed file position/size.
+%% @end
+%%-----------------------------------------------------------------------------
+-spec position(pid()) -> {ok, Position::integer()}.
+position(Pid) when is_pid(Pid) ->
+    gen_server:call(Pid, position).
+
+%%-----------------------------------------------------------------------------
 %% @doc Stop the server.
 %% @end
 %%-----------------------------------------------------------------------------
@@ -126,6 +134,8 @@ init([File, Consumer, Options]) ->
     {noreply, #state{}, Timeout::integer() | hibernate} |
     {stop, Reason::any(), Reply::any(), #state{}} |
     {stop, Reason::any(), #state{}}.
+handle_call(position, _From, #state{offset = Offset} = State) ->
+    {reply, {ok,Offset}, State};
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
 
