@@ -34,6 +34,8 @@
     {pstate, any()}
 ].
 
+-export_type([consumer/0, options/0]).
+
 -record(state, {
       consumer      :: consumer()
     , tref          :: reference()
