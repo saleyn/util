@@ -35,19 +35,43 @@
 
 -define(MAX_READ_SIZE, 32*1024*1024).
 
--type consumer() :: fun((Msg::any(), State::any()) -> NewState::any()).
+-type consumer() :: fun((Msg :: '$end_of_file' | any(), State::any()) ->
+    NewState::any()).
 -type options()  :: [
     {pos,       StartPos::integer()} |
-    {end_pos,   ReadUntilPos::integer()} |
-    {max_size,  MaxReadSize::integer()} |
+    {end_pos,   ReadUntilPos::integer() | eof} |
+    {max_size,  MaxReadSize::integer()  | eof} |
     {timeout,   MSec::integer()} |
-    {parser, fun((binary(), ParserState::any()) ->
-                {more|done, Data::any(), Tail::binary(), NewParserState::any()} |
+    {parser, fun((Data::binary(), ParserState::any()) ->
+                {more|done, Msg::any(), Tail::binary(), NewParserState::any()} |
                 {skip, Tail::binary(), NewParserState::any()} |
                 false) |
              {Mod::atom(), Fun::atom()}} |
-    {pstate, any()}
-].
+    {pstate, any()}].
+%% Details:
+%% <dl>
+%% <dt>pos</dt>
+%%   <dd>Start reading from this position (default: 0)</dd>
+%% <dt>end_pos</dt>
+%%   <dd>Read until this position and stop. If provided and file position reaches
+%%       `end_pos', the consumer() callback given to the reader will be called as:
+%%       ``Consumer('$end_of_file', State)''
+%%   </dd>
+%% <dt>max_size</dt>
+%%   <dd>Maximum chunk size to read from file in a single pass (default: 32M).</dd>
+%% <dt>timeout</dt>
+%%   <dd>Number of milliseconds between successive file scanning (default: 1000)</dd>
+%% <dt>parser</dt>
+%%   <dd>Is the function to be called when the next chunk is read from file. The
+%%       function must return `{more, Msg, Tail, State}' if there is more data to
+%%       be parsed in the `Tail'; `{done, Msg, Tail, State}' if the `Tail' contains
+%%       incomplete message; `{skip, Tail, State}' to continue parsing `Tail'
+%%       without calling `Consumer' callback on the last parsed message; `false' if
+%%       the `Data' should be ignored without calling `Consumer' callback.
+%%   </dd>
+%% <dt>pstate</dt>
+%%   <dd>Initial value of the parser state.</dd>
+%% </dl>
 
 -export_type([consumer/0, options/0]).
 
@@ -56,7 +80,7 @@
     , tref          :: reference()
     , fd            :: port()
     , pos = 0       :: integer() | eof
-    , end_pos       :: integer() | undefined  % Read until this pos (not inclusive)
+    , end_pos       :: integer() | eof | undefined  % Read until this pos (inclusive)
     , max_size      :: integer()
     , timeout       :: integer()
     , chunk  = <<>> :: binary()
@@ -131,17 +155,22 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
     % If Parser is defined it can be {M,F} or fun/2. That function fill be
     % called on each incoming packet:
     %   M:F(Packet, ParserState) -> {Data, Pos, NewParserState}
-    Pos     = proplists:get_value(pos,      Options, 0),
-    EndPos  = proplists:get_value(end_pos,  Options),
+    {ok,FD} = file:open(File, [read,raw,binary,read_ahead]),
+    {ok,End}= file:position(FD, eof),
+    Offset  = case proplists:get_value(pos, Options, 0) of
+              N when is_integer(N) -> N;
+              eof                  -> End;
+              Other1               -> throw({invalid_option, {pos, Other1}})
+              end,
+    EndPos  = case proplists:get_value(end_pos,  Options) of
+              M when is_integer(M) -> M;
+              eof                  -> End;
+              undefined            -> undefined;
+              Other2               -> throw({invalid_option, {end_pos, Other2}})
+              end,
     MaxSize = proplists:get_value(max_size, Options, ?MAX_READ_SIZE),
     Parser  = proplists:get_value(parser,   Options),
     PState  = proplists:get_value(pstate,   Options),
-    {ok,FD} = file:open(File, [read,raw,binary,read_ahead]),
-    Offset  = if
-                  is_integer(Pos) -> Pos;
-                  is_atom(Pos)    -> {ok,N}=file:position(FD, Pos), N;
-                  true            -> throw({invalid_option, {pos, Pos}})
-              end,
     State   = #state{consumer=Consumer, fd=FD, parser=Parser, pstate=PState,
                      pos=Offset, end_pos=EndPos, max_size=MaxSize},
     {ok, State}.
@@ -153,18 +182,26 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
 -spec run(#state{}) -> #state{}.
 run(#state{fd=FD, pos=Pos, end_pos=EndPos} = S) ->
     case file:position(FD, eof) of
-    {ok, Pos} ->
-        S;
-    {ok, N} ->
-        End = if is_integer(EndPos) -> min(N, EndPos-1); true -> N end,
+    {ok, N} when N =/= Pos ->
+        End = if is_integer(EndPos) -> min(N, EndPos); true -> N end,
         %% Did we reach the end?
         case min(End - Pos, S#state.max_size) of
         Size when Size > 0 ->
             {ok, Data} = file:pread(FD, Pos, Size),
             process_chunk(Data, Size, S);
+        _ when is_integer(EndPos), Pos >= EndPos ->
+            % Reached the requested and of input - notify consumer:
+            PS1 = (S#state.consumer)('$end_of_file', S#state.pstate),
+            S#state{pstate = PS1};
         _ ->
             S
-        end
+        end;
+    {ok, Pos} when is_integer(EndPos), Pos >= EndPos ->
+        % Reached the requested and of input - notify consumer:
+        PS1 = (S#state.consumer)('$end_of_file', S#state.pstate),
+        S#state{pstate = PS1};
+    {ok, Pos} ->
+        S
     end.
 
 %%-----------------------------------------------------------------------------
@@ -365,6 +402,14 @@ wait(I) ->
         timeout
     end.
 
+consume('$end_of_file', PState) when is_integer(PState) ->
+    put(count_end, get(count_end)+1),
+    PState;
+consume(Msg, PState) when is_integer(PState) ->
+    Bin = <<"abc", (integer_to_binary(PState))/binary>>,
+    ?assertEqual(Msg, Bin),
+    PState-1.
+
 sync_read_file_test() ->
     File  = "/tmp/test-file-reader.log",
     Self  = self(),
@@ -392,19 +437,16 @@ sync_read_file_test() ->
 
     %% Consume data
 
-    Prsr    = fun(Bin, PState) ->
+    Prsr = fun(Bin, PState) ->
         [Msg, Tail] = binary:split(Bin, <<"\n">>),
         {more, Msg, Tail, PState}
     end,
-    Consume = fun(Msg, PState) ->
-        Bin = <<"abc", (integer_to_binary(PState))/binary>>,
-        ?assertEqual(Msg, Bin),
-        PState-1
-    end,
+
+    put(count_end, 0),
 
     %% (1) Initialize file reader
     (fun() ->
-        {ok, State} = init(File, Consume, [{parser, Prsr}, {pstate, N}]),
+        {ok, State} = init(File, fun consume/2, [{parser, Prsr}, {pstate, N}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(0, State1#state.pstate),
@@ -414,7 +456,7 @@ sync_read_file_test() ->
 
     %% (2) Now test reading from the end of file
     (fun() ->
-        {ok, State} = init(File, Consume, [{pos, eof}, {parser, Prsr}, {pstate, N}]),
+        {ok, State} = init(File, fun consume/2, [{pos, eof}, {parser, Prsr}, {pstate, N}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(10, State1#state.pstate),
@@ -424,7 +466,7 @@ sync_read_file_test() ->
 
     %% (3) Now test reading from the 6th position
     (fun() ->
-        {ok, State} = init(File, Consume, [{pos, 6}, {parser, Prsr}, {pstate, N-1}]),
+        {ok, State} = init(File, fun consume/2, [{pos, 6}, {parser, Prsr}, {pstate, N-1}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(0, State1#state.pstate),
@@ -432,9 +474,9 @@ sync_read_file_test() ->
         close(State1)
     end)(),
 
-    %% (3) Now test reading only 11 bytes: <<"abc10\nabc9\n">>
+    %% (4) Now test reading only 11 bytes: <<"abc10\nabc9\n">>
     (fun() ->
-        {ok, State} = init(File, Consume, [{end_pos, 12}, {parser, Prsr}, {pstate, N}]),
+        {ok, State} = init(File, fun consume/2, [{end_pos, 11}, {parser, Prsr}, {pstate, N}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(8, State1#state.pstate),
@@ -442,6 +484,23 @@ sync_read_file_test() ->
         close(State1)
     end)(),
 
+    ?assertEqual(1, get(count_end)),
+
+    %% (5) Now test reading from the end of file till the end of file
+    (fun() ->
+        {ok, State} = init(File, fun consume/2, [{pos, eof}, {end_pos, eof}, {parser, Prsr}, {pstate, N}]),
+        %% Execute file reader synchronously
+        State1 = run(State),
+        ?assertEqual(51, State1#state.pos),
+        ?assertEqual(51, State1#state.end_pos),
+        ?assertEqual(N,  State1#state.pstate),
+        %% Close file reader
+        close(State1)
+    end)(),
+
+    ?assertEqual(2, get(count_end)),
+
+    erase(count_end),
     file:delete(File).
        
 -endif.
