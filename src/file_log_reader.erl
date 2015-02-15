@@ -13,7 +13,8 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/3, start/3, stop/1, position/1]).
+-export([start_link/3,  start/3, stop/1, position/1]).
+-export([init/3, run/1, close/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
@@ -41,9 +42,9 @@
       consumer      :: consumer()
     , tref          :: reference()
     , fd            :: port()
-    , offset        :: integer()
+    , offset = 0    :: integer()
     , timeout       :: integer()
-    , chunk = <<>>  :: binary()
+    , chunk  = <<>> :: binary()
     , parser        :: {atom(), atom()} |
                        fun((binary(), any()) -> {any(), binary(), any()})
     , pstate        :: any()
@@ -79,17 +80,58 @@ start(File, Consumer, Options) when is_function(Consumer, 1) ->
 %% @doc Report last processed file position/size.
 %% @end
 %%-----------------------------------------------------------------------------
--spec position(pid()) -> {ok, Position::integer()}.
-position(Pid) when is_pid(Pid) ->
+-spec position(pid() | atom()) -> {ok, Position::integer()}.
+position(Pid) ->
     gen_server:call(Pid, position).
 
 %%-----------------------------------------------------------------------------
 %% @doc Stop the server.
 %% @end
 %%-----------------------------------------------------------------------------
--spec stop(pid()) -> ok.
-stop(Pid) when is_pid(Pid) ->
+-spec stop(pid() | atom()) -> ok.
+stop(Pid) ->
     gen_server:call(Pid, stop).
+
+%%-----------------------------------------------------------------------------
+%% @doc When using file processor without gen_server, use this function to
+%%      initialize the state, and then call run/1.
+%% @end
+%%-----------------------------------------------------------------------------
+-spec init(string(), consumer(), options()) -> {ok, #state{}}.
+init(File, Consumer, Options) when is_list(File), is_list(Options) ->
+    % If Parser is defined it can be {M,F} or fun/2. That function fill be
+    % called on each incoming packet:
+    %   M:F(Packet, ParserState) -> {Data, Offset, NewParserState}
+    Parser  = proplists:get_value(parser, Options),
+    PState  = proplists:get_value(pstate, Options),
+    {ok,FD} = file:open(File, [read,raw,binary,read_ahead]),
+    maybe_register(proplists:get_value(register, Options)),
+
+    {ok, #state{consumer=Consumer, fd=FD, parser=Parser, pstate=PState}}.
+
+%%-----------------------------------------------------------------------------
+%% @doc Process file from `Offset' to eof.
+%% @end
+%%-----------------------------------------------------------------------------
+-spec run(#state{}) -> #state{}.
+run(#state{fd=FD, offset=Offset} = S) ->
+    case file:position(FD, eof) of
+    {ok, Offset} ->
+        S;
+    {ok, Pos} when Pos > Offset ->
+        Size = Pos - Offset,
+        {ok, Data} = file:pread(FD, Offset, Size),
+        process_chunk(Data, Size, S)
+    end.
+
+
+%%-----------------------------------------------------------------------------
+%% @doc Close file processor (use this method when not using gen_server)
+%% @end
+%%-----------------------------------------------------------------------------
+close(#state{fd=FD} = State) ->
+    file:close(FD),
+    State#state{fd=undefined}.
 
 %%%----------------------------------------------------------------------------
 %%% Callback functions from gen_server
@@ -97,8 +139,6 @@ stop(Pid) when is_pid(Pid) ->
 
 %%-----------------------------------------------------------------------------
 %% @private
-%% @spec (Args) -> {ok, State} | {ok, State, Timeout} |
-%%                 ignore | {stop, Reason}
 %% @doc Initiates the server
 %% @end
 %%-----------------------------------------------------------------------------
@@ -106,23 +146,12 @@ stop(Pid) when is_pid(Pid) ->
     {ok, #state{}} |
     {ok, #state{}, Timeout :: integer() | hibernate} | ignore | {stop, any()}.
 init([File, Consumer, Options]) ->
-    %process_flag(trap_exit, true),
     try
-        % If Parser is defined it can be {M,F} or fun/2. That function fill be
-        % called on each incoming packet:
-        %   M:F(Packet, ParserState) -> {Data, Offset, NewParserState}
-        Timeout = proplists:get_value(timeout,Options, 1000),
-        Parser  = proplists:get_value(parser, Options),
-        PState  = proplists:get_value(pstate, Options),
-        %Symbols = [atom_to_binary(S, latin1)
-        %            || S <- proplists:get_value(symbols, Options, [])],
-        %Symbols =:= [] andalso throw({undefined_required_option, symbols}),
-        {ok,FD} = file:open(File, [read,raw,binary,read_ahead]),
-        TRef    = erlang:send_after(Timeout, self(), check_md_files_timer),
-        maybe_register(proplists:get_value(register, Options)),
+        {ok, State} = init(File, Consumer, Options),
+        Timeout     = proplists:get_value(timeout,Options, 1000),
+        TRef        = erlang:send_after(Timeout, self(), check_md_files_timer),
 
-        {ok, #state{consumer=Consumer, tref=TRef, fd=FD,
-                    offset=0, parser=Parser, pstate=PState, timeout=Timeout}}
+        {ok, State#state{tref=TRef, timeout=Timeout}}
     catch _:What ->
         {stop, What}
     end.
@@ -167,7 +196,7 @@ handle_cast(Msg, State) ->
     {noreply, #state{}} | {noreply, #state{}, Timeout::integer() | hibernate} |
     {stop, Reason::any(), #state{}}.
 handle_info(check_md_files_timer, #state{timeout=Timeout} = State) ->
-    State1 = process_file(State),
+    State1 = run(State),
     TRef   = erlang:send_after(Timeout, self(), check_md_files_timer),
     {noreply, State1#state{tref=TRef}};
 handle_info(_Info, State) ->
@@ -198,22 +227,12 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%----------------------------------------------------------------------------
 
-process_file(#state{fd=FD, offset=Offset} = S) ->
-    case file:position(FD, eof) of
-    {ok, Offset} ->
-        S;
-    {ok, Pos} when Pos > Offset ->
-        Size = Pos - Offset,
-        {ok, Data} = file:pread(FD, Offset, Size),
-        process_chunk(Data, Size, S)
-    end.
-
 process_chunk(Data, Size, #state{offset=Offset, parser=P, chunk=C, pstate=PS} = S) ->
     case parse(P, join(C, Data), PS) of
     {more, Msg, <<>>, PS1} ->
         (S#state.consumer)(Msg),
         N = byte_size(Data),
-        process_file(S#state{offset=Offset + N, pstate=PS1});
+        run(S#state{offset=Offset + N, pstate=PS1});
     {more, Msg, Tail, PS1} ->
         (S#state.consumer)(Msg),
         N = byte_size(Data) - byte_size(Tail),
@@ -221,7 +240,7 @@ process_chunk(Data, Size, #state{offset=Offset, parser=P, chunk=C, pstate=PS} = 
     {done, Msg, Tail, PS1} ->
         (S#state.consumer)(Msg),
         N = byte_size(Data) - byte_size(Tail),
-        process_file(S#state{offset=Offset + N, pstate=PS1});
+        run(S#state{offset=Offset + N, pstate=PS1});
     {skip, Tail, PS1} ->
         N = byte_size(Data) - byte_size(Tail),
         process_chunk(Tail, Size, S#state{offset=Offset + N, pstate=PS1});
