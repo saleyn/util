@@ -25,6 +25,7 @@
 
 -type consumer() :: fun((Msg::any()) -> ok).
 -type options()  :: [
+    {register,   atom()} |
     {timeout, integer()} |
     {parser, fun((binary(), ParserState::any()) ->
                 {more|done, Data::any(), Tail::binary(), NewParserState::any()} |
@@ -118,6 +119,8 @@ init([File, Consumer, Options]) ->
         %Symbols =:= [] andalso throw({undefined_required_option, symbols}),
         {ok,FD} = file:open(File, [read,raw,binary,read_ahead]),
         TRef    = erlang:send_after(Timeout, self(), check_md_files_timer),
+        maybe_register(proplists:get_value(register, Options)),
+
         {ok, #state{consumer=Consumer, tref=TRef, fd=FD,
                     offset=0, parser=Parser, pstate=PState, timeout=Timeout}}
     catch _:What ->
@@ -233,8 +236,11 @@ parse(Fun, Data, State) when is_function(Fun, 2) ->
 parse(undefined, Data, State) ->
     {done, Data, <<>>, State}.
 
-join(<<>>, Bin) -> Bin;
-join(Head, Bin) -> <<Head/binary, Bin/binary>>.
+join(<<>>, Bin)             -> Bin;
+join(Head, Bin)             -> <<Head/binary, Bin/binary>>.
+
+maybe_register(undefined)   -> ok;
+maybe_register(Name)        -> register(Name, self()).
 
 %%%----------------------------------------------------------------------------
 %%% Test functions
