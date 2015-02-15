@@ -1,7 +1,16 @@
 %%% vim:ts=4:sw=4:et
 %%%----------------------------------------------------------------------------
-%%% @doc Periodically read a constantly growing file and parse newly added data
-%%% @author Serge Aleynikov <saleyn@gmail.com>
+%%% @doc Periodically read an append-only log file and parse newly added data.
+%%%
+%%% The user controls the interval in msec how often to check for file
+%%% modifications. When new data is appended to file it triggers invocation of
+%%% the user-defined parsing function that deliminates the file, and the result
+%%% is delivered to the consumer by calling the consumer callback function.
+%%%
+%%% The log reader can be started as a `gen_server' or can be controlled
+%%% synchronously by using `init/3', `run/1', and `close/1' methods.
+%%%
+%%% @author    Serge Aleynikov <saleyn@gmail.com>
 %%% @copyright 2015 Serge Aleynikov
 %%% @end
 %%%----------------------------------------------------------------------------
@@ -13,7 +22,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/3,  start/3, stop/1, position/1]).
+-export([start_link/3, start_link/4, start/3, start/4, stop/1, position/1]).
 -export([init/3, run/1, close/1]).
 
 %% gen_server callbacks
@@ -24,10 +33,9 @@
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
--type consumer() :: fun((Msg::any()) -> ok).
+-type consumer() :: fun((Msg::any(), State::any()) -> NewState::any()).
 -type options()  :: [
-    {register,   atom()} |
-    {timeout, integer()} |
+    {timeout, MSec::integer()} |
     {parser, fun((binary(), ParserState::any()) ->
                 {more|done, Data::any(), Tail::binary(), NewParserState::any()} |
                 {skip, Tail::binary(), NewParserState::any()} |
@@ -62,18 +70,32 @@
 %%      respectively.
 %% @end
 %%-----------------------------------------------------------------------------
+-spec start_link(atom(), string(), consumer(), options()) ->
+    {ok, pid()} | ignore | {error, any()}.
+start_link(RegName, File, Consumer, Options)
+    when is_atom(RegName), is_list(File), is_function(Consumer,2), is_list(Options) ->
+    gen_server:start_link({local, RegName}, ?MODULE, [File, Consumer, Options], []).
+
 -spec start_link(string(), consumer(), options()) ->
     {ok, pid()} | ignore | {error, any()}.
-start_link(File, Consumer, Options) when is_function(Consumer, 1) ->
+start_link(File, Consumer, Options)
+    when is_list(File), is_function(Consumer,2), is_list(Options) ->
     gen_server:start_link(?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
 %% @doc Start the server outside of supervision tree.
 %% @end
 %%-----------------------------------------------------------------------------
+-spec start(atom(), string(), consumer(), options()) ->
+    {ok, pid()} | {error, any()}.
+start(RegName, File, Consumer, Options)
+    when is_atom(RegName), is_list(File), is_function(Consumer,2), is_list(Options) ->
+    gen_server:start({local, RegName}, ?MODULE, [File, Consumer, Options], []).
+
 -spec start(string(), consumer(), options()) ->
     {ok, pid()} | {error, any()}.
-start(File, Consumer, Options) when is_function(Consumer, 1) ->
+start(File, Consumer, Options)
+    when is_list(File), is_function(Consumer,2), is_list(Options) ->
     gen_server:start(?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
@@ -105,8 +127,6 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
     Parser  = proplists:get_value(parser, Options),
     PState  = proplists:get_value(pstate, Options),
     {ok,FD} = file:open(File, [read,raw,binary,read_ahead]),
-    maybe_register(proplists:get_value(register, Options)),
-
     {ok, #state{consumer=Consumer, fd=FD, parser=Parser, pstate=PState}}.
 
 %%-----------------------------------------------------------------------------
@@ -123,7 +143,6 @@ run(#state{fd=FD, offset=Offset} = S) ->
         {ok, Data} = file:pread(FD, Offset, Size),
         process_chunk(Data, Size, S)
     end.
-
 
 %%-----------------------------------------------------------------------------
 %% @doc Close file processor (use this method when not using gen_server)
@@ -230,17 +249,17 @@ code_change(_OldVsn, State, _Extra) ->
 process_chunk(Data, Size, #state{offset=Offset, parser=P, chunk=C, pstate=PS} = S) ->
     case parse(P, join(C, Data), PS) of
     {more, Msg, <<>>, PS1} ->
-        (S#state.consumer)(Msg),
+        PS2 = (S#state.consumer)(Msg, PS1),
         N = byte_size(Data),
-        run(S#state{offset=Offset + N, pstate=PS1});
+        run(S#state{offset=Offset + N, pstate=PS2});
     {more, Msg, Tail, PS1} ->
-        (S#state.consumer)(Msg),
+        PS2 = (S#state.consumer)(Msg, PS1),
         N = byte_size(Data) - byte_size(Tail),
-        process_chunk(Tail, Size, S#state{offset=Offset + N, pstate=PS1});
+        process_chunk(Tail, Size, S#state{offset=Offset + N, pstate=PS2});
     {done, Msg, Tail, PS1} ->
-        (S#state.consumer)(Msg),
+        PS2 = (S#state.consumer)(Msg, PS1),
         N = byte_size(Data) - byte_size(Tail),
-        run(S#state{offset=Offset + N, pstate=PS1});
+        run(S#state{offset=Offset + N, pstate=PS2});
     {skip, Tail, PS1} ->
         N = byte_size(Data) - byte_size(Tail),
         process_chunk(Tail, Size, S#state{offset=Offset + N, pstate=PS1});
@@ -255,11 +274,8 @@ parse(Fun, Data, State) when is_function(Fun, 2) ->
 parse(undefined, Data, State) ->
     {done, Data, <<>>, State}.
 
-join(<<>>, Bin)             -> Bin;
-join(Head, Bin)             -> <<Head/binary, Bin/binary>>.
-
-maybe_register(undefined)   -> ok;
-maybe_register(Name)        -> register(Name, self()).
+join(<<>>, Bin) -> Bin;
+join(Head, Bin) -> <<Head/binary, Bin/binary>>.
 
 %%%----------------------------------------------------------------------------
 %%% Test functions
@@ -267,7 +283,7 @@ maybe_register(Name)        -> register(Name, self()).
 
 -ifdef(EUNIT).
 
-read_file_test() ->
+async_read_file_test() ->
     File  = "/tmp/test-file-reader.log",
     Self  = self(),
     N     = 10,
@@ -300,8 +316,8 @@ read_file_test() ->
         {more, Msg, Tail, State}
     end,
     Opts      = [{timeout, 100}, {parser, Prsr}],
-    OnMsg     = fun(Msg) -> User ! Msg end,
-    {ok, Pid} = start_link(File, OnMsg, Opts),
+    Consume   = fun(Msg, State) -> User ! Msg, State end,
+    {ok, Pid} = start_link(File, Consume, Opts),
 
     ?assertEqual(done, receive done -> done after 1000 -> timeout end),
     ?assertEqual(ok, stop(Pid)),
@@ -319,7 +335,53 @@ wait(I) ->
     after 1000 ->
         timeout
     end.
-        
+
+sync_read_file_test() ->
+    File  = "/tmp/test-file-reader.log",
+    Self  = self(),
+    N     = 10,
+    file:delete(File),
+
+    %% Produce data
+    Loop  = fun
+        Writer(0,_F) -> ok;
+        Writer(I, F) ->
+            Bin = <<"abc", (integer_to_binary(I))/binary, $\n>>,
+            ok  = file:write(F, Bin),
+            Writer(I-1, F)
+    end,
+    spawn_link(fun() ->
+        Res  = file:open(File, [write,raw,binary]),
+        ?assertMatch({ok,_}, Res),
+        {ok, F} = Res,
+        Loop(N, F),
+        Self ! continue
+    end),
+
+    %% Wait until the file is ready
+    receive continue -> ok end,
+
+    %% Consume data
+
+    Prsr    = fun(Bin, PState) ->
+        [Msg, Tail] = binary:split(Bin, <<"\n">>),
+        {more, Msg, Tail, PState}
+    end,
+    Consume = fun(Msg, PState) ->
+        Bin = <<"abc", (integer_to_binary(PState))/binary>>,
+        ?assertEqual(Msg, Bin),
+        PState-1
+    end,
+    %% Initialize file reader
+    {ok, State} = init(File, Consume, [{parser, Prsr}, {pstate, N}]),
+    %% Execute file reader synchronously
+    State1 = run(State),
+    ?assertEqual(0, State1#state.pstate),
+    %% Close file reader
+    close(State1),
+
+    file:delete(File).
+       
 -endif.
 
 %%%.
