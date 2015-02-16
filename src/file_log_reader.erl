@@ -42,6 +42,7 @@
     {end_pos,   ReadUntilPos::integer() | eof} |
     {max_size,  MaxReadSize::integer()  | eof} |
     {timeout,   MSec::integer()} |
+    {retry_sec, Sec::integer()}  |
     {parser, fun((Data::binary(), ParserState::any()) ->
                 {more|done, Msg::any(), Tail::binary(), NewParserState::any()} |
                 {skip, Tail::binary(), NewParserState::any()} |
@@ -55,12 +56,18 @@
 %% <dt>end_pos</dt>
 %%   <dd>Read until this position and stop. If provided and file position reaches
 %%       `end_pos', the consumer() callback given to the reader will be called as:
-%%       ``Consumer({'$end_of_file', Reader::pid(), Offset::integer()}, State)''
+%%       ``Consumer({'$end_of_file', FD::pid(), Offset::integer()}, State)''. Use
+%%       `file:pid2name(FD)' to get the filename of the file.
 %%   </dd>
 %% <dt>max_size</dt>
 %%   <dd>Maximum chunk size to read from file in a single pass (default: 32M).</dd>
 %% <dt>timeout</dt>
 %%   <dd>Number of milliseconds between successive file scanning (default: 1000)</dd>
+%% <dt>retry_sec</dt>
+%%   <dd>Number of seconds between successive retries upon failure to open the
+%%       market data file passed to one of the `start*/{3,4}' functions (default: 15).
+%%       The value of 0 means that the file must exist or else the process won't
+%%       start.</dd>
 %% <dt>parser</dt>
 %%   <dd>Is the function to be called when the next chunk is read from file. The
 %%       function must return `{more, Msg, Tail, State}' if there is more data to
@@ -162,9 +169,11 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
     MaxSize = proplists:get_value(max_size, Options, ?MAX_READ_SIZE),
     Parser  = proplists:get_value(parser,   Options),
     PState  = proplists:get_value(pstate,   Options),
+    RetryS  = proplists:get_value(retry_sec,Options, 15),
+    Timeout = proplists:get_value(timeout,  Options, 1000),
     State   = #state{consumer=Consumer, parser=Parser, pstate=PState,
-                     pos=Offset, end_pos=EndPos, max_size=MaxSize},
-    try_open_file(1, 15, File, State).
+                     pos=Offset, end_pos=EndPos, max_size=MaxSize, timeout=Timeout},
+    try_open_file(1, RetryS, File, State).
 
 %%-----------------------------------------------------------------------------
 %% @doc Process file from given position `Pos' to `EndPos' (or `eof').
@@ -182,7 +191,7 @@ run(#state{fd=FD, pos=Pos, end_pos=EndPos} = S) ->
             process_chunk(Data, Size, S);
         _ when is_integer(EndPos), Pos >= EndPos ->
             % Reached the requested and of input - notify consumer:
-            PS1 = (S#state.consumer)({'$end_of_file', self(), CurEnd}, S#state.pstate),
+            PS1 = (S#state.consumer)({'$end_of_file', FD, CurEnd}, S#state.pstate),
             S#state{pstate = PS1};
         _ ->
             S
@@ -191,7 +200,7 @@ run(#state{fd=FD, pos=Pos, end_pos=EndPos} = S) ->
                       ((is_integer(EndPos) andalso Pos >= EndPos) orelse
                        (EndPos =:= eof)) ->
         % Reached the requested end of input - notify consumer:
-        PS1 = (S#state.consumer)({'$end_of_file', self(), CurEnd}, S#state.pstate),
+        PS1 = (S#state.consumer)({'$end_of_file', FD, CurEnd}, S#state.pstate),
         S#state{pstate = PS1};
     {ok, _CurEnd} ->
         S
@@ -219,11 +228,7 @@ close(#state{fd=FD} = State) ->
     {ok, #state{}, Timeout :: integer() | hibernate} | ignore | {stop, any()}.
 init([File, Consumer, Options]) ->
     try
-        {ok, State} = init(File, Consumer, Options),
-        Timeout     = proplists:get_value(timeout,Options, 1000),
-        TRef        = erlang:send_after(Timeout, self(), check_md_files_timer),
-
-        {ok, State#state{tref=TRef, timeout=Timeout}}
+        init(File, Consumer, Options)
     catch _:What ->
         {stop, What}
     end.
@@ -315,17 +320,26 @@ try_open_file(Attempt, RetrySec, File, #state{} = State) when is_list(File) ->
                       eof                  -> End;
                       Other1               -> throw({invalid_option, {pos, Other1}})
                    end,
-        {ok, State#state{fd=FD, pos=Pos}};
-    {error, Reason} when Attempt =:= 1 ->
-        lager:warning("Failed to open file ~s (will retry in ~ws): ~p",
-            [File, RetrySec, Reason]),
+        case Attempt of
+        1 -> ok;
+        _ -> error_logger:info_msg
+                ("~w: file ~s was opened successfully\n", [?MODULE, File])
+        end,
+        TRef = erlang:send_after(State#state.timeout, self(), check_md_files_timer),
+        {ok, State#state{tref=TRef, fd=FD, pos=Pos}};
+    {error, Reason} when Attempt =:= 1, RetrySec > 0 ->
+        error_logger:warning_msg(
+            "~w: failed to open file ~s (will retry in ~ws): ~s",
+            [?MODULE, File, RetrySec, file:format_error(Reason)]),
         Msg = {open_file_timer, Attempt+1, RetrySec, File},
         erlang:send_after(RetrySec*1000, self(), Msg),
         {ok, State};
-    {error, _Reason} ->
+    {error, _Reason} when RetrySec > 0 ->
         Msg = {open_file_timer, Attempt+1, RetrySec, File},
         erlang:send_after(RetrySec*1000, self(), Msg),
-        {ok, State}
+        {ok, State};
+    {error, Reason} ->
+        throw({cannot_open_file, File, Reason})
     end.
 
 process_chunk(<<>>, _Size, S) ->
@@ -420,7 +434,7 @@ wait(I) ->
         timeout
     end.
 
-consume({'$end_of_file', _Reader, Pos}, PState) when is_integer(PState), is_integer(Pos) ->
+consume({'$end_of_file', _FD, Pos}, PState) when is_integer(PState), is_integer(Pos) ->
     put(count_end, get(count_end)+1),
     put(end_pos, Pos),
     PState;

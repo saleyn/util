@@ -5,7 +5,8 @@
 PROJECT := $(notdir $(PWD))
 TARBALL := $(PROJECT)
 
-REBAR   := rebar
+REBAR   := $(which rebar3 2> /dev/null)
+REBAR   := $(if $(REBAR),$(REBAR),rebar)
 
 empty   :=
 space   := $(empty) $(empty)
