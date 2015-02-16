@@ -152,16 +152,7 @@ stop(Pid) ->
 %%-----------------------------------------------------------------------------
 -spec init(string(), consumer(), options()) -> {ok, #state{}}.
 init(File, Consumer, Options) when is_list(File), is_list(Options) ->
-    % If Parser is defined it can be {M,F} or fun/2. That function fill be
-    % called on each incoming packet:
-    %   M:F(Packet, ParserState) -> {Data, Pos, NewParserState}
-    {ok,FD} = file:open(File, [read,raw,binary,read_ahead]),
-    {ok,End}= file:position(FD, eof),
-    Offset  = case proplists:get_value(pos, Options, 0) of
-              N when is_integer(N) -> N;
-              eof                  -> End;
-              Other1               -> throw({invalid_option, {pos, Other1}})
-              end,
+    Offset  = proplists:get_value(pos, Options, 0),
     EndPos  = case proplists:get_value(end_pos,  Options) of
               M when is_integer(M) -> M;
               eof                  -> eof;
@@ -171,9 +162,9 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
     MaxSize = proplists:get_value(max_size, Options, ?MAX_READ_SIZE),
     Parser  = proplists:get_value(parser,   Options),
     PState  = proplists:get_value(pstate,   Options),
-    State   = #state{consumer=Consumer, fd=FD, parser=Parser, pstate=PState,
+    State   = #state{consumer=Consumer, parser=Parser, pstate=PState,
                      pos=Offset, end_pos=EndPos, max_size=MaxSize},
-    {ok, State}.
+    try_open_file(1, 15, File, State).
 
 %%-----------------------------------------------------------------------------
 %% @doc Process file from given position `Pos' to `EndPos' (or `eof').
@@ -284,6 +275,9 @@ handle_info(check_md_files_timer, #state{end_pos=End} = State) ->
         Ref = erlang:send_after(State#state.timeout, self(), check_md_files_timer),
         {noreply, State1#state{tref=Ref}}
     end;
+handle_info({open_file_timer, Attempt, RetrySec, File}, State) ->
+    {ok, State1} = try_open_file(Attempt, RetrySec, File, State),
+    {noreply, State1};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -311,6 +305,28 @@ code_change(_OldVsn, State, _Extra) ->
 %%%----------------------------------------------------------------------------
 %%% Internal functions
 %%%----------------------------------------------------------------------------
+
+try_open_file(Attempt, RetrySec, File, #state{} = State) when is_list(File) ->
+    case file:open(File, [read,raw,binary,read_ahead]) of
+    {ok,FD} ->
+        {ok,End} = file:position(FD, eof),
+        Pos      = case State#state.pos of
+                      N when is_integer(N) -> N;
+                      eof                  -> End;
+                      Other1               -> throw({invalid_option, {pos, Other1}})
+                   end,
+        {ok, State#state{fd=FD, pos=Pos}};
+    {error, Reason} when Attempt =:= 1 ->
+        lager:warning("Failed to open file ~s (will retry in ~ws): ~p",
+            [File, RetrySec, Reason]),
+        Msg = {open_file_timer, Attempt+1, RetrySec, File},
+        erlang:send_after(RetrySec*1000, self(), Msg),
+        {ok, State};
+    {error, _Reason} ->
+        Msg = {open_file_timer, Attempt+1, RetrySec, File},
+        erlang:send_after(RetrySec*1000, self(), Msg),
+        {ok, State}
+    end.
 
 process_chunk(<<>>, _Size, S) ->
     run(S);
