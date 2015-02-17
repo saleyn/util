@@ -197,11 +197,11 @@ run(#state{fd=FD, pos=Pos, end_pos=EndPos} = S) ->
             S
         end;
     {ok, CurEnd} when % Pos >= CurEnd andalso
-                      ((is_integer(EndPos) andalso Pos >= EndPos) orelse
-                       (EndPos =:= eof)) ->
+                      (is_integer(EndPos) andalso Pos >= EndPos) orelse
+                      (EndPos =:= eof) ->
         % Reached the requested end of input - notify consumer:
         PS1 = (S#state.consumer)({'$end_of_file', FD, CurEnd}, S#state.pstate),
-        S#state{pstate = PS1};
+        S#state{pstate = PS1, end_pos=Pos};
     {ok, _CurEnd} ->
         S
     end.
@@ -272,13 +272,13 @@ handle_cast(Msg, State) ->
 -spec handle_info(any(), #state{}) ->
     {noreply, #state{}} | {noreply, #state{}, Timeout::integer() | hibernate} |
     {stop, Reason::any(), #state{}}.
-handle_info(check_md_files_timer, #state{end_pos=End} = State) ->
-    State1 = run(State),
-    if is_integer(End) andalso State1#state.pos >= End ->
-        {stop, normal, State1};
+handle_info(check_md_files_timer, State) ->
+    #state{pos=Pos, end_pos=End} = S = run(State),
+    if is_integer(End) andalso Pos >= End ->
+        {stop, normal, S};
     true ->
-        Ref = erlang:send_after(State#state.timeout, self(), check_md_files_timer),
-        {noreply, State1#state{tref=Ref}}
+        Ref = erlang:send_after(S#state.timeout, self(), check_md_files_timer),
+        {noreply, S#state{tref=Ref}}
     end;
 handle_info({open_file_timer, Attempt, RetrySec, File}, State) ->
     {ok, State1} = try_open_file(Attempt, RetrySec, File, State),
