@@ -31,25 +31,29 @@
          code_change/3]).
 
 -ifdef(TEST).
+-define(D(Fmt,Args), io:format(Fmt, Args)).
 -include_lib("eunit/include/eunit.hrl").
+-else.
+-define(D(Fmt,Args), ok).
 -endif.
 
 -define(MAX_READ_SIZE, 32*1024*1024).
 
--type consumer() :: fun((Msg :: {'$end_of_file', pid(), integer()} | any(), State::any()) ->
-    NewState::any()).
+-type consumer() ::
+    fun((Msg :: {'$end_of_file', string(), Res::any()} | any(),
+         Pos::integer(), State::any()) -> NewState::any()).
 -type options()  :: [
-    {pos,       StartPos::integer()} |
+    {pos,       StartPos::integer()}           |
     {end_pos,   ReadUntilPos::integer() | eof} |
     {max_size,  MaxReadSize::integer()  | eof} |
-    {timeout,   MSec::integer()} |
-    {retry_sec, Sec::integer()}  |
+    {timeout,   MSec::integer()}               |
+    {retry_sec, Sec::integer()}                |
     {parser, fun((Data::binary(), ParserState::any()) ->
                 {ok, Msg::any(), Tail::binary(), NewParserState::any()} |
                 {incomplete, NewParserState::any()} |
                 {skip, Tail::binary(), NewParserState::any()}) |
-             {Mod::atom(), Fun::atom()}} |
-    {pstate, any()}].
+             {Mod::atom(), Fun::atom()}}       |
+    {pstate, fun((File::string(), consumer(), Options::list()) -> any()) | any()}].
 %% Details:
 %% <dl>
 %% <dt>pos</dt>
@@ -57,9 +61,9 @@
 %% <dt>end_pos</dt>
 %%   <dd>Read until this position and stop. If provided and file position reaches
 %%       `end_pos', the consumer() callback given to the reader will be called as:
-%%       ``Consumer({'$end_of_file', FD::pid(), Pos::integer(), Result}, State)''
+%%       ``Consumer({'$end_of_file', Filename::string(), Result}, Pos::integer(), State)''
 %%       where `Result' is `ok' or `{error|exit|exception, Error::any(), StackTrace}'
-%%       if an error occured. Use `file:pid2name(FD)' to get the filename of the file.
+%%       if an error occured.
 %%   </dd>
 %% <dt>max_size</dt>
 %%   <dd>Maximum chunk size to read from file in a single pass (default: 32M).</dd>
@@ -85,7 +89,8 @@
 %%       </dl>
 %%   </dd>
 %% <dt>pstate</dt>
-%%   <dd>Initial value of the parser state.</dd>
+%%   <dd>Initial value of the parser state or a functor `fun((File::string()
+%%       Consumer::consumer(), Options::options()) -> PState::any())'</dd>
 %% </dl>
 
 -export_type([consumer/0, options/0]).
@@ -94,6 +99,7 @@
       consumer      :: consumer()
     , tref          :: reference()
     , fd            :: port()
+    , file          :: string()
     , pos = 0       :: integer() | eof
     , end_pos       :: integer() | eof | undefined  % Read until this pos (inclusive)
     , max_size      :: integer()
@@ -122,13 +128,13 @@
 -spec start_link(atom(), string(), consumer(), options()) ->
     {ok, pid()} | ignore | {error, any()}.
 start_link(RegName, File, Consumer, Options)
-    when is_atom(RegName), is_list(File), is_function(Consumer,2), is_list(Options) ->
+    when is_atom(RegName), is_list(File), is_function(Consumer,3), is_list(Options) ->
     gen_server:start_link({local, RegName}, ?MODULE, [File, Consumer, Options], []).
 
 -spec start_link(string(), consumer(), options()) ->
     {ok, pid()} | ignore | {error, any()}.
 start_link(File, Consumer, Options)
-    when is_list(File), is_function(Consumer,2), is_list(Options) ->
+    when is_list(File), is_function(Consumer,3), is_list(Options) ->
     gen_server:start_link(?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
@@ -138,13 +144,13 @@ start_link(File, Consumer, Options)
 -spec start(atom(), string(), consumer(), options()) ->
     {ok, pid()} | {error, any()}.
 start(RegName, File, Consumer, Options)
-    when is_atom(RegName), is_list(File), is_function(Consumer,2), is_list(Options) ->
+    when is_atom(RegName), is_list(File), is_function(Consumer,3), is_list(Options) ->
     gen_server:start({local, RegName}, ?MODULE, [File, Consumer, Options], []).
 
 -spec start(string(), consumer(), options()) ->
     {ok, pid()} | {error, any()}.
 start(File, Consumer, Options)
-    when is_list(File), is_function(Consumer,2), is_list(Options) ->
+    when is_list(File), is_function(Consumer,3), is_list(Options) ->
     gen_server:start(?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
@@ -178,41 +184,56 @@ stop(Pid) ->
 %%-----------------------------------------------------------------------------
 -spec init(string(), consumer(), options()) -> {ok, #state{}}.
 init(File, Consumer, Options) when is_list(File), is_list(Options) ->
-    Offset  = proplists:get_value(pos, Options, 0),
-    EndPos  = case proplists:get_value(end_pos,  Options) of
-              M when is_integer(M) -> M;
-              eof                  -> eof;
-              undefined            -> undefined;
-              Other2               -> throw({invalid_option, {end_pos, Other2}})
-              end,
-    MaxSize = proplists:get_value(max_size, Options, ?MAX_READ_SIZE),
-    Parser  = proplists:get_value(parser,   Options),
-    PState  = proplists:get_value(pstate,   Options),
-    RetryS  = proplists:get_value(retry_sec,Options, 15),
-    Timeout = proplists:get_value(timeout,  Options, 1000),
-    State   = #state{consumer=Consumer, parser=Parser, pstate=PState,
-                     pos=Offset, end_pos=EndPos, max_size=MaxSize,
-                     timeout=Timeout, incompl_count=0},
-    try_open_file(1, RetryS, File, State).
+    try
+        Offset  = proplists:get_value(pos, Options, 0),
+        EndPos  = case proplists:get_value(end_pos,  Options) of
+                  M when is_integer(M) -> M;
+                  eof                  -> eof;
+                  undefined            -> undefined;
+                  Other2               -> throw({invalid_option, {end_pos, Other2}})
+                  end,
+        MaxSize = proplists:get_value(max_size, Options, ?MAX_READ_SIZE),
+        Parser  = proplists:get_value(parser,   Options),
+        RetryS  = proplists:get_value(retry_sec,Options, 15),
+        Timeout = proplists:get_value(timeout,  Options, 1000),
+        State   = #state{file=File,  consumer=Consumer, parser=Parser,
+                         pos=Offset, end_pos=EndPos, max_size=MaxSize,
+                         timeout=Timeout, incompl_count=0},
+        {ok, S} = try_open_file(1, RetryS, File, State),
+        PState  = case proplists:get_value(pstate, Options) of
+                  F when is_function(F, 3) ->
+                      F(File, Consumer, Options);
+                  Other ->
+                      Other
+                  end,
+        {ok, S#state{pstate=PState}}
+    catch
+        throw:ignore ->
+            ignore;
+        T:E ->
+            {stop, {T, E, erlang:get_stacktrace()}}
+    end.
 
 %%-----------------------------------------------------------------------------
 %% @doc Process file from given position `Pos' to `EndPos' (or `eof').
 %% @end
 %%-----------------------------------------------------------------------------
 -spec run(#state{}) -> #state{}.
-run(#state{fd=FD, pos=Pos, end_pos=EndPos, max_size=MaxChunkSz} = S) ->
+run(#state{fd=FD, pos=Pos, end_pos=EndPos, max_size=MaxChunkSz, done=false} = S) ->
     MaxPos  = Pos+MaxChunkSz,
     NextPos = if is_integer(EndPos) -> min(MaxPos, EndPos); true -> MaxPos end,
     Size    = NextPos - Pos,
     if Size > 0 ->
         case file:pread(FD, Pos, Size) of
-        {ok, Data} ->
+        {ok, Data} when byte_size(Data) > S#state.part_size ->
             try
                 S1 = process_chunk(Data, S),
-                schedule_timer(S1)
+                run(S1)
             catch E:W ->
                 end_of_file({E, W, erlang:get_stacktrace()}, S)
             end;
+        {ok, _Data} ->
+            schedule_timer(S);
         eof when EndPos =:= eof ->
             % Reached the requested end of input - notify consumer:
             end_of_file(ok, S#state{end_pos=Pos});
@@ -223,10 +244,12 @@ run(#state{fd=FD, pos=Pos, end_pos=EndPos, max_size=MaxChunkSz} = S) ->
     true ->
         % Reached the requested end of input - notify consumer:
         end_of_file(ok, S#state{end_pos=Pos})
-    end.
+    end;
+run(#state{} = S) ->
+    S.
             
-end_of_file(Result, #state{pos=Pos, consumer=Callback, fd=FD, pstate=PState} = S) ->
-    PS1 = Callback({'$end_of_file', FD, Pos, Result}, PState),
+end_of_file(Result, #state{pos=Pos, consumer=Callback, file=F, pstate=PState} = S) ->
+    PS1 = Callback({'$end_of_file', F, Result}, Pos, PState),
     S#state{pstate = PS1, part_size=0, done=Result}.
 
 schedule_timer(#state{timeout=Timeout, fd=FD} = S) ->
@@ -305,7 +328,7 @@ handle_info({check_md_files_timer, _FD}, State) ->
     S = #state{done=Done} = run(State),
     case Done of
     false ->
-        {noreply, S};
+        {noreply, S, hibernate};
     ok ->
         {stop, normal, S};
     {E, Reason, Stacktrace} when E=:=error; E=:=exception; E=:=exit ->
@@ -379,19 +402,20 @@ process_chunk(Data, #state{part_size=N} = S) when N > 0, byte_size(Data) =< N ->
     %% previous processing iteration.  Current read attempt didn't read any more
     %% of new bytes, so do nothing and wait until there's more data available
     S#state{incompl_count=S#state.incompl_count+1};
-process_chunk(Data, #state{pos=Pos, parser=P, pstate=PS} = S) ->
+process_chunk(Data, #state{pos=Pos, consumer=OnMsg, parser=P, pstate=PS} = S) ->
     case parse(P, Data, PS) of
     {ok, Msg, <<>>, PS1} ->
         %% The Data was fully parsed, invoke the callback and try to see if
         %% more data was appended to the file
-        PS2 = (S#state.consumer)(Msg, PS1),
-        run(S#state{pos=Pos + byte_size(Data), pstate=PS2, part_size=0});
+        NPos = Pos + byte_size(Data),
+        PS2  = OnMsg(Msg, NPos, PS1),
+        run(S#state{pos=NPos, pstate=PS2, part_size=0});
     {ok, Msg, Tail, PS1} when is_binary(Tail) ->
         %% A chunk of Data up to the Tail was fully parsed, invoke the callback
         %% and continue parsing the Tail
-        PS2 = (S#state.consumer)(Msg, PS1),
-        N = byte_size(Data) - byte_size(Tail),
-        process_chunk(Tail, S#state{pos=Pos + N, pstate=PS2, part_size=0});
+        NPos = Pos + (byte_size(Data) - byte_size(Tail)),
+        PS2  = OnMsg(Msg, NPos, PS1),
+        process_chunk(Tail, S#state{pos=NPos, pstate=PS2, part_size=0});
     {incomplete, PS1} ->
         I = S#state.incompl_count,
         S#state{pstate=PS1, part_size=byte_size(Data), incompl_count=I+1};
@@ -400,12 +424,12 @@ process_chunk(Data, #state{pos=Pos, parser=P, pstate=PS} = S) ->
         process_chunk(Tail, S#state{pos=Pos + N, pstate=PS1, part_size=0})
     end.
 
-parse({M,F}, Data, State) ->
-    M:F(Data, State);
 parse(Fun, Data, State) when is_function(Fun, 2) ->
     Fun(Data, State);
+parse({M,F}, Data, State) ->
+    M:F(Data, State);
 parse(undefined, Data, State) ->
-    {done, Data, <<>>, State}.
+    {ok, Data, <<>>, State}.
 
 %%%----------------------------------------------------------------------------
 %%% Test functions
@@ -435,7 +459,7 @@ async_read_file_test() ->
         end
     end,
     Opts      = [{timeout, 10}, {parser, Prsr}, {pstate, 0}],
-    Consume   = fun(Msg, State) -> User ! Msg, State end,
+    Consume   = fun(Msg, _Pos, State) -> User ! Msg, State end,
     {ok, Pid} = start_link(File, Consume, Opts),
 
     ?assertEqual(done, receive done -> done after 1000 -> timeout end),
@@ -492,11 +516,11 @@ wait(I, End) ->
     %    timeout
     end.
 
-consume({'$end_of_file', _FD, Pos, ok}, PState) when is_integer(Pos), is_integer(PState) ->
+consume({'$end_of_file', _F, ok}, Pos, PState) when is_integer(Pos), is_integer(PState) ->
     put(count_end, get(count_end)+1),
     put(end_pos, Pos),
     PState;
-consume(Msg, PState) when is_binary(Msg), is_integer(PState) ->
+consume(Msg, _Pos, PState) when is_binary(Msg), is_integer(PState) ->
     Bin = <<"abc", (integer_to_binary(PState))/binary>>,
     ?assertEqual(Msg, Bin),
     PState-1.
@@ -519,7 +543,7 @@ sync_read_file_test() ->
 
     %% (1) Initialize file reader
     (fun() ->
-        {ok, State} = init(File, fun consume/2, [{parser, Prsr}, {pstate, N}]),
+        {ok, State} = init(File, fun consume/3, [{parser, Prsr}, {pstate, N}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(0, State1#state.pstate),
@@ -527,9 +551,11 @@ sync_read_file_test() ->
         close(State1)
     end)(),
 
+    ?assertEqual(0,  get(count_end)),
+
     %% (2) Now test reading from the end of file
     (fun() ->
-        {ok, State} = init(File, fun consume/2, [{pos, eof}, {parser, Prsr}, {pstate, N}]),
+        {ok, State} = init(File, fun consume/3, [{pos, eof}, {parser, Prsr}, {pstate, N}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(10, State1#state.pstate),
@@ -537,9 +563,11 @@ sync_read_file_test() ->
         close(State1)
     end)(),
 
+    ?assertEqual(0,  get(count_end)),
+
     %% (3) Now test reading from the 6th position
     (fun() ->
-        {ok, State} = init(File, fun consume/2, [{pos, 6}, {parser, Prsr}, {pstate, N-1}]),
+        {ok, State} = init(File, fun consume/3, [{pos, 6}, {parser, Prsr}, {pstate, N-1}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(0, State1#state.pstate),
@@ -547,9 +575,11 @@ sync_read_file_test() ->
         close(State1)
     end)(),
 
+    ?assertEqual(0,  get(count_end)),
+
     %% (4) Now test reading only 11 bytes: <<"abc10\nabc9\n">>
     (fun() ->
-        {ok, State} = init(File, fun consume/2, [{end_pos, 11}, {parser, Prsr}, {pstate, N}]),
+        {ok, State} = init(File, fun consume/3, [{end_pos, 11}, {parser, Prsr}, {pstate, N}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(8, State1#state.pstate),
@@ -562,7 +592,7 @@ sync_read_file_test() ->
 
     %% (5) Now test reading from the end of file till the end of file
     (fun() ->
-        {ok, State} = init(File, fun consume/2, [{pos, eof}, {end_pos, eof}, {parser, Prsr}, {pstate, N}]),
+        {ok, State} = init(File, fun consume/3, [{pos, eof}, {end_pos, eof}, {parser, Prsr}, {pstate, N}]),
         %% Execute file reader synchronously
         State1 = run(State),
         ?assertEqual(51, State1#state.pos),
