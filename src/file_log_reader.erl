@@ -206,13 +206,18 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
                   undefined            -> undefined;
                   Other2               -> throw({invalid_option, {end_pos, Other2}})
                   end,
-        MaxSize = proplists:get_value(max_size, Options, ?MAX_READ_SIZE),
-        Parser  = proplists:get_value(parser,   Options),
-        RetryS  = proplists:get_value(retry_sec,Options, 15),
-        Timeout = proplists:get_value(timeout,  Options, 1000),
+        MaxSize = proplists:get_value(max_size,     Options, ?MAX_READ_SIZE),
+        Parser  = proplists:get_value(parser,       Options),
+        RetryS  = proplists:get_value(retry_sec,    Options, 15),
+        Timeout = proplists:get_value(timeout,      Options, 1000),
+        PStUpd  = proplists:get_value(pstate_update,Options),
+
+        PStUpd =:= undefined orelse is_function(PStUpd,3)
+                  orelse throw({badarg, pstate_update}),
+
         State   = #state{file=File,  consumer=Consumer, parser=Parser,
                          pos=Offset, end_pos=EndPos, max_size=MaxSize,
-                         timeout=Timeout, incompl_count=0},
+                         timeout=Timeout, incompl_count=0, pstate_update=PStUpd},
         {ok, S} = try_open_file(1, RetryS, File, State),
         PState  = case proplists:get_value(pstate, Options) of
                   F when is_function(F, 3) ->
@@ -323,7 +328,7 @@ handle_call({update_pstate, Option, Value}, _From, #state{} = State) ->
             {reply, {error, Reason}, State}
         end;
     true ->
-        {error, pstate_update_not_implemented}
+        {reply, {error, pstate_update_not_implemented}, State}
     end;
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
