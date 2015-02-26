@@ -23,7 +23,7 @@
 
 %% API
 -export([start_link/3, start_link/4, start/3, start/4, stop/1,
-         position/1, pstate/1]).
+         position/1, pstate/1, update_pstate/3]).
 -export([init/3, run/1, close/1]).
 
 %% gen_server callbacks
@@ -53,7 +53,9 @@
                 {incomplete, NewParserState::any()} |
                 {skip, Tail::binary(), NewParserState::any()}) |
              {Mod::atom(), Fun::atom()}}       |
-    {pstate, fun((File::string(), consumer(), Options::list()) -> any()) | any()}].
+    {pstate, fun((File::string(), consumer(), Options::list()) -> any()) | any()} |
+    {pstate_update, fun((Option::atom(), Value::any(), PState::any()) ->
+                        {ok, NewPState::any()} | {error, any()})}].
 %% Details:
 %% <dl>
 %% <dt>pos</dt>
@@ -91,6 +93,9 @@
 %% <dt>pstate</dt>
 %%   <dd>Initial value of the parser state or a functor `fun((File::string()
 %%       Consumer::consumer(), Options::options()) -> PState::any())'</dd>
+%% <dt>pstate_update</dt>
+%%   <dd>Update function of the parser state.  Called when the user invokes
+%%       `update_pstate/3'</dd>
 %% </dl>
 
 -export_type([consumer/0, options/0]).
@@ -107,6 +112,7 @@
     , parser        :: {atom(), atom()} |
                        fun((binary(), any()) -> {any(), binary(), any()})
     , pstate        :: any()
+    , pstate_update :: fun((any()) -> any())
     , part_size = 0 :: integer()         % Sz of incomple unparsed chunk at eof
     , done = false  :: false | ok |      % Processing completion indicator
                        {error|exception|exit, Reason::any(), Stacktrace::any()}
@@ -168,6 +174,14 @@ position(Pid) ->
 -spec pstate(pid() | atom()) -> {ok, any()}.
 pstate(Pid) ->
     gen_server:call(Pid, pstate).
+
+%%-----------------------------------------------------------------------------
+%% @doc Update parser state.
+%% @end
+%%-----------------------------------------------------------------------------
+-spec update_pstate(pid(), Option::atom(), Value::any()) -> {ok, State::any()}.
+update_pstate(Pid, Option, Value) when is_atom(Option) ->
+    gen_server:call(Pid, {update_pstate, Option, Value}).
 
 %%-----------------------------------------------------------------------------
 %% @doc Stop the server.
@@ -299,6 +313,18 @@ handle_call(position, _From, #state{pos = Pos} = State) ->
     {reply, {ok, Pos}, State};
 handle_call(pstate, _From, #state{pstate = PState} = State) ->
     {reply, {ok, PState}, State};
+handle_call({update_pstate, Option, Value}, _From, #state{} = State) ->
+    #state{pstate_update=Fun, pstate=PState} = State,
+    if is_function(Fun, 3) ->
+        case Fun(Option, Value, PState) of
+        {ok, NewPState} ->
+            {reply, {ok, NewPState}, State#state{pstate=NewPState}};
+        {error, Reason} ->
+            {reply, {error, Reason}, State}
+        end;
+    true ->
+        {error, pstate_update_not_implemented}
+    end;
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
 
