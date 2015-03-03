@@ -40,7 +40,8 @@
 -define(MAX_READ_SIZE, 32*1024*1024).
 
 -type consumer() ::
-    fun((Msg :: {'$end_of_file', string(), Res::any()} | any(),
+    fun((Msg :: any() | {'$end_of_file', string(), Res ::
+                            ok | {error|throw|exit, Reason::any(), Stacktrace::list()}},
          Pos::integer(), State::any()) -> NewState::any()).
 -type options()  :: [
     {pos,       StartPos::integer()}           |
@@ -129,6 +130,7 @@
 %%      If init/1 returns `{stop,Reason}' or ignore, the process is
 %%      terminated and the function returns `{error,Reason}' or ignore,
 %%      respectively.
+%% @see start_link/3
 %% @end
 %%-----------------------------------------------------------------------------
 -spec start_link(atom(), string(), consumer(), options()) ->
@@ -137,6 +139,25 @@ start_link(RegName, File, Consumer, Options)
     when is_atom(RegName), is_list(File), is_function(Consumer,3), is_list(Options) ->
     gen_server:start_link({local, RegName}, ?MODULE, [File, Consumer, Options], []).
 
+%%-----------------------------------------------------------------------------
+%% @doc Process `File' by calling `Consumer' callback on every delimited
+%%      message. Message delimination is handled by the `{parser, Parser}'
+%%      option. `Consumer' function gets called iteratively with the following
+%%      arguments:
+%%      <dl>
+%%          <dt>(Msg, Pos::integer(), State)</dt>
+%%          <dd>`Msg' is what the parser function returned. `Pos' is current
+%%              file position following the `Msg'. `State' is current value
+%%              of parser state that is initialized by `{pstate, PState}'
+%%              option given to the `start_link/{3,4}' function</dd>
+%%          <dt>({'$end_of_file', Filename::string(), Result}, Pos::integer(), PState)</dt>
+%%          <dd>This call happens when end of file condition is reached (see
+%%              definition of `consumer()' type)</dd>
+%%      </dl>
+%%      `Consumer' can end processing normally without reaching the end
+%%      of file by throwing `{eof, PState}' exception.
+%% @end
+%%-----------------------------------------------------------------------------
 -spec start_link(string(), consumer(), options()) ->
     {ok, pid()} | ignore | {error, any()}.
 start_link(File, Consumer, Options)
@@ -248,8 +269,16 @@ run(#state{fd=FD, pos=Pos, end_pos=EndPos, max_size=MaxChunkSz, done=false} = S)
             try
                 S1 = process_chunk(Data, S),
                 run(S1)
-            catch E:W ->
-                end_of_file({E, W, erlang:get_stacktrace()}, S)
+            catch
+                %% This is a special case - the consumer callback may throw
+                %% an `eof' exception to force the normal end of processing:
+                throw:{eof, PState} when EndPos =:= eof ->
+                    end_of_file(ok, S#state{end_pos=Pos, pstate=PState});
+                throw:{eof, PState} ->
+                    end_of_file(ok, S#state{pstate=PState});
+                %% Some other error occured - abort:
+                E:W ->
+                    end_of_file({E, W, erlang:get_stacktrace()}, S)
             end;
         {ok, _Data} ->
             schedule_timer(S);
@@ -497,6 +526,53 @@ async_read_file_test() ->
     {ok, PState} = pstate(Pid),
     ?assertEqual(9,  PState),
     ?assertEqual(ok, stop(Pid)),
+    file:delete(File).
+
+premature_end_test() ->
+    %% This test illustrates how to abort parsing gracefully in the middle
+    %% of the input file processing.
+    File  = "/tmp/test-file-reader.log",
+    Self  = self(),
+    N     = 10,
+
+    %% Producer of data
+    begin_produce(File, N, false),
+
+    %% Consumer of data
+    User = spawn_link(fun() -> ?assertEqual(ok, wait(N, 6)), Self ! done end),
+
+    erase(eof_called),
+
+    Prsr = fun(Bin, PState) ->
+        [Msg, Tail] = binary:split(Bin, <<"\n">>),
+        {ok, Msg, Tail, PState+1}
+    end,
+    Opts      = [{timeout, 10}, {parser, Prsr}, {pstate, 0}],
+    Consume   = fun (<<"abc5">>, _Pos, State) ->
+                        %%?debugFmt("Msg <<abc5>> state ~w", [State]),
+                        ?assertEqual(6, State),
+                        throw({eof, State});
+                    ({'$end_of_file', _File, Reason}, _Pos, State) ->
+                        ?assertEqual(6,    State),
+                        ?assertEqual(File, _File),
+                        ?assertEqual(ok,  Reason),
+                        Self ! eof_called,
+                        State;
+                    (Msg, _Pos, State) ->
+                        %%?debugFmt("Msg ~p state ~w", [Msg, State]),
+                        User ! Msg,
+                        State
+                end,
+    {ok, Pid} = start_link(File, Consume, Opts),
+    monitor(process, Pid),
+
+    ?assertEqual(ok,
+         receive eof_called -> put(eof_called, true), ok after 1000 -> timeout end),
+    ?assertEqual(done, receive done -> done after 1000 -> timeout end),
+    ?assertEqual(ok,
+         receive {'DOWN', _Ref, process, Pid, normal} -> ok after 1000 -> timeout end),
+    ?assertEqual(true, get(eof_called)),
+    erase(eof_called),
     file:delete(File).
 
 begin_produce(File, N, Wait) ->
