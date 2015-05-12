@@ -21,6 +21,8 @@
 
 -behaviour(gen_server).
 
+%%% TODO: convert into behavior!!!
+
 %% API
 -export([start_link/3, start_link/4, start/3, start/4, stop/1,
          position/1, pstate/1, update_pstate/3]).
