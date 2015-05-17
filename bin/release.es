@@ -26,6 +26,7 @@
 %%     erlc $(LIB_ARGS) -o $(@D) $<
 %% ```
 %%-------------------------------------------------------------------
+-mode(compile).
 
 -include_lib("sasl/src/systools.hrl").
 
@@ -165,7 +166,14 @@ create_file_link(Filename, Filename) ->
 create_file_link(File, Filename) ->
     case file:read_link(File) of
     {ok, _} -> ok;
-    _       -> [] = os:cmd("ln -s -r " ++ Filename ++ " " ++ File), ok
+    _       ->
+        Cmd = "ln -s -r " ++ Filename ++ " " ++ File,
+        case os:cmd(Cmd) of
+        []  -> ok;
+        _   ->
+            %% Most likely can't created links on this filesystem
+            [] = os:cmd("cp " ++ Filename ++ " " ++ File)
+        end
     end.
 
 remove_file_link(File) ->
