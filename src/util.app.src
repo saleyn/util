@@ -1,6 +1,6 @@
 {application, util,
     [{description,"General utility modules"},
-     {vsn, git},
+     {vsn, "1.0"},
      {modules,[]},
      {registered,[]},
      {applications,[kernel,stdlib]},
