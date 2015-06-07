@@ -43,12 +43,12 @@ help() ->
     format("** user extended commands **~n"),
     format("saveh(File)   -- save command history to a file\n"),
     format("dbgtc(File)   -- use dbg:trace_client() to read data from File\n"),
-    format("dbgon(M)      -- enable dbg tracer on all funs in module M\n"),
+    format("dbgon(M)      -- enable dbg tracer on all funs in module(s) M :: atom()|[atom()]\n"),
     format("dbgon(M,Fun)  -- enable dbg tracer for module M and function F\n"),
     format("dbgon(M,File) -- enable dbg tracer for module M and log to File\n"),
-    format("dbgadd(M)     -- enable call tracer for module M\n"),
+    format("dbgadd(M)     -- enable call tracer for module(s) M :: atom()|[atom()]\n"),
     format("dbgadd(M,F)   -- enable call tracer for function M:F\n"),
-    format("dbgdel(M)     -- disable call tracer for module M\n"),
+    format("dbgdel(M)     -- disable call tracer for module(s) M :: atom()|[atom()]\n"),
     format("dbgdel(M,F)   -- disable call tracer for function M:F\n"),
     format("dbgoff()      -- disable dbg tracer (calls dbg:stop/0)\n"),
     format("p(Term)       -- print term using io:format(\"~s\\n\", [Term])\n", ["~p"]),
@@ -68,12 +68,11 @@ dbgtc(File) ->
             (A,B)                                -> io:format("~w: ~w~n", [A,B]) end,
    dbg:trace_client(file, File, {Fun, []}).
 
-dbgon(Module) ->
+dbgon(Modules) when is_atom(Modules); is_list(Modules) ->
    case dbg:tracer() of
    {ok,_} ->
       dbg:p(all,call),
-      dbg:tpl(Module, [{'_',[],[{return_trace}]}]),
-      ok;
+      dbgadd(Modules);
    Else ->
       Else
    end.
@@ -87,19 +86,22 @@ dbgon(Module, Fun) when is_atom(Fun) ->
 dbgon(Module, File) when is_list(File) ->
    {ok,_} = dbg:tracer(file, dbg:trace_port(file, File)),
    dbg:p(all,call),
-   dbg:tpl(Module, [{'_',[],[{return_trace}]}]),
-   ok.
+   dbgadd(Module).
 
-dbgadd(Module) ->
-   dbg:tpl(Module, [{'_',[],[{return_trace}]}]),
+dbgadd(Module) when is_atom(Module) ->
+   dbgadd([Module]);
+dbgadd(Modules) when is_list(Modules) ->
+   [dbg:tpl(M, [{'_',[],[{return_trace}]}]) || M <- Modules],
    ok.
 
 dbgadd(Module, Fun) ->
    dbg:tpl(Module, Fun, [{'_',[],[{return_trace}]}]),
    ok.
 
-dbgdel(Module) ->
-   dbg:ctpl(Module),
+dbgdel(Module) when is_atom(Module) ->
+   dbgdel([Module]);
+dbgdel(Modules) when is_list(Modules) ->
+   [dbg:ctpl(M) || M <- Modules],
    ok.
 
 dbgdel(Module, Fun) ->
