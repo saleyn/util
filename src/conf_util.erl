@@ -155,11 +155,11 @@ env_subst(Text, {win32, _}, Bindings) ->
     env_subst(Text, win, "(?|(?:\\%\\%)|(?:%[A-Za-z][A-Za-z_0-9]*%))", Bindings).
 
 env_subst(Text, OsType, Pattern, Bindings) ->
-    case re:run(Text, Pattern, [{capture, all}]) of
+    case re:run(Text, Pattern, [global,{capture, all}]) of
     {match, Matches} ->
         {Vars, TextList, Last} =
             lists:foldl(fun
-                ({Start, Length}, {Dict, List, Prev}) when Start >= 0 ->
+                ([{Start, Length}], {Dict, List, Prev}) when Start >= 0 ->
                     Pos = Start+1,
                     Match = string:substr(Text, Pos, Length),
                     case env_var(OsType, Match, Bindings) of
