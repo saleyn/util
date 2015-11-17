@@ -26,10 +26,7 @@
 %%%-----------------------------------------------------------------------------
 -module(iif).
 
--export([
-      ife/2, ife/3, ifne/2, ifne/3, iif/3, iif/4
-    , group/2, copy_tuple_except/5
-]).
+-export([ife/2, ife/3, ifne/2, ifne/3, iif/3, iif/4]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -69,24 +66,6 @@ iif(Value,_Other,  _True, False) -> execute(Value, False).
 execute(_, F) when is_function(F,0) -> F();
 execute(V, F) when is_function(F,1) -> F(V);
 execute(_, V)                       -> V.
-
-group(Pos, List) when is_integer(Pos), is_list(List) ->
-    lists:foldl(fun(T, A) when is_tuple(T), tuple_size(T) >= Pos ->
-        TT0 = erlang:make_tuple(tuple_size(T)-1, undefined),
-        TT  = copy_tuple_except(Pos, 1, tuple_size(T), T, TT0),
-        Key = element(Pos, T),
-        Old = maps:get(Key, A, []),
-        A#{Key => [TT | Old]}
-    end, #{}, List).
-
-%% @doc Copy every element of tuple TS to tuple TT ignoring the item at
-%%      Ignore position
-copy_tuple_except(_Ignore, I, N,_TS, TT) when I > N -> TT;
-copy_tuple_except(I, I, N, TS, TT) -> copy_tuple_except(I, I+1, N, TS, TT);
-copy_tuple_except(Ignore, I, N, TS, TT) when Ignore > I ->
-    copy_tuple_except(Ignore, I+1, N, TS, setelement(I, TT, element(I, TS)));
-copy_tuple_except(Ignore, I, N, TS, TT) -> % Ignore < I
-    copy_tuple_except(Ignore, I+1, N, TS, setelement(I-1, TT, element(I, TS))).
 
 %%%-----------------------------------------------------------------------------
 %%% Unit Tests
@@ -130,18 +109,5 @@ iif_test() ->
     ?assertEqual(efg, iif(x, y, abc, efg)),
     ?assertEqual(ok,  iif(x, y, abc, fun() -> ok end)),
     ?assertEqual(x,   iif(x, y, abc, fun(X) -> X end)).
-
-group_test() ->
-    ?assertEqual(
-        #{a => [{11,13},{10,12}],b => [{15,16},{30,60}],c => [{10,15}]},
-        iif:group(1, [{a, 10, 12}, {a, 11, 13}, {b, 30, 60}, {b, 15, 16}, {c, 10, 15}])),
-
-    ?assertEqual(
-        #{a => [{11,13},{10,12}],b => [{15,16},{30,60}],c => [{15}]},
-        iif:group(1, [{a, 10, 12}, {a, 11, 13}, {b, 30, 60}, {b, 15, 16}, {c, 15}])),
-
-    ?assertEqual(
-        #{a => [{11,13},{10,12}],b => [{15,16},{30,60}],c => [{}]},
-        iif:group(1, [{a, 10, 12}, {a, 11, 13}, {b, 30, 60}, {b, 15, 16}, {c}])).
 
 -endif.
