@@ -6,6 +6,8 @@ Erlang utility modules:
 * decompiler          - decompiles modules and functions (useful for
                         verifying accuracy of code generation,
                         e.g. erlydtl project)
+* file_log_reader     - Periodically read an append-only log file and parse newly 
+                        added data
 * pcap                - reader/writer of packet capture files (tcpdump, wireshark)
 * restrict_remsh_mod  - to be used for remote shells to prevent a node from
                         being exited with `q()`, `init:stop()`, `erlang:halt()`.
