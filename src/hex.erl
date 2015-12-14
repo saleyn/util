@@ -4,6 +4,8 @@
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @end
 %%%-----------------------------------------------------------------------------
+%%% Date:   2015-12-10
+%%%-----------------------------------------------------------------------------
 %%% Copyright (c) 2015 Serge Aleynikov
 %%%
 %%% Permission is hereby granted, free of charge, to any person
@@ -94,15 +96,14 @@ all_test() ->
     <<"fffefdfcfbfa1009080701">> = to_hex(16#fffefdfcfbfa1009080701),
 
     <<>>                                   = to_bin(<<"0">>),
-    <<0>>                                  = to_bin(<<"00">>),
     <<0>>                                  = to_bin("00"),
+    <<0>>                                  = to_bin(<<"00">>),
     <<255,254,253,252,251,250,16,9,8,7,1>> = to_bin(<<"fffefdfcfbfa1009080701">>),
     <<255,254,253,252,251,250,16,9,8,7,1>> = to_bin(<<"FFFEFDFCFBFA1009080701">>),
 
     0                                      = to_int("0"),
     0                                      = to_int(<<"0">>),
-    <<255,254,253,252,251,250,16,9,8,7,1>> = to_bin(<<"fffefdfcfbfa1009080701">>),
-    <<255,254,253,252,251,250,16,9,8,7,1>> = to_bin(<<"FFFEFDFCFBFA1009080701">>),
+    16#fffefdfcfbfa1009080701              = to_int("fffefdfcfbfa1009080701"),
     16#fffefdfcfbfa1009080701              = to_int(<<"fffefdfcfbfa1009080701">>),
     ok.
 
