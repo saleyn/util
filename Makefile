@@ -15,6 +15,9 @@ delim   := $(empty),\n        $(empty)
 all:
 	@$(REBAR) compile
 
+test eunit:
+	@$(REBAR) $@
+
 # This is just an example of using make instead of rebar to do fast compilation
 all-fast: $(patsubst src/%.app.src,ebin/%.app,$(wildcard src/*.app.src))
 
