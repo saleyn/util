@@ -42,15 +42,18 @@
 
 -spec command(string()) -> {integer(), list()}.
 command(Cmd) ->
-	command(Cmd, undefined, []).
+	command(Cmd, [], undefined).
 
--spec command(string(), undefined|fun((list(),any()) -> any())) -> {integer(), any()}.
-command(Cmd, Fun) ->
-    command(Cmd, Fun, []).
-
--spec command(string(), undefined|fun((list(),any()) -> any()), list()) ->
+-spec command(string(), list()|undefined|fun((list(),any()) -> any())) ->
     {integer(), any()}.
-command(Cmd, Fun, Opt) when Fun=:=undefined; is_function(Fun, 2) ->
+command(Cmd, Fun) when is_function(Fun, 2) ->
+    command(Cmd, [], Fun);
+command(Cmd, Opt) when is_list(Opt) ->
+    command(Cmd, Opt, undefined).
+
+-spec command(string(), list(), undefined|fun((list(),any()) -> any())) ->
+    {integer(), any()}.
+command(Cmd, Opt, Fun) when is_list(Opt), Fun=:=undefined orelse is_function(Fun, 2) ->
     Opts = Opt ++ [stream, exit_status, use_stdio, in, hide, eof],
     P    = open_port({spawn, Cmd}, Opts),
     get_data(P, Fun, []).
@@ -75,18 +78,29 @@ status(Status) when is_integer(Status) ->
 %%%-----------------------------------------------------------------------------
 get_data(P, Fun, D) ->
 	receive
-		{P, {data, D1}} when Fun=:=undefined ->
-			get_data(P, Fun, [D1|D]);
+		{P, {data, {eol, Line}}} when Fun =:= undefined ->
+            get_data(P, Fun, [Line|D]);
+		{P, {data, {eol, Line}}} when is_function(Fun, 2) ->
+            get_data(P, Fun, Fun(Line, D));
+		{P, {data, {noeol, Line}}} when Fun =:= undefined ->
+            get_data(P, Fun, [Line|D]);
+		{P, {data, {noeol, Line}}} when is_function(Fun, 2) ->
+            get_data(P, Fun, Fun(Line, D));
+		{P, {data, D1}} when Fun =:= undefined ->
+            get_data(P, Fun, [D1|D]);
 		{P, {data, D1}} when is_function(Fun, 2) ->
-            D2 = Fun(D1, D),
-			get_data(P, Fun, D2);
+			get_data(P, Fun, Fun(D1, D));
 		{P, eof} ->
 			port_close(P),
             receive
+                {P, {exit_status, 0}} when is_function(Fun, 2) ->
+                    {ok, Fun(eof, D)};
                 {P, {exit_status, N}} when is_function(Fun, 2) ->
-                    {N, Fun(eof, D)};
+                    {error, {N, Fun(eof, D)}};
+                {P, {exit_status, 0}} ->
+                    {ok, lists:reverse(D)};
                 {P, {exit_status, N}} ->
-                    {N, lists:flatten(lists:reverse(D))}
+                    {error, {N, lists:reverse(D)}}
             after 5000 ->
                 throw({no_exit_status, Fun(eof, D)})
             end
@@ -99,12 +113,13 @@ get_data(P, Fun, D) ->
 -ifdef(EUNIT).
 
 command_test() ->
-	{0, "ok\n"} = osx:command("echo ok"),
-	{1, ""}     = osx:command("false"),
-    {0, ok}     = osx:command("echo ok", fun("ok\n",_) -> ok; (eof, A) -> A end),
-    {143, []}   = osx:command("kill $$"),
-    {signal,15,true} = status(143),
-    {status,0}       = status(0),
+	{ok,    ["ok\n"]}  = osx:command("echo ok"),
+	{error, {1, ""}}   = osx:command("false"),
+    {ok, ok}           = osx:command("echo ok", fun("ok\n",_) -> ok; (eof, A) -> A end),
+    {ok,["a","b","c"]} = osx:command("echo -en 'a\nb\nc\n'", [{line, 80}]),
+    {error, {143,[]}}  = osx:command("kill $$"),
+    {signal,15,true}   = status(143),
+    {status,0}         = status(0),
     ok.
 
 -endif.
