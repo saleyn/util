@@ -26,9 +26,9 @@
 %% @doc Perform replacement of environment variable values in the OsPath.
 %% ```
 %% Example:
-%%   cmp_conf:subst_env_path("~/app")       -> "/home/cuser/app"
-%%   cmp_conf:subst_env_path("${HOME}/app") -> "/home/cuser/app"
-%%   cmp_conf:subst_env_path("$USER/app")   -> "cuser/app"
+%%   conf_util:subst_env_path("~/app")       -> "/home/cuser/app"
+%%   conf_util:subst_env_path("${HOME}/app") -> "/home/cuser/app"
+%%   conf_util:subst_env_path("$USER/app")   -> "cuser/app"
 %% '''
 %% @see os:getenv/1
 %% @end
@@ -48,10 +48,10 @@ subst_env_path(OsPath) ->
 %%      variables are looked up).
 %% ```
 %% Example:
-%%   cmp_conf:subst_env_path("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
-%%   cmp_conf:subst_env_path("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
-%%   cmp_conf:subst_env_path("$A/",  [{a, "/aaa"}]) -> "/aaa/"
-%%   cmp_conf:subst_env_path("${A}/",[{a, "/aaa"}]) -> "/aaa/"
+%%   conf_util:subst_env_path("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
+%%   conf_util:subst_env_path("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
+%%   conf_util:subst_env_path("$A/",  [{a, "/aaa"}]) -> "/aaa/"
+%%   conf_util:subst_env_path("${A}/",[{a, "/aaa"}]) -> "/aaa/"
 %% '''
 %% @see os:getenv/1
 %% @end
