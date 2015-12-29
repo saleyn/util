@@ -9,6 +9,7 @@ Erlang utility modules:
 | file_log_reader     | Periodically read an append-only log file and parse newly added data                 |
 | iif                 | Ternery if function                                                                  |
 | hex                 | Hex to bin conversion                                                                |
+| listx               | Miscelaneous list handling functions                                                 |
 | osx                 | Execution of os commands with returned stdout and exit status                        |
 | pcap                | reader/writer of packet capture files (tcpdump, wireshark)                           |
 | restrict_remsh_mod  | to be used for remote shells to restrict `q()`, `init:stop()`, `erlang:halt()`, etc. |
