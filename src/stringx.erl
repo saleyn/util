@@ -36,7 +36,7 @@ wordcount(S) ->
     wordcount(S, 0).
 
 %%-------------------------------------------------------------------------
-%% @doc Count number of words in a string
+%% @doc Wrap words words in a string
 %% @end
 %%-------------------------------------------------------------------------
 -spec wordwrap(string(), integer()) -> string().
@@ -66,13 +66,13 @@ wordwrap([], Acc, WordAcc, _LineLen, _Margin) ->
 
 % Premature newline
 wordwrap([$\n | Rest], Acc, WordAcc, _LineLen, Margin) ->
-    wordwrap(Rest, [$\n | WordAcc ++ Acc], [], 0, Margin);
+    wordwrap(Rest, [$\n | dropws(WordAcc, Acc)], [], 0, Margin);
 
-% Hit the wrap length at a space character. Add a newline
+% Reached the wrap length at a space character - add $\n
 wordwrap([$  | Rest], Acc, WordAcc, Margin, Margin) ->
-    wordwrap(Rest, [$\n | WordAcc ++ Acc], [], 0, Margin);
+    wordwrap(Rest, [$\n | dropws(WordAcc, Acc)], [], 0, Margin);
 
-% Hit a space character before the wrap length. Keep going
+% Found space character before the wrap length - continue
 wordwrap([$  | Rest], Acc, WordAcc, LineLen, Margin) ->
     wordwrap(Rest, [$  | WordAcc ++ Acc], [], LineLen + 1 + length(WordAcc), Margin);
 
@@ -81,8 +81,16 @@ wordwrap([C | Rest], Acc, WordAcc, 0, Margin) when erlang:length(WordAcc) > Marg
     wordwrap(Rest, Acc, [C | WordAcc], 0, Margin);
 wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin) 
     when erlang:length(WordAcc) + LineLen > Margin ->
-    wordwrap(Rest, [$\n | Acc], [C | WordAcc], 0, Margin);
+    wordwrap(Rest, [$\n | dropws(Acc, [])], [C | WordAcc], 0, Margin);
 
 % Just building a word...
 wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin) ->
     wordwrap(Rest, Acc, [C | WordAcc], LineLen, Margin).
+
+dropws(Word, Acc) -> dropws2(dropws1(Word), Acc).
+
+dropws1([$ |T]) -> dropws1(T);
+dropws1(L     ) -> L.
+
+dropws2([],   Acc) -> dropws1(Acc);
+dropws2(Word, Acc) -> Word ++ Acc.
