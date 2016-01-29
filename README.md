@@ -9,6 +9,7 @@ Erlang utility modules:
 | file_log_reader       | Periodically read an append-only log file and parse newly added data                 |
 | iif                   | Ternery if function                                                                  |
 | io_lib_pretty_limited | Print term to binary by constraining the output size                                 |
+| gin                   | Convenient parse transform for `in(Value, [A,B,C])` type of guards                   |
 | hex                   | Hex to bin conversion                                                                |
 | listx                 | Miscelaneous list handling functions                                                 |
 | osx                   | Execution of os commands with returned stdout and exit status                        |
