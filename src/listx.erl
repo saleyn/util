@@ -26,11 +26,15 @@
 %%%-----------------------------------------------------------------------------
 -module(listx).
 
--export([group/2, copy_tuple_except/5]).
+-export([group/2, copy_tuple_except/5, sum/1]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
+
+%%%-----------------------------------------------------------------------------
+%%% API
+%%%-----------------------------------------------------------------------------
 
 %% @doc Group elements in the `List' by element at position `Pos'.
 -spec group(Pos::integer(), List::[tuple()]) -> [{any(), tuple()}].
@@ -43,6 +47,15 @@ group(Pos, List) when is_integer(Pos), is_list(List) ->
         A#{Key => [TT | Old]}
     end, #{}, List).
 
+%% @doc Add every positional element of each tuple in the list.
+%% E.g. `sum([{1,2}, {3,4}, {5,6}]) -> {9,12}.'
+sum(ListOfTuples = [H|_]) when is_tuple(H) ->
+	sum(ListOfTuples, erlang:make_tuple(tuple_size(H), 0)).
+
+%%%-----------------------------------------------------------------------------
+%%% Internal functions
+%%%-----------------------------------------------------------------------------
+
 %% @doc Copy every element of tuple TS to tuple TT ignoring the item at
 %%      Ignore position
 copy_tuple_except(_Ignore, I, N,_TS, TT) when I > N -> TT;
@@ -51,6 +64,14 @@ copy_tuple_except(Ignore, I, N, TS, TT) when Ignore > I ->
     copy_tuple_except(Ignore, I+1, N, TS, setelement(I, TT, element(I, TS)));
 copy_tuple_except(Ignore, I, N, TS, TT) -> % Ignore < I
     copy_tuple_except(Ignore, I+1, N, TS, setelement(I-1, TT, element(I, TS))).
+
+sum([H|T], Acc) when tuple_size(H) =:= tuple_size(Acc) ->
+  sum(T, sum(1,tuple_size(Acc)+1,H,Acc));
+sum([], Acc) ->
+  Acc.
+
+sum(N,N,_,Acc) -> Acc;
+sum(I,N,H,Acc) -> sum(I+1,N,H,setelement(I, Acc, element(I, H) + element(I, Acc))).
 
 %%%-----------------------------------------------------------------------------
 %%% Unit Tests
@@ -70,5 +91,10 @@ group_test() ->
     ?assertEqual(
         #{a => [{11,13},{10,12}],b => [{15,16},{30,60}],c => [{}]},
         group(1, [{a, 10, 12}, {a, 11, 13}, {b, 30, 60}, {b, 15, 16}, {c}])).
+
+sum_test() ->
+	?assertEqual({9,12},    sum([{1,2}, {3,4}, {5,6}])),
+	?assertEqual({6},       sum([{1}, {2}, {3}])),
+	?assertEqual({9,12,12}, sum([{1,2,3}, {3,4,4}, {5,6,5}])).
 
 -endif.
