@@ -26,7 +26,7 @@
 %%%-----------------------------------------------------------------------------
 -module(listx).
 
--export([group/2, copy_tuple_except/5, sum/1]).
+-export([group/2, copy_tuple_except/5, sum/1, sum/2]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -50,7 +50,12 @@ group(Pos, List) when is_integer(Pos), is_list(List) ->
 %% @doc Add every positional element of each tuple in the list.
 %% E.g. `sum([{1,2}, {3,4}, {5,6}]) -> {9,12}.'
 sum(ListOfTuples = [H|_]) when is_tuple(H) ->
-	sum(ListOfTuples, erlang:make_tuple(tuple_size(H), 0)).
+	suml(ListOfTuples, erlang:make_tuple(tuple_size(H), 0)).
+
+%% @doc Add every positional element of two tuples.
+%% E.g. `sum({1,2}, {3,4}) -> {3,6}.'
+sum(Tuple1, Tuple2) when tuple_size(Tuple1) =:= tuple_size(Tuple2) ->
+    sum(1, tuple_size(Tuple1)+1, Tuple1, Tuple2).
 
 %%%-----------------------------------------------------------------------------
 %%% Internal functions
@@ -65,10 +70,10 @@ copy_tuple_except(Ignore, I, N, TS, TT) when Ignore > I ->
 copy_tuple_except(Ignore, I, N, TS, TT) -> % Ignore < I
     copy_tuple_except(Ignore, I+1, N, TS, setelement(I-1, TT, element(I, TS))).
 
-sum([H|T], Acc) when tuple_size(H) =:= tuple_size(Acc) ->
-  sum(T, sum(1,tuple_size(Acc)+1,H,Acc));
-sum([], Acc) ->
-  Acc.
+suml([H|T], Acc) when tuple_size(H) =:= tuple_size(Acc) ->
+    suml(T, sum(1,tuple_size(Acc)+1,H,Acc));
+suml([], Acc) ->
+    Acc.
 
 sum(N,N,_,Acc) -> Acc;
 sum(I,N,H,Acc) -> sum(I+1,N,H,setelement(I, Acc, element(I, H) + element(I, Acc))).
@@ -93,6 +98,7 @@ group_test() ->
         group(1, [{a, 10, 12}, {a, 11, 13}, {b, 30, 60}, {b, 15, 16}, {c}])).
 
 sum_test() ->
+	?assertEqual({4,6},     sum({1,2}, {3,4})),
 	?assertEqual({9,12},    sum([{1,2}, {3,4}, {5,6}])),
 	?assertEqual({6},       sum([{1}, {2}, {3}])),
 	?assertEqual({9,12,12}, sum([{1,2,3}, {3,4,4}, {5,6,5}])).
