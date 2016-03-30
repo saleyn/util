@@ -209,10 +209,10 @@ saveh(File) ->
 % http://www.erlang.org/pipermail/erlang-questions/2007-August/028462.html
 
 tc(N, F) when N > 0 ->
-    time_it(fun() -> exit(call(N, N, F, erlang:now())) end).
+    time_it(fun() -> exit(call(N, N, F, erlang:timestamp())) end).
 
 tc(N, M, F, A) when N > 0 ->
-    time_it(fun() -> exit(call(N, N, M, F, A, erlang:now())) end).
+    time_it(fun() -> exit(call(N, N, M, F, A, erlang:timestamp())) end).
 
 time_it(F) -> 
     Pid  = spawn_opt(F, [{min_heap_size, 16384}]),
@@ -223,14 +223,14 @@ time_it(F) ->
 
 call(1, X, F, Time1) ->
     Res = (catch F()),
-    return(X, Res, Time1, erlang:now());
+    return(X, Res, Time1, erlang:timestamp());
 call(N, X, F, Time1) ->
     (catch F()),
     call(N-1, X, F, Time1).
 
 call(1, X, M, F, A, Time1) ->
     Res = (catch apply(M, F, A)),
-    return(X, Res, Time1, erlang:now());
+    return(X, Res, Time1, erlang:timestamp());
 call(N, X, M, F, A, Time1) ->
     catch apply(M, F, A),
     call(N-1, X, M, F, A, Time1).

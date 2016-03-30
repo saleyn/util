@@ -594,7 +594,7 @@ str2b64_end([])          -> [].
 boundary_bin([]) ->
     undefined;
 boundary_bin(_) ->
-    {A,B,C} = now(),
+    {A,B,C} = erlang:timestamp(),
     random:seed(A,B,C),
     <<"Boundary_(", (list_to_binary(random_list(10)))/binary, ")">>.
 

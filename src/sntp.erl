@@ -117,7 +117,7 @@ time(N, Server, Acc) ->
     time(N-1, Server, [Res | Acc]).
 
 encode() ->
-    {Secs, US} = now_to_sntp_time(now()),
+    {Secs, US} = now_to_sntp_time(erlang:timestamp()),
     <<(_LI = 0):2, (_VN = 4):3, (_Mode = 3):3, 
       0:8, 0:8, 0:8, 0:32, 0:32, 0:32, 0:64, 0:64, 0:64,
       Secs:32/big-integer, US:32/big-integer>>.
@@ -130,7 +130,7 @@ decode(<<LI:2, Vsn:3, Mode:3, Stratum:8, _Poll:8/signed-integer,
          RecvTimeSec:32/big-integer,    RecvTimeUSec:32/big-integer,
          TransTimeSec:32/big-integer,   TransTimeUSec:32/big-integer,
          _Rest/binary>>) when LI < 3, Mode >= 3 ->
-    DestTime  = now(),
+    DestTime  = erlang:timestamp(),
     OrigTime  = sntp_time_to_now(OrigTimeSec, OrigTimeUSec),
     RecvTime  = sntp_time_to_now(RecvTimeSec,  RecvTimeUSec),
     TransTime = sntp_time_to_now(TransTimeSec, TransTimeUSec),
