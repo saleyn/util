@@ -26,7 +26,7 @@
 %%%-----------------------------------------------------------------------------
 -module(listx).
 
--export([group/2, copy_tuple_except/5]).
+-export([group/2, copy_tuple_except/5, zip_record/2]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -51,6 +51,13 @@ copy_tuple_except(Ignore, I, N, TS, TT) when Ignore > I ->
     copy_tuple_except(Ignore, I+1, N, TS, setelement(I, TT, element(I, TS)));
 copy_tuple_except(Ignore, I, N, TS, TT) -> % Ignore < I
     copy_tuple_except(Ignore, I+1, N, TS, setelement(I-1, TT, element(I, TS))).
+
+%% @doc Convert a record/tuple to a list of `{Name,Value}' pairs, where `Name'
+%%      is a field name taken from the `Fields' list. 
+-spec zip_record(list(), tuple()) -> list().
+zip_record(Fields, State) when is_list(Fields), tuple_size(State) =:= length(Fields)+1 ->
+  Vals = tl(tuple_to_list(State)),
+  lists:zip(Fields, Vals).
 
 %%%-----------------------------------------------------------------------------
 %%% Unit Tests
