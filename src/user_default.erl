@@ -118,12 +118,8 @@ p(Term) ->
 %% @doc Load all changed modules.
 
 l() ->
-    lists:foreach(
-      fun(M) ->
-          io:format("Loading ~p -> ~p~n", [M, c:l(M)])
-      end,
-      mm()
-     ).
+  [io:format("Loading ~p -> ~p~n", [M, c:l(M)]) || M <- mm()],
+  ok.
 
 %% @doc Load all changed modules on all visible nodes
 
@@ -148,24 +144,19 @@ module_modified(Module) ->
     {file, preloaded} ->
         false;
     {file, Path} ->
-        CompileOpts = proplists:get_value(compile, Module:module_info()),
-        CompileTime = proplists:get_value(time, CompileOpts),
-        Src = proplists:get_value(source, CompileOpts),
-        module_modified(Path, CompileTime, Src);
+        MD5  = Module:module_info(md5),
+        module_modified(Path, MD5);
     _ ->
         false
     end.
 
-module_modified(Path, PrevCompileTime, PrevSrc) ->
+module_modified(Path, PrevMD5) ->
     case find_module_file(Path) of
     false ->
         false;
     ModPath ->
-        {ok, {_, [{_, CB}]}} = beam_lib:chunks(ModPath, ["CInf"]),
-        CompileOpts =  binary_to_term(CB),
-        CompileTime = proplists:get_value(time, CompileOpts),
-        Src = proplists:get_value(source, CompileOpts),
-        not (CompileTime == PrevCompileTime) and (Src == PrevSrc)
+        {ok, {_, MD5}} = beam_lib:md5(ModPath),
+        MD5 =/= PrevMD5
     end.
 
 find_module_file(Path) ->
