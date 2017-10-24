@@ -58,7 +58,7 @@ xml(#xmlElement{name = N, attributes = A, content = C}) ->
 xml([#xmlElement{} = E | T]) ->
   [xml(E) | xml(T)];
 xml([#xmlText{value = V} | _]) ->
-  iolist_to_binary(V);
+  unicode:characters_to_binary(V, utf8);
 xml([]) ->
   [].
 
@@ -75,7 +75,7 @@ xml([], _) ->
   [].
 
 process_attributes([#xmlAttribute{name=N, value=V} | T]) ->
-  [{N, iolist_to_binary(V)} | process_attributes(T)];
+  [{N, unicode:characters_to_binary(V, utf8)} | process_attributes(T)];
 process_attributes([]) ->
   [].
 
@@ -91,4 +91,4 @@ process_value(Value, integer) -> list_to_integer(Value);
 process_value(Value, float)   -> list_to_float  (Value);
 process_value(Value, binary)  -> list_to_binary (Value);
 process_value(Value, string)  -> Value;
-process_value(Value, _)       -> iolist_to_binary(Value).
+process_value(Value, _)       -> unicode:characters_to_binary(Value, utf8).
