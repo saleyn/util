@@ -189,12 +189,12 @@ take_nth(I, L) when I < 2 -> L;
 take_nth(_,[])            -> [];
 take_nth(I,[_|T])         -> take_nth(I-1, T).
 
-ws([Row|Rs], Ws)   -> ws(Rs, ws_1(Row, Ws));
-ws([], Ws)         -> Ws.
+ws([H|T], Ws)             -> ws(T, ws1(H, Ws));
+ws([], Ws)                -> Ws.
 
-ws_1([{T0,V}|Vs], [{Type,Max}|Ms]) ->
-  [{type(T0,Type),max(string:length(V),Max)}|ws_1(Vs,Ms)];
-ws_1([], []) -> [].
+ws1([{T,V}|Vs], [{Type,Max}|Ms]) ->
+  [{type(T,Type),max(string:length(V),Max)}|ws1(Vs,Ms)];
+ws1([], []) -> [].
 
 type(T, undefined) -> T;
 type(T, T)         -> T;
