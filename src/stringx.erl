@@ -18,12 +18,16 @@
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
 
+% Options for table pretty printing
 -record(opts, {
-  pad   = $\s,
-  dir   = trailing,
-  c_sep = " | ",
-  h_sep = "+",
-  r_sep = "-"
+  number_pad = $\s,     % padding character for numbers
+  th_dir     = both     :: both|leading|trailing, % table header padding dir
+  td_dir     = trailing :: both|leading|trailing, % table row    padding dir
+  start_col  = 1,       % Start printing from this field (use 2 for records)
+  c_sep      = " | ",   % Column separator
+  d_sep      = "+",     % Delimiter header/footer column separator
+  r_sep      = "-",
+  prefix     = ""       % Use this prefix in front of each row
 }).
 
 %%%------------------------------------------------------------------------
@@ -128,28 +132,32 @@ dropws2(Word, Acc) -> Word ++ Acc.
 pretty_table(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
   pretty_table(tuple_to_list(Keys0), Rows0, Opts);
 pretty_table(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
-  KeyStrs = [element(2, to_string(Key)) || Key <- Keys0],
-  Rows    = [to_strings(Keys0, V) || V <- Rows0],
+  KeyStrs = take_nth(Opts#opts.start_col, [element(2, to_string(Key)) || Key <- Keys0]),
+  Rows    = [take_nth(Opts#opts.start_col, to_strings(Keys0, V))      || V   <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
   Col     = fun({_,Str}, {Type, Width}) ->
-              Dir = case Type of
-                      number -> leading;
-                      _      -> Opts#opts.dir
-                    end,
-              string:pad(Str, Width, Dir)
+              {Dir,Pad} = case Type of
+                            number -> {leading, Opts#opts.number_pad};
+                            _      -> {Opts#opts.td_dir, $\s}
+                          end,
+              string:pad(Str, Width, Dir, Pad)
             end,
-  AddSpLn = length([C || C <- Opts#opts.c_sep, C == $ ]),
+  AddSpLn = length([C || C <- Opts#opts.c_sep, C == $\s]),
   AddSpH  = string:copies(Opts#opts.r_sep, AddSpLn div 2),
   AddSpT  = string:copies(Opts#opts.r_sep, AddSpLn - (AddSpLn div 2)),
   Row     = fun(Row) ->
               R0 = [Col(Str, W) || {Str,W} <- lists:zip(Row, Ws)],
-              lists:join(Opts#opts.c_sep, R0)
+              [Opts#opts.prefix, lists:join(Opts#opts.c_sep, R0)]
             end,
-  Header0 = [{string:pad(Str, W, both), string:copies(Opts#opts.r_sep, W)}
+  Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.r_sep, W)}
               || {Str,{_,W}} <- lists:zip(KeyStrs, Ws)],
   Header  = lists:join(Opts#opts.c_sep, [H || {H,_} <- Header0]),
-  Delim   = lists:join(AddSpH ++ [Opts#opts.h_sep] ++ AddSpT, [T || {_,T} <- Header0]),
-  [Header, $\n, Delim, $\n, lists:join($\n, [Row(R) || R <- Rows]), $\n, Delim, $\n].
+  Delim   = lists:join(AddSpH ++ [Opts#opts.d_sep] ++ AddSpT, [T || {_,T} <- Header0]),
+  [Opts#opts.prefix, Header, $\n, Delim, $\n, lists:join($\n, [Row(R) || R <- Rows]), $\n, Delim, $\n].
+
+take_nth(I, L) when I < 2 -> L;
+take_nth(_,[])            -> [];
+take_nth(I,[_|T])         -> take_nth(I-1, T).
 
 ws([Row|Rs], Ws)   -> ws(Rs, ws_1(Row, Ws));
 ws([], Ws)         -> Ws.
