@@ -34,7 +34,7 @@
 
 -export([help/0, saveh/1, dbgtc/1, dbgon/1, dbgon/2,
          dbgadd/1, dbgadd/2, dbgdel/1, dbgdel/2, dbgoff/0,
-         p/1, l/0, nl/0, mm/0, tc/2, tc/4]).
+         p/1, nl/0, tc/2, tc/4]).
 
 -import(io, [format/1, format/2]).
 
@@ -52,9 +52,7 @@ help() ->
     format("dbgdel(M,F)   -- disable call tracer for function M:F\n"),
     format("dbgoff()      -- disable dbg tracer (calls dbg:stop/0)\n"),
     format("p(Term)       -- print term using io:format(\"~s\\n\", [Term])\n", ["~p"]),
-    format("l()           -- load all changed modules\n"),
     format("nl()          -- load all changed modules on all known nodes\n"),
-    format("mm()          -- list modified modules\n"),
     format("tc(N,M,F,A)   -- evaluate {M,F,A} N times and return {TotMkSecs, MkSecs/call, Result}\n"),
     format("tc(N,F)       -- evaluate F N times and return {MkSecs, MkSecs/call, Result}\n"),
     true.
@@ -115,66 +113,13 @@ dbgoff() ->
 p(Term) ->
    io:format("~p\n", [Term]).
 
-%% @doc Load all changed modules.
-
-l() ->
-  [io:format("Loading ~p -> ~p~n", [M, c:l(M)]) || M <- mm()],
-  ok.
-
 %% @doc Load all changed modules on all visible nodes
 
 nl() ->
-    lists:foreach(
-      fun(M) ->
-          io:format("Network loading ~p -> ~p~n", [M, c:nl(M)])
-      end,
-      mm()
-     ).
+   [io:format("Network loading ~p -> ~p~n", [M, c:nl(M)]) || M <- c:mm()],
+   ok.
 
-%% Vladimir Sekissov's fine code
-
-mm() ->
-    modified_modules().
-
-modified_modules() ->
-    [M || {M, _} <-  code:all_loaded(), module_modified(M) == true].
-
-module_modified(Module) ->
-    case code:is_loaded(Module) of
-    {file, preloaded} ->
-        false;
-    {file, Path} ->
-        MD5  = Module:module_info(md5),
-        module_modified(Path, MD5);
-    _ ->
-        false
-    end.
-
-module_modified(Path, PrevMD5) ->
-    case find_module_file(Path) of
-    false ->
-        false;
-    ModPath ->
-        {ok, {_, MD5}} = beam_lib:md5(ModPath),
-        MD5 =/= PrevMD5
-    end.
-
-find_module_file(Path) ->
-    case file:read_file_info(Path) of
-    {ok, _} ->
-        Path;
-    _ ->
-        %% maybe the path was changed?
-        %% NB: the following does not exist ... but the whole works
-        %% fairly well anyway
-        case code:where_is_file(filename:basename(Path)) of
-        non_existing ->
-            false;
-        NewPath ->
-            NewPath
-        end
-    end.
-
+%% @doc Save command history to file
 saveh(File) ->
     {ok, Io} = file:open(File, [write, read, delayed_write]),
     GetHist = fun() ->
