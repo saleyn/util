@@ -65,29 +65,40 @@
 <p><pre>pretty_table(HeaderRowKeys :: [string()],
              Rows :: [Row :: tuple() | list() | #{}],
              Opts ::
-                 #opts{number_pad = any(),
+                 #opts{number_pad = char(),
                        th_dir = both | leading | trailing,
                        td_dir = both | leading | trailing,
-                       td_start = any(),
-                       td_sep = any(),
-                       tr_sep = any(),
-                       tr_sep_td = any(),
-                       prefix = any(),
+                       td_start = integer(),
+                       td_sep = string(),
+                       tr_sep = string(),
+                       tr_sep_td = string(),
+                       prefix = string(),
                        td_formats = tuple()}) -&gt;
                 list()</pre></p>
 </div><p>Pretty print table of lists/tuples/maps to list.
   The following options control formatting behavior:
-  * number_pad - leading padding character used for numbers
-  * th_dir     - table header row padding direction (both|leading|trailing)
-  * td_dir     - table row padding direction (both|leading|trailing)
-  * td_start   - Don't print columns less than this (e.g. use 2 for records)
-  * td_sep     - Column separator (default <code>" | "</code>)
-  * tr_sep     - Row separator (default <code>"-"</code>)
-  * tr_sep_td  - Column delimiter used in separating rows (<code>"+"`)
-  * prefix     - prepend each row with this string
-  * td_formats - a tuple containing column formats. Each value is either
-                 a format string passed to `io_lib:format/2</code> or a function
-                 <code>fun(Value) -&gt; {number|string, FormattedValue::string()}</code></p>
+  <dl>
+  <dt>number_pad</dt>
+       <dd>Leading padding character used for numbers</dd>
+  <dt>th_dir</dt>
+       <dd>Table header row padding direction (both|leading|trailing)</dd>
+  <dt>td_dir</dt>
+       <dd>Table row padding direction (both|leading|trailing)</dd>
+  <dt>td_start</dt>
+       <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
+  <dt>td_sep</dt>
+       <dd>Column separator (default <code>" | "</code>)</dd>
+  <dt>tr_sep</dt>
+       <dd>Row separator (default <code>"-"</code>)</dd>
+  <dt>tr_sep_td</dt>
+       <dd>Column delimiter used in separating rows (<code>"+"`)&lt;/dd&gt;
+  &lt;dt&gt;prefix&lt;/dt&gt;
+       &lt;dd&gt;Prepend each row with this string&lt;/dd&gt;
+  &lt;dt&gt;td_formats&lt;/dt&gt;
+       &lt;dd&gt;A tuple containing column formats. Each value is either
+           a format string passed to `io_lib:format/2</code> or a function
+           <code>fun(Value) -&gt; {number|string, FormattedValue::string()}</code></dd>
+  </dl></p>
 
 <h3 class="function"><a name="titlecase-1">titlecase/1</a></h3>
 <div class="spec">

@@ -20,14 +20,14 @@
 
 % Options for table pretty printing
 -record(opts, {
-  number_pad = $\s,     % padding character for numbers
+  number_pad = $\s      :: char(),    % padding character for numbers
   th_dir     = both     :: both|leading|trailing, % table header padding dir
   td_dir     = trailing :: both|leading|trailing, % table row    padding dir
-  td_start   = 1,       % Start printing from this field (use 2 for records)
-  td_sep     = " | ",   % Column separator
-  tr_sep     = "-",
-  tr_sep_td  = "+",     % Delimiter header/footer column separator
-  prefix     = "",      % Use this prefix in front of each row
+  td_start   = 1        :: integer(), % Start printing from this field number
+  td_sep     = " | "    :: string(),  % Column separator
+  tr_sep     = "-"      :: string(),
+  tr_sep_td  = "+"      :: string(),  % Delimiter header/footer column sep
+  prefix     = ""       :: string(),  % Use this prefix in front of each row
   td_formats :: tuple() % Optional tuple containing value format for columns
                         % (each item is either a Fmt string or fun(Value)).
 }).
@@ -81,17 +81,28 @@ pretty_table(HeaderRowKeys, Rows) ->
 %%-------------------------------------------------------------------------
 %% @doc Pretty print table of lists/tuples/maps to list.
 %% The following options control formatting behavior:
-%% * number_pad - leading padding character used for numbers
-%% * th_dir     - table header row padding direction (both|leading|trailing)
-%% * td_dir     - table row padding direction (both|leading|trailing)
-%% * td_start   - Don't print columns less than this (e.g. use 2 for records)
-%% * td_sep     - Column separator (default `" | "')
-%% * tr_sep     - Row separator (default `"-"')
-%% * tr_sep_td  - Column delimiter used in separating rows (`"+"`)
-%% * prefix     - prepend each row with this string
-%% * td_formats - a tuple containing column formats. Each value is either
-%%                a format string passed to `io_lib:format/2' or a function
-%%                `fun(Value) -> {number|string, FormattedValue::string()}'
+%% <dl>
+%% <dt>number_pad</dt>
+%%      <dd>Leading padding character used for numbers</dd>
+%% <dt>th_dir</dt>
+%%      <dd>Table header row padding direction (both|leading|trailing)</dd>
+%% <dt>td_dir</dt>
+%%      <dd>Table row padding direction (both|leading|trailing)</dd>
+%% <dt>td_start</dt>
+%%      <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
+%% <dt>td_sep</dt>
+%%      <dd>Column separator (default `" | "')</dd>
+%% <dt>tr_sep</dt>
+%%      <dd>Row separator (default `"-"')</dd>
+%% <dt>tr_sep_td</dt>
+%%      <dd>Column delimiter used in separating rows (`"+"`)</dd>
+%% <dt>prefix</dt>
+%%      <dd>Prepend each row with this string</dd>
+%% <dt>td_formats</dt>
+%%      <dd>A tuple containing column formats. Each value is either
+%%          a format string passed to `io_lib:format/2' or a function
+%%          `fun(Value) -> {number|string, FormattedValue::string()}'</dd>
+%% </dl>
 %% @end
 %%-------------------------------------------------------------------------
 -spec pretty_table([string()], [Row :: tuple()|list()|map()], #opts{}) -> list().
