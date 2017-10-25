@@ -23,11 +23,13 @@
   number_pad = $\s,     % padding character for numbers
   th_dir     = both     :: both|leading|trailing, % table header padding dir
   td_dir     = trailing :: both|leading|trailing, % table row    padding dir
-  start_col  = 1,       % Start printing from this field (use 2 for records)
-  c_sep      = " | ",   % Column separator
-  d_sep      = "+",     % Delimiter header/footer column separator
-  r_sep      = "-",
-  prefix     = ""       % Use this prefix in front of each row
+  td_start   = 1,       % Start printing from this field (use 2 for records)
+  td_sep     = " | ",   % Column separator
+  tr_sep     = "-",
+  tr_sep_td  = "+",     % Delimiter header/footer column separator
+  prefix     = "",      % Use this prefix in front of each row
+  td_formats :: tuple() % Optional tuple containing value format for columns
+                        % (each item is either a Fmt string or fun(Value)).
 }).
 
 %%%------------------------------------------------------------------------
@@ -59,23 +61,51 @@ wordwrap(S, Margin) when is_list(S), is_integer(Margin) ->
   wordwrap(S, [], [], 0, Margin).
 
 %%-------------------------------------------------------------------------
-%% @doc Pretty print table
+%% @doc Pretty print list of maps to list.
+%% @see pretty_table/3.
 %% @end
 %%-------------------------------------------------------------------------
+-spec pretty_table([map()]) -> list().
 pretty_table([Map|_] = LofMaps0) when is_map(Map) ->
   pretty_table(lists:sort(maps:keys(Map)), LofMaps0, #opts{}).
 
+%%-------------------------------------------------------------------------
+%% @doc Pretty print table of lists/tuples/maps to list.
+%% @see pretty_table/3.
+%% @end
+%%-------------------------------------------------------------------------
+-spec pretty_table([string()], [Row :: tuple()|list()|map()]) -> list().
 pretty_table(HeaderRowKeys, Rows) ->
   pretty_table(HeaderRowKeys, Rows, #opts{}).
 
+%%-------------------------------------------------------------------------
+%% @doc Pretty print table of lists/tuples/maps to list.
+%% The following options control formatting behavior:
+%% * number_pad - leading padding character used for numbers
+%% * th_dir     - table header row padding direction (both|leading|trailing)
+%% * td_dir     - table row padding direction (both|leading|trailing)
+%% * td_start   - Don't print columns less than this (e.g. use 2 for records)
+%% * td_sep     - Column separator (default `" | "')
+%% * tr_sep     - Row separator (default `"-"')
+%% * tr_sep_td  - Column delimiter used in separating rows (`"+"`)
+%% * prefix     - prepend each row with this string
+%% * td_formats - a tuple containing column formats. Each value is either
+%%                a format string passed to `io_lib:format/2' or a function
+%%                `fun(Value) -> {number|string, FormattedValue::string()}'
+%% @end
+%%-------------------------------------------------------------------------
+-spec pretty_table([string()], [Row :: tuple()|list()|map()], #opts{}) -> list().
+pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
+  pretty_table1(HeaderRowKeys, Rows, Opts).
+
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
-  io:put_chars(pretty_table(lists:sort(maps:keys(Map)), LofMaps0, #opts{})).
+  io:put_chars(pretty_table1(lists:sort(maps:keys(Map)), LofMaps0, #opts{})).
 
 pretty_print_table(HeaderRowKeys, Rows) ->
-  io:put_chars(pretty_table(HeaderRowKeys, Rows, #opts{})).
+  io:put_chars(pretty_table1(HeaderRowKeys, Rows, #opts{})).
 
 pretty_print_table(HeaderRowKeys, Rows, Opts) ->
-  io:put_chars(pretty_table(HeaderRowKeys, Rows, Opts)).
+  io:put_chars(pretty_table1(HeaderRowKeys, Rows, Opts)).
 
 %%%------------------------------------------------------------------------
 %%% Internal functions
@@ -129,11 +159,11 @@ dropws1(L     ) -> L.
 dropws2([],   Acc) -> dropws1(Acc);
 dropws2(Word, Acc) -> Word ++ Acc.
 
-pretty_table(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
-  pretty_table(tuple_to_list(Keys0), Rows0, Opts);
-pretty_table(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
-  KeyStrs = take_nth(Opts#opts.start_col, [element(2, to_string(Key)) || Key <- Keys0]),
-  Rows    = [take_nth(Opts#opts.start_col, to_strings(Keys0, V))      || V   <- Rows0],
+pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
+  pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
+pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
+  KeyStrs = take_nth(Opts#opts.td_start, [element(2, to_string(Key)) || Key <- Keys0]),
+  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts#opts.td_formats)) || V   <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
   Col     = fun({_,Str}, {Type, Width}) ->
               {Dir,Pad} = case Type of
@@ -142,17 +172,17 @@ pretty_table(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) -
                           end,
               string:pad(Str, Width, Dir, Pad)
             end,
-  AddSpLn = length([C || C <- Opts#opts.c_sep, C == $\s]),
-  AddSpH  = string:copies(Opts#opts.r_sep, AddSpLn div 2),
-  AddSpT  = string:copies(Opts#opts.r_sep, AddSpLn - (AddSpLn div 2)),
+  AddSpLn = length([C || C <- Opts#opts.td_sep, C == $\s]),
+  AddSpH  = string:copies(Opts#opts.tr_sep, AddSpLn div 2),
+  AddSpT  = string:copies(Opts#opts.tr_sep, AddSpLn - (AddSpLn div 2)),
   Row     = fun(Row) ->
               R0 = [Col(Str, W) || {Str,W} <- lists:zip(Row, Ws)],
-              [Opts#opts.prefix, lists:join(Opts#opts.c_sep, R0)]
+              [Opts#opts.prefix, lists:join(Opts#opts.td_sep, R0)]
             end,
-  Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.r_sep, W)}
+  Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.tr_sep, W)}
               || {Str,{_,W}} <- lists:zip(KeyStrs, Ws)],
-  Header  = lists:join(Opts#opts.c_sep, [H || {H,_} <- Header0]),
-  Delim   = lists:join(AddSpH ++ [Opts#opts.d_sep] ++ AddSpT, [T || {_,T} <- Header0]),
+  Header  = lists:join(Opts#opts.td_sep, [H || {H,_} <- Header0]),
+  Delim   = lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT, [T || {_,T} <- Header0]),
   [Opts#opts.prefix, Header, $\n, Delim, $\n, lists:join($\n, [Row(R) || R <- Rows]), $\n, Delim, $\n].
 
 take_nth(I, L) when I < 2 -> L;
@@ -170,15 +200,47 @@ type(T, undefined) -> T;
 type(T, T)         -> T;
 type(_, _)         -> string.
 
-to_strings(Keys, Map) when is_map(Map) ->
-  [to_string(maps:get(Key, Map, undefined)) || Key <- Keys];
-to_strings(_Keys, List) when is_list(List) ->
-  [to_string(Entry) || Entry <- List];
-to_strings(_Keys, Tuple) when is_tuple(Tuple) ->
-  [to_string(Entry) || Entry <- tuple_to_list(Tuple)].
+to_strings(Keys, Values, undefined) ->
+  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)));
+to_strings(Keys, Values, Formats) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
+  to_strings1(Keys, Values, tuple_to_list(Formats));
+to_strings(Keys, Values, Formats) when is_list(Formats), length(Formats) == length(Keys) ->
+  to_strings1(Keys, Values, Formats).
 
-to_string(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};
-to_string(Float) when is_float(Float) -> {number, io_lib:format("~.4f",[Float])};
-to_string(Str)   when is_list(Str)    -> {string, Str};
-to_string(Bin)   when is_binary(Bin)  -> {string, Bin};
-to_string(T)                          -> {string, io_lib:format("~tp", [T])}.
+to_strings1([], _, _) ->
+  [];
+to_strings1([K|Keys], Map, [F|Formats]) when is_map(Map) ->
+  [to_string(maps:get(K, Map), F) | to_strings1(Keys, Map, Formats)];
+to_strings1(_Keys, List, Formats) when is_list(List), is_list(Formats) ->
+  [to_string(Entry, F) || {Entry, F} <- lists:zip(List, Formats)];
+to_strings1(Keys, Tuple, Formats) when is_tuple(Tuple), is_list(Formats) ->
+  to_strings1(Keys, tuple_to_list(Tuple), Formats).
+
+to_string(V) ->
+  to_string(V, undefined).
+
+to_string(V, Fmt) when is_list(Fmt) ->
+  {guess_type(V), io_lib:format(Fmt, [V])};
+to_string(V, Fmt) when is_function(Fmt, 1) ->
+  case Fmt(V) of
+    R when is_tuple(R)
+         , tuple_size(R)==2
+         , (element(1,R)==number orelse element(1,R)==string) ->
+      R;
+    R when is_tuple(R) ->
+      throw({invalid_format_function_return, V, R});
+    R ->
+      {string, R}
+  end;
+to_string(V, undefined) ->
+  to_string1(V).
+  
+to_string1(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};
+to_string1(Float) when is_float(Float) -> {number, io_lib:format("~.4f",[Float])};
+to_string1(Str)   when is_list(Str)    -> {string, Str};
+to_string1(Bin)   when is_binary(Bin)  -> {string, Bin};
+to_string1(T)                          -> {string, io_lib:format("~tp", [T])}.
+
+guess_type(V)     when is_integer(V)   -> number;
+guess_type(V)     when is_float(V)     -> number;
+guess_type(_)                          -> string.

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module stringx</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module stringx</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Implements miscelaneous string functions.
+<p>Copyright © 2006 Serge Aleynikov</p>
+
+<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2>Implements miscelaneous string functions
+  
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#pretty_print_table-1">pretty_print_table/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pretty_print_table-2">pretty_print_table/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pretty_print_table-3">pretty_print_table/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pretty_table-1">pretty_table/1</a></td><td>Pretty print list of maps to list.</td></tr>
+<tr><td valign="top"><a href="#pretty_table-2">pretty_table/2</a></td><td>Pretty print table of lists/tuples/maps to list.</td></tr>
+<tr><td valign="top"><a href="#pretty_table-3">pretty_table/3</a></td><td>Pretty print table of lists/tuples/maps to list.</td></tr>
+<tr><td valign="top"><a href="#titlecase-1">titlecase/1</a></td><td>Convert words in a string to capitalize first letter of each word.</td></tr>
+<tr><td valign="top"><a href="#wordcount-1">wordcount/1</a></td><td>Count number of words in a string.</td></tr>
+<tr><td valign="top"><a href="#wordwrap-2">wordwrap/2</a></td><td>Wrap words words in a string.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="pretty_print_table-1">pretty_print_table/1</a></h3>
+<div class="spec">
+<p><tt>pretty_print_table(LofMaps0) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pretty_print_table-2">pretty_print_table/2</a></h3>
+<div class="spec">
+<p><tt>pretty_print_table(HeaderRowKeys, Rows) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pretty_print_table-3">pretty_print_table/3</a></h3>
+<div class="spec">
+<p><tt>pretty_print_table(HeaderRowKeys, Rows, Opts) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pretty_table-1">pretty_table/1</a></h3>
+<div class="spec">
+<p><pre>pretty_table(LofMaps0 :: [#{}]) -&gt; list()</pre></p>
+</div><p>Pretty print list of maps to list.</p>
+<p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
+
+<h3 class="function"><a name="pretty_table-2">pretty_table/2</a></h3>
+<div class="spec">
+<p><pre>pretty_table(HeaderRowKeys :: [string()],
+             Rows :: [Row :: tuple() | list() | #{}]) -&gt;
+                list()</pre></p>
+</div><p>Pretty print table of lists/tuples/maps to list.</p>
+<p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
+
+<h3 class="function"><a name="pretty_table-3">pretty_table/3</a></h3>
+<div class="spec">
+<p><pre>pretty_table(HeaderRowKeys :: [string()],
+             Rows :: [Row :: tuple() | list() | #{}],
+             Opts ::
+                 #opts{number_pad = any(),
+                       th_dir = both | leading | trailing,
+                       td_dir = both | leading | trailing,
+                       td_start = any(),
+                       td_sep = any(),
+                       tr_sep = any(),
+                       tr_sep_td = any(),
+                       prefix = any(),
+                       td_formats = tuple()}) -&gt;
+                list()</pre></p>
+</div><p>Pretty print table of lists/tuples/maps to list.
+  The following options control formatting behavior:
+  * number_pad - leading padding character used for numbers
+  * th_dir     - table header row padding direction (both|leading|trailing)
+  * td_dir     - table row padding direction (both|leading|trailing)
+  * td_start   - Don't print columns less than this (e.g. use 2 for records)
+  * td_sep     - Column separator (default <code>" | "</code>)
+  * tr_sep     - Row separator (default <code>"-"</code>)
+  * tr_sep_td  - Column delimiter used in separating rows (<code>"+"`)
+  * prefix     - prepend each row with this string
+  * td_formats - a tuple containing column formats. Each value is either
+                 a format string passed to `io_lib:format/2</code> or a function
+                 <code>fun(Value) -&gt; {number|string, FormattedValue::string()}</code></p>
+
+<h3 class="function"><a name="titlecase-1">titlecase/1</a></h3>
+<div class="spec">
+<p><pre>titlecase(S :: string()) -&gt; string()</pre></p>
+</div><p>Convert words in a string to capitalize first letter of each word.</p>
+
+<h3 class="function"><a name="wordcount-1">wordcount/1</a></h3>
+<div class="spec">
+<p><pre>wordcount(S :: string()) -&gt; string()</pre></p>
+</div><p>Count number of words in a string</p>
+
+<h3 class="function"><a name="wordwrap-2">wordwrap/2</a></h3>
+<div class="spec">
+<p><pre>wordwrap(S :: string(), Margin :: integer()) -&gt; string()</pre></p>
+</div><p>Wrap words words in a string</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>
