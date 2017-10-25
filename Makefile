@@ -46,11 +46,13 @@ github-docs:
 	else \
 		git checkout -b gh-pages; \
 	fi
-	git checkout master src include Makefile rebar.*
+	rm -f rebar.lock
+	git checkout master -- src include
+	git checkout master -- Makefile rebar.*
 	make docs
 	mv doc/*.* .
 	make clean
-	rm -fr src include Makefile erl_crash.dump rebar.* README*
+	rm -fr src c_src include Makefile erl_crash.dump priv rebar.* README*
 	@FILES=`git st -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
 	for f in $$FILES ; do \
 		echo "Adding $$f"; git add $$f; \
@@ -61,6 +63,7 @@ github-docs:
 		else ret=1; git reset --hard; \
 		fi; \
 		set -e; git checkout master && echo 'Switched to master'; exit $$ret"
+
 
 tar:
 	@rm -f $(TARBALL).tgz; \
