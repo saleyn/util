@@ -103,6 +103,19 @@ pretty_table(HeaderRowKeys, Rows) ->
 %%          a format string passed to `io_lib:format/2' or a function
 %%          `fun(Value) -> {number|string, FormattedValue::string()}'</dd>
 %% </dl>
+%% Example:
+%% ```
+%% 1> stringx:pretty_print_table({a,b,c}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}],
+%%      #opts{td_dir=both, td_formats=
+%%          {undefined, fun(V) when is_integer(V) -> {number, integer_to_list(V)};
+%%                         (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])}
+%%                      end, "~w"}}).
+%%  a   |     b     |   c
+%% -----+-----------+-------
+%%  a   |        10 |  ccc
+%% bxxx | 200.00123 | 'Done'
+%% -----+-----------+-------
+%% '''
 %% @end
 %%-------------------------------------------------------------------------
 -spec pretty_table([string()], [Row :: tuple()|list()|map()], #opts{}) -> list().
