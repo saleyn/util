@@ -1,0 +1,6 @@
+%% encoding: UTF-8
+{application,util}.
+{modules,[conf_util,decompiler,erlang_scan,file_log_reader,gen_leader,gin,hex,
+          iif,io_lib_pretty_limited,listx,osx,pcap,plists,pmap,prof,
+          restrict_remsh_mod,smerl,smtp,sntp,ssh_sign,stringx,sup_bridge,
+          trunc_io,user_default,xmltree,xref_test]}.

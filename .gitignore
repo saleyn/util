@@ -2,7 +2,6 @@
 .rebar*
 rebar.lock
 deps
-doc/
 ebin/
 src/erlang_scan.erl
 *.o
