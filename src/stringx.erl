@@ -18,19 +18,7 @@
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
 
-% Options for table pretty printing
--record(opts, {
-  number_pad = $\s      :: char(),    % padding character for numbers
-  th_dir     = both     :: both|leading|trailing, % table header padding dir
-  td_dir     = trailing :: both|leading|trailing, % table row    padding dir
-  td_start   = 1        :: integer(), % Start printing from this field number
-  td_sep     = " | "    :: string(),  % Column separator
-  tr_sep     = "-"      :: string(),
-  tr_sep_td  = "+"      :: string(),  % Delimiter header/footer column sep
-  prefix     = ""       :: string(),  % Use this prefix in front of each row
-  td_formats :: tuple() % Optional tuple containing value format for columns
-                        % (each item is either a Fmt string or fun(Value)).
-}).
+-include("stringx.hrl").
 
 %%%------------------------------------------------------------------------
 %%% External API
@@ -205,9 +193,17 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
             end,
   Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.tr_sep, W)}
               || {Str,{_,W}} <- lists:zip(KeyStrs, Ws)],
-  Header  = lists:join(Opts#opts.td_sep, [H || {H,_} <- Header0]),
-  Delim   = lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT, [T || {_,T} <- Header0]),
-  [Opts#opts.prefix, Header, $\n, Delim, $\n, lists:join($\n, [Row(R) || R <- Rows]), $\n, Delim, $\n].
+  Header  = if Opts#opts.out_header ->
+              [lists:join(Opts#opts.td_sep, [H || {H,_} <- Header0]),$\n];
+            true ->
+              []
+            end,
+  Delim   = if Opts#opts.out_sep ->
+              [lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT, [T || {_,T} <- Header0]),$\n];
+            true ->
+              []
+            end,
+  [Opts#opts.prefix, Header, Delim, lists:join($\n, [Row(R) || R <- Rows]), $\n, Delim].
 
 take_nth(I, L) when I < 2 -> L;
 take_nth(_,[])            -> [];
