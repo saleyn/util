@@ -17,6 +17,7 @@
 -export([titlecase/1, wordcount/1, wordwrap/2]).
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
+-export([align_rows/1]).
 
 -include("stringx.hrl").
 
@@ -206,6 +207,23 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
   [Opts#opts.prefix, Header, Delim, string:join([Row(R) || R <- Rows], "\n"),
    if Delim==[] -> ""; true -> "\n" end, Delim].
 
+align_rows([]) ->
+  [];
+align_rows([H|_] = Rows) when is_tuple(H) ->
+  RR = [tuple_to_list(R) || R <- Rows],
+  LL = align_rows(RR),
+  [list_to_tuple(R) || R <- LL];
+align_rows([H|_] = Rows) when is_list(H) ->
+  RR  = [[lists:flatten(element(2,to_string1(I))) || I <- R] || R <- Rows],
+  Ln  = [list_to_tuple([length(I) || I <- R]) || R <- RR],
+  Max = fun(I) -> lists:max([element(I, R) || R <- Ln]) end,
+  ML  = fun
+          Loop(0, A) -> A;
+          Loop(I, A) -> Loop(I-1, [Max(I) | A])
+        end,
+  LW  = ML(length(H), []),
+  [[lists:flatten(string:pad(S, W, trailing)) || {W,S} <- lists:zip(LW,R)] || R <- RR].
+  
 take_nth(I, L) when I < 2 -> L;
 take_nth(_,[])            -> [];
 take_nth(I,[_|T])         -> take_nth(I-1, T).
