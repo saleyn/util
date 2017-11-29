@@ -203,7 +203,8 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
             true ->
               []
             end,
-  [Opts#opts.prefix, Header, Delim, lists:join($\n, [Row(R) || R <- Rows]), $\n, Delim].
+  [Opts#opts.prefix, Header, Delim, string:join([Row(R) || R <- Rows], "\n"),
+   if Delim==[] -> ""; true -> "\n" end, Delim].
 
 take_nth(I, L) when I < 2 -> L;
 take_nth(_,[])            -> [];
