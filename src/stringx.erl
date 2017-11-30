@@ -17,7 +17,7 @@
 -export([titlecase/1, wordcount/1, wordwrap/2]).
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
--export([align_rows/1]).
+-export([align_rows/1, aligned_format/2]).
 
 -include("stringx.hrl").
 
@@ -207,6 +207,16 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
   [Opts#opts.prefix, Header, Delim, string:join([Row(R) || R <- Rows], "\n"),
    if Delim==[] -> ""; true -> "\n" end, Delim].
 
+aligned_format(Fmt, Rows) ->
+  Aligned = align_rows(Rows),
+  Fun     = fun(T) when is_tuple(T) -> tuple_to_list(T);
+               (L)                  -> case all_columns_simple(L) of
+                                          true  -> [L];
+                                          false ->  L
+                                       end
+            end,
+  [io_lib:format(Fmt, Fun(Row)) || Row <- Aligned].
+
 align_rows([]) ->
   [];
 align_rows([H|_] = Rows) when is_tuple(H) ->
@@ -214,12 +224,7 @@ align_rows([H|_] = Rows) when is_tuple(H) ->
   LL = align_rows(RR),
   [list_to_tuple(R) || R <- LL];
 align_rows([H|_] = Rows) ->
-  Simple = lists:all(fun(I) ->
-                       is_atom(I)    orelse
-                       is_integer(I) orelse
-                       is_float(I)   orelse
-                       io_lib:printable_list(H)
-                     end, Rows),
+  Simple = all_columns_simple(Rows),
   {N, L, Unlist} = if
                      Simple -> {1, [[I] || I <- Rows], true};
                      true   -> {length(H), Rows, false}
@@ -238,7 +243,15 @@ align_rows([H|_] = Rows) ->
   true ->
     LL
   end.
-  
+
+all_columns_simple(Rows) ->
+  lists:all(fun(I) ->
+             is_atom(I)    orelse
+             is_integer(I) orelse
+             is_float(I)   orelse
+             io_lib:printable_list(I)
+            end, Rows).
+
 take_nth(I, L) when I < 2 -> L;
 take_nth(_,[])            -> [];
 take_nth(I,[_|T])         -> take_nth(I-1, T).
