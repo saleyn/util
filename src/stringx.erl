@@ -213,16 +213,31 @@ align_rows([H|_] = Rows) when is_tuple(H) ->
   RR = [tuple_to_list(R) || R <- Rows],
   LL = align_rows(RR),
   [list_to_tuple(R) || R <- LL];
-align_rows([H|_] = Rows) when is_list(H) ->
-  RR  = [[lists:flatten(element(2,to_string1(I))) || I <- R] || R <- Rows],
+align_rows([H|_] = Rows) ->
+  Simple = lists:all(fun(I) ->
+                       is_atom(I)    orelse
+                       is_integer(I) orelse
+                       is_float(I)   orelse
+                       io_lib:printable_list(H)
+                     end, Rows),
+  {N, L, Unlist} = if
+                     Simple -> {1, [[I] || I <- Rows], true};
+                     true   -> {length(H), Rows, false}
+                   end,
+  RR  = [[lists:flatten(element(2,to_string1(I))) || I <- R] || R <- L],
   Ln  = [list_to_tuple([length(I) || I <- R]) || R <- RR],
   Max = fun(I) -> lists:max([element(I, R) || R <- Ln]) end,
   ML  = fun
           Loop(0, A) -> A;
           Loop(I, A) -> Loop(I-1, [Max(I) | A])
         end,
-  LW  = ML(length(H), []),
-  [[lists:flatten(string:pad(S, W, trailing)) || {W,S} <- lists:zip(LW,R)] || R <- RR].
+  LW  = ML(N, []),
+  LL  = [[lists:flatten(string:pad(S, W, trailing)) || {W,S} <- lists:zip(LW,R)] || R <- RR],
+  if Unlist ->
+    [I || [I] <- LL];
+  true ->
+    LL
+  end.
   
 take_nth(I, L) when I < 2 -> L;
 take_nth(_,[])            -> [];
