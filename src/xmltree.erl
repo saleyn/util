@@ -39,8 +39,10 @@ file(Filename) when is_list(Filename) ->
   xml(Xml).
 file(Filename, RulesFile) when is_list(Filename), is_list(RulesFile) ->
   {Xml, _} = xmerl_scan:file(Filename),
-  {ok, [Rules]} = file:consult(RulesFile),
-  xml(Xml, Rules);
+  case file:consult(RulesFile) of
+    {ok, [Rules]} -> xml(Xml, Rules);
+    {ok,  Rules } -> xml(Xml, Rules)
+  end;
 file(Filename, Rules) when is_list(Filename), is_tuple(Rules) ->
   {Xml, _} = xmerl_scan:file(Filename),
   xml(Xml, Rules).
