@@ -17,7 +17,7 @@
 -export([titlecase/1, wordcount/1, wordwrap/2]).
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
--export([align_rows/1, aligned_format/2]).
+-export([align_rows/1, align_rows/2, aligned_format/2, aligned_format/3]).
 
 -include("stringx.hrl").
 
@@ -208,7 +208,16 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
    if Delim==[] -> ""; true -> "\n" end, Delim].
 
 aligned_format(Fmt, Rows) ->
-  Aligned = align_rows(Rows),
+  {match, FF} = re:run(Fmt, "(~-?s)", [global, {capture, [1], list}]),
+  Directions  = [case F of
+                   "~s"  -> trailing;
+                   "~-s" -> leading
+                 end || [F] <- FF],
+  Fmt1 = lists:append(string:replace(Fmt, "~-s", "~s", all)),
+  aligned_format(Fmt1, Rows, Directions).
+
+aligned_format(Fmt, Rows, Directions) when is_list(Rows), is_list(Directions) ->
+  Aligned = align_rows(Rows, Directions),
   Fun     = fun(T) when is_tuple(T) -> tuple_to_list(T);
                (L)                  -> case all_columns_simple(L) of
                                           true  -> [L];
@@ -217,13 +226,16 @@ aligned_format(Fmt, Rows) ->
             end,
   [io_lib:format(Fmt, Fun(Row)) || Row <- Aligned].
 
-align_rows([]) ->
+align_rows(Rows) ->
+  align_rows(Rows, []).
+
+align_rows([], _Direcitons) ->
   [];
-align_rows([H|_] = Rows) when is_tuple(H) ->
+align_rows([H|_] = Rows, Directions) when is_tuple(H), is_list(Directions) ->
   RR = [tuple_to_list(R) || R <- Rows],
-  LL = align_rows(RR),
+  LL = align_rows(RR, Directions),
   [list_to_tuple(R) || R <- LL];
-align_rows([H|_] = Rows) ->
+align_rows([H|_] = Rows, Directions) ->
   Simple = all_columns_simple(Rows),
   {N, L, Unlist} = if
                      Simple -> {1, [[I] || I <- Rows], true};
@@ -237,7 +249,21 @@ align_rows([H|_] = Rows) ->
           Loop(I, A) -> Loop(I-1, [Max(I) | A])
         end,
   LW  = ML(N, []),
-  LL  = [[lists:flatten(string:pad(S, W, trailing)) || {W,S} <- lists:zip(LW,R)] || R <- RR],
+  DD  = if
+          length(Directions) == N ->
+            Directions;
+          true ->
+            T0 = erlang:make_tuple(N, trailing),
+            {_,T1} = lists:foldl(
+                  fun
+                    (trailing, {I, A}) -> {I+1, A};
+                    (leading,  {I, A}) -> {I+1, setelement(I, A, leading)};
+                    ({J,D},    {I, A}) when J =< N andalso (D == trailing orelse D == leading) ->
+                      {I+1, setelement(J, A, D)}
+                  end, {1, T0}, Directions),
+            tuple_to_list(T1)
+        end,
+  LL  = [[lists:flatten(string:pad(S, W, D)) || {W,S,D} <- lists:zip3(LW,R,DD)] || R <- RR],
   if Unlist ->
     [I || [I] <- LL];
   true ->
