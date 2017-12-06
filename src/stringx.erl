@@ -229,18 +229,50 @@ aligned_format(Fmt, Rows, Directions) when is_list(Rows), is_list(Directions) ->
 align_rows(Rows) ->
   align_rows(Rows, []).
 
-align_rows([], _Direcitons) ->
+%%-------------------------------------------------------------------------
+%% @doc Align rows of terms by stringifying them to uniform column width.
+%% `Options' can be:
+%%
+-spec align_rows(Rows    :: [tuple()|list()],
+                 Options :: [{dir,    Dir::[trailing|leading|
+                                            {Pos::integer(),trailing|leading}]} |
+                             {return, Ret::tuple|list} |
+                             {prefix, string()}]) ->
+       [AlignedRow::tuple()|list()].
+%% `Rows' is a list of lists of tuples. All rows must have the same arity.
+%% `Options' contain:
+%% <dl>
+%% <dt>{dir, Direction}</dt>
+%%     <dd>Column padding direction, where Direction is one of `leading',
+%%         `trailing', or `{Position::integer(), leading|trailing}'</dd>
+%% <dt>{return, tuple|list}</dt>
+%%     <dd>Return result rows as lists or tuples</dd>
+%% <dt>{prefix, string()}</dt>
+%%     <dd>Prefix first item in each row with this string</dd>
+%% </dt>
+%% @end
+%%-------------------------------------------------------------------------
+align_rows([], _Options) ->
   [];
-align_rows([H|_] = Rows, Directions) when is_tuple(H), is_list(Directions) ->
+align_rows([H|_] = Rows, Options) when is_tuple(H), is_list(Options) ->
   RR = [tuple_to_list(R) || R <- Rows],
-  LL = align_rows(RR, Directions),
-  [list_to_tuple(R) || R <- LL];
-align_rows([H|_] = Rows, Directions) ->
+  LL = align_rows(RR, Options),
+  case proplists:get_value(return, Options) of
+    I when I==undefined; I==tuple ->
+      [list_to_tuple(R) || R <- LL];
+    list ->
+      LL
+  end;
+align_rows([H|_] = Rows, Options) when is_list(Options) ->
   Simple = all_columns_simple(Rows),
   {N, L, Unlist} = if
                      Simple -> {1, [[I] || I <- Rows], true};
                      true   -> {length(H), Rows, false}
                    end,
+  lists:filter(fun(R) when is_tuple(R) -> tuple_size(R) =/= N;
+                  (R) when is_list(R)  -> length(R)     =/= N
+               end, L) =/= []
+    andalso throw(all_rows_must_have_same_arity),
   RR  = [[lists:flatten(element(2,to_string1(I))) || I <- R] || R <- L],
   Ln  = [list_to_tuple([length(I) || I <- R]) || R <- RR],
   Max = fun(I) -> lists:max([element(I, R) || R <- Ln]) end,
@@ -249,9 +281,10 @@ align_rows([H|_] = Rows, Directions) ->
           Loop(I, A) -> Loop(I-1, [Max(I) | A])
         end,
   LW  = ML(N, []),
+  Dir = proplists:get_value(dir, Options, []),
   DD  = if
-          length(Directions) == N ->
-            Directions;
+          length(Dir) == N ->
+            Dir;
           true ->
             T0 = erlang:make_tuple(N, trailing),
             {_,T1} = lists:foldl(
@@ -260,14 +293,20 @@ align_rows([H|_] = Rows, Directions) ->
                     (leading,  {I, A}) -> {I+1, setelement(I, A, leading)};
                     ({J,D},    {I, A}) when J =< N andalso (D == trailing orelse D == leading) ->
                       {I+1, setelement(J, A, D)}
-                  end, {1, T0}, Directions),
+                  end, {1, T0}, Dir),
             tuple_to_list(T1)
         end,
   LL  = [[lists:flatten(string:pad(S, W, D)) || {W,S,D} <- lists:zip3(LW,R,DD)] || R <- RR],
-  if Unlist ->
-    [I || [I] <- LL];
-  true ->
-    LL
+  case proplists:get_value(prefix, Options) of
+    [] when Unlist ->
+      [I || [I] <- LL];
+    [] ->
+      LL;
+    Pfx when Unlist ->
+      LL1 = [[Pfx ++ HH | TT] || [HH|TT] <- LL],
+      [I || [I] <- LL1];
+    Pfx ->
+      [[Pfx ++ HH | TT] || [HH|TT] <- LL]
   end.
 
 all_columns_simple(Rows) ->
