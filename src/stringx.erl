@@ -297,7 +297,7 @@ align_rows([H|_] = Rows, Options) when is_list(Options) ->
             tuple_to_list(T1)
         end,
   LL  = [[lists:flatten(string:pad(S, W, D)) || {W,S,D} <- lists:zip3(LW,R,DD)] || R <- RR],
-  case proplists:get_value(prefix, Options) of
+  case proplists:get_value(prefix, Options, []) of
     [] when Unlist ->
       [I || [I] <- LL];
     [] ->
