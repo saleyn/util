@@ -234,7 +234,7 @@ align_rows(Rows) ->
 %% `Options' can be:
 %%
 -spec align_rows(Rows    :: [tuple()|list()],
-                 Options :: [{dir,    Dir::[trailing|leading|both|
+                 Options :: [{pad,    Dir::[trailing|leading|both|
                                             {Pos::integer()|last,trailing|leading|both|none}]} |
                              {return, Ret::tuple|list} |
                              {prefix, string()}]) ->
@@ -242,7 +242,7 @@ align_rows(Rows) ->
 %% `Rows' is a list of lists of tuples. All rows must have the same arity.
 %% `Options' contain:
 %% <dl>
-%% <dt>{dir, Direction}</dt>
+%% <dt>{pad, Direction}</dt>
 %%     <dd>Column padding direction, where `Direction' is one of `leading',
 %%         `trailing', `{Position::integer(), leading|trailing|none}',
 %%         `{last, leading|trailing|none}'</dd>
@@ -282,7 +282,7 @@ align_rows([H|_] = Rows, Options) when is_list(Options) ->
           Loop(I, A) -> Loop(I-1, [Max(I) | A])
         end,
   LW  = ML(N, []),
-  Dir = proplists:get_value(dir, Options, []),
+  Dir = proplists:get_value(pad, Options, []),
   DD  = if
           length(Dir) == N, is_atom(hd(Dir)) ->
             Dir;
