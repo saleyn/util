@@ -234,8 +234,8 @@ align_rows(Rows) ->
 %% `Options' can be:
 %%
 -spec align_rows(Rows    :: [tuple()|list()],
-                 Options :: [{dir,    Dir::[trailing|leading|
-                                            {Pos::integer(),trailing|leading}]} |
+                 Options :: [{dir,    Dir::[trailing|leading|both|
+                                            {Pos::integer()|last,trailing|leading|both|none}]} |
                              {return, Ret::tuple|list} |
                              {prefix, string()}]) ->
        [AlignedRow::tuple()|list()].
@@ -243,8 +243,9 @@ align_rows(Rows) ->
 %% `Options' contain:
 %% <dl>
 %% <dt>{dir, Direction}</dt>
-%%     <dd>Column padding direction, where Direction is one of `leading',
-%%         `trailing', or `{Position::integer(), leading|trailing}'</dd>
+%%     <dd>Column padding direction, where `Direction' is one of `leading',
+%%         `trailing', `{Position::integer(), leading|trailing|none}',
+%%         `{last, leading|trailing|none}'</dd>
 %% <dt>{return, tuple|list}</dt>
 %%     <dd>Return result rows as lists or tuples</dd>
 %% <dt>{prefix, string()}</dt>
@@ -283,20 +284,37 @@ align_rows([H|_] = Rows, Options) when is_list(Options) ->
   LW  = ML(N, []),
   Dir = proplists:get_value(dir, Options, []),
   DD  = if
-          length(Dir) == N ->
+          length(Dir) == N, is_atom(hd(Dir)) ->
             Dir;
           true ->
             T0 = erlang:make_tuple(N, trailing),
             {_,T1} = lists:foldl(
                   fun
-                    (trailing, {I, A}) -> {I+1, A};
-                    (leading,  {I, A}) -> {I+1, setelement(I, A, leading)};
-                    ({J,D},    {I, A}) when J =< N andalso (D == trailing orelse D == leading) ->
+                    (D, {I, A})     when   D == trailing orelse
+                                           D == leading  orelse
+                                           D == both     orelse
+                                           D == none ->
+                      {I+1, setelement(I, A, D)};
+                    ({last,D}, {I,A}) when
+                                          (D == trailing orelse
+                                           D == leading  orelse
+                                           D == both     orelse
+                                           D == none) ->
+                      {I+1, setelement(N, A, D)};
+                    ({J,D}, {I, A}) when (is_integer(J) andalso J =< N) andalso
+                                          (D == trailing orelse
+                                           D == leading  orelse
+                                           D == both     orelse
+                                           D == none) ->
                       {I+1, setelement(J, A, D)}
                   end, {1, T0}, Dir),
             tuple_to_list(T1)
         end,
-  LL  = [[lists:flatten(string:pad(S, W, D)) || {W,S,D} <- lists:zip3(LW,R,DD)] || R <- RR],
+  PAD = fun
+          (S,_W, none) -> S;
+          (S, W, D)    -> string:pad(S, W, D)
+        end,
+  LL  = [[lists:flatten(PAD(S, W, D)) || {W,S,D} <- lists:zip3(LW,R,DD)] || R <- RR],
   case proplists:get_value(prefix, Options, []) of
     [] when Unlist ->
       [I || [I] <- LL];
