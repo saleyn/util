@@ -270,10 +270,8 @@ align_rows([H|_] = Rows, Options) when is_list(Options) ->
                      Simple -> {1, [[I] || I <- Rows], true};
                      true   -> {length(H), Rows, false}
                    end,
-  lists:filter(fun(R) when is_tuple(R) -> tuple_size(R) =/= N;
-                  (R) when is_list(R)  -> length(R)     =/= N
-               end, L) =/= []
-    andalso throw(all_rows_must_have_same_arity),
+  lists:filter(fun(R) when is_list(R) -> length(R) =/= N end, L) =/= []
+    andalso throw({all_rows_must_have_same_arity, N, [I || I <- L, length(I) /= N]}),
   RR  = [[lists:flatten(element(2,to_string1(I))) || I <- R] || R <- L],
   Ln  = [list_to_tuple([length(I) || I <- R]) || R <- RR],
   Max = fun(I) -> lists:max([element(I, R) || R <- Ln]) end,

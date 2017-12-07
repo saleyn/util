@@ -99,6 +99,10 @@ process_attributes([], _) ->
 
 process_value(Value, Fun) when is_function(Fun ,1) -> Fun(Value);
 process_value(Value, atom)    -> list_to_atom   (Value);
+process_value(Value, boolean) -> A = list_to_existing_atom(Value),
+                                 if is_boolean(A) -> A;
+                                    true          -> throw({value_is_not_boolean, Value})
+                                 end;
 process_value(Value, integer) -> list_to_integer(Value);
 process_value(Value, float)   -> list_to_float  (Value);
 process_value(Value, binary)  -> list_to_binary (Value);
