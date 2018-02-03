@@ -231,15 +231,18 @@ align_rows(Rows) ->
 
 %%-------------------------------------------------------------------------
 %% @doc Align rows of terms by stringifying them to uniform column width.
+%%      If some row doesn't need to be aligned, pass its value as a binary.
 %% `Options' can be:
 %%
--spec align_rows(Rows    :: [tuple()|list()],
+-spec align_rows(Rows    :: [tuple()|binary()|list()],
                  Options :: [{pad,    Dir::[trailing|leading|both|
                                             {Pos::integer()|last,trailing|leading|both|none}]} |
                              {return, Ret::tuple|list} |
-                             {prefix, string()}]) ->
+                             {prefix,       string()}  |
+                             {ignore_empty, boolean()}]) ->
        [AlignedRow::tuple()|list()].
-%% `Rows' is a list of lists of tuples. All rows must have the same arity.
+%% `Rows' is a list. All rows must have the same arity except if a row is
+%%  a binary.
 %% `Options' contain:
 %% <dl>
 %% <dt>{pad, Direction}</dt>
@@ -250,31 +253,59 @@ align_rows(Rows) ->
 %%     <dd>Return result rows as lists or tuples</dd>
 %% <dt>{prefix, string()}</dt>
 %%     <dd>Prefix first item in each row with this string</dd>
+%% <dt>{ignore_empty, boolean()}</dt>
+%%     <dd>Don't pad trailing empty columns if this option is true</dd>
 %% </dt>
 %% @end
 %%-------------------------------------------------------------------------
 align_rows([], _Options) ->
   [];
-align_rows([H|_] = Rows, Options) when is_tuple(H), is_list(Options) ->
-  RR = [tuple_to_list(R) || R <- Rows],
-  LL = align_rows(RR, Options),
-  case proplists:get_value(return, Options) of
-    I when I==undefined; I==tuple ->
-      [list_to_tuple(R) || R <- LL];
-    list ->
-      LL
-  end;
-align_rows([H|_] = Rows, Options) when is_list(Options) ->
+align_rows(Rows, Options) when is_list(Rows), is_list(Options) ->
+  case lists:any(fun(I) -> is_tuple(I) end, Rows) of
+    true ->
+      FF = fun
+            (I) when is_binary(I) -> I;
+            (I) when is_tuple(I)  -> tuple_to_list(I);
+            (I) when is_list(I)   -> I
+           end,
+      RR = [FF(R) || R <- Rows],
+      LL = align_rows1(RR, Options),
+      case proplists:get_value(return, Options) of
+        I when I==undefined; I==tuple ->
+          [case is_binary(R) of
+             true -> R;
+             _    -> list_to_tuple(R)
+           end || R <- LL];
+        list ->
+          LL
+      end;
+    false ->
+      align_rows1(Rows, Options)
+  end.
+align_rows1(Rows, Options) when is_list(Rows), is_list(Options) ->
   Simple = all_columns_simple(Rows),
   {N, L, Unlist} = if
                      Simple -> {1, [[I] || I <- Rows], true};
-                     true   -> {length(H), Rows, false}
+                     true   -> {length(hd([R || R <- Rows, not is_binary(R)])), Rows, false}
                    end,
-  lists:filter(fun(R) when is_list(R) -> length(R) =/= N end, L) =/= []
-    andalso throw({all_rows_must_have_same_arity, N, [I || I <- L, length(I) /= N]}),
-  RR  = [[lists:flatten(element(2,to_string1(I))) || I <- R] || R <- L],
-  Ln  = [list_to_tuple([length(I) || I <- R]) || R <- RR],
-  Max = fun(I) -> lists:max([element(I, R) || R <- Ln]) end,
+  lists:filter(fun
+                (R) when is_list(R)   -> length(R) =/= N;
+                (R) when is_binary(R) -> false
+               end, L) =/= []
+    andalso throw({all_rows_must_have_same_arity, N,
+                   [I || I <- L, not is_binary(I), length(I) /= N]}),
+  RR  = [case is_binary(R) of
+           true -> R;
+           _    -> [lists:flatten(element(2,to_string1(I))) || I <- R]
+         end || R <- L],
+  Ln  = [case is_binary(R) of
+           true -> R;
+           _    -> list_to_tuple([length(I) || I <- R])
+         end || R <- RR],
+  Max = fun(I) -> lists:max([case is_binary(R) of
+                               true -> 0;
+                               _    -> element(I, R)
+                             end || R <- Ln]) end,
   ML  = fun
           Loop(0, A) -> A;
           Loop(I, A) -> Loop(I-1, [Max(I) | A])
@@ -308,21 +339,43 @@ align_rows([H|_] = Rows, Options) when is_list(Options) ->
                   end, {1, T0}, Dir),
             tuple_to_list(T1)
         end,
+  HasLastNone = lists:member({last,none}, Dir),
+  IE  = proplists:get_value(ignore_empty, Options, false),
+  SkE = fun
+          (List) when not IE ->
+            List;
+          (List) ->
+            RL0 = lists:reverse(List),
+            RL1 = lists:dropwhile(fun({_Wid, Row, _Pad}) -> Row == [] end, RL0),
+            case {length(RL0) == length(RL1), HasLastNone, RL1} of
+              {false, true, [{Wid, Row, _} | Rest]} ->
+                lists:reverse([{Wid, Row, none} | Rest]);
+              _ ->
+                lists:reverse(RL1)
+            end
+        end,
   PAD = fun
           (S,_W, none) -> S;
           (S, W, D)    -> string:pad(S, W, D)
         end,
-  LL  = [[lists:flatten(PAD(S, W, D)) || {W,S,D} <- lists:zip3(LW,R,DD)] || R <- RR],
+  LL  = [case is_binary(R) of
+          true  -> R;
+          false -> [lists:flatten(PAD(S, W, D)) || {W,S,D} <- SkE(lists:zip3(LW,R,DD))]
+         end || R <- RR],
   case proplists:get_value(prefix, Options, []) of
     [] when Unlist ->
       [I || [I] <- LL];
     [] ->
       LL;
-    Pfx when Unlist ->
-      LL1 = [[Pfx ++ HH | TT] || [HH|TT] <- LL],
-      [I || [I] <- LL1];
     Pfx ->
-      [[Pfx ++ HH | TT] || [HH|TT] <- LL]
+      LL1 = [case is_binary(HH) of
+               true  -> [<<(list_to_binary(Pfx))/binary, HH/binary>> | TT];
+               false -> [Pfx ++ HH | TT]
+             end || [HH|TT] <- LL],
+      if
+        Unlist -> [I || [I] <- LL1];
+        true   -> LL1
+      end
   end.
 
 all_columns_simple(Rows) ->
@@ -330,6 +383,7 @@ all_columns_simple(Rows) ->
              is_atom(I)    orelse
              is_integer(I) orelse
              is_float(I)   orelse
+             is_binary(I)  orelse
              io_lib:printable_list(I)
             end, Rows).
 
@@ -386,7 +440,7 @@ to_string(V, undefined) ->
 to_string1(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};
 to_string1(Float) when is_float(Float) -> {number, io_lib:format("~.4f",[Float])};
 to_string1(Str)   when is_list(Str)    -> {string, Str};
-to_string1(Bin)   when is_binary(Bin)  -> {string, Bin};
+to_string1(Bin)   when is_binary(Bin)  -> {string, binary_to_list(Bin)};
 to_string1(T)                          -> {string, io_lib:format("~tp", [T])}.
 
 guess_type(V)     when is_integer(V)   -> number;
