@@ -273,11 +273,14 @@ align_rows(Rows, Options) when is_list(Rows), is_list(Options) ->
       case proplists:get_value(return, Options) of
         I when I==undefined; I==tuple ->
           [case is_binary(R) of
-             true -> R;
+             true -> binary_to_list(R);
              _    -> list_to_tuple(R)
            end || R <- LL];
         list ->
-          LL
+          [case is_binary(R) of
+             true  -> binary_to_list(R);
+             false -> R
+           end || R <- LL]
       end;
     false ->
       align_rows1(Rows, Options)
