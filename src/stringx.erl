@@ -371,10 +371,14 @@ align_rows1(Rows, Options) when is_list(Rows), is_list(Options) ->
     [] ->
       LL;
     Pfx ->
-      LL1 = [case is_binary(HH) of
-               true  -> [<<(list_to_binary(Pfx))/binary, HH/binary>> | TT];
-               false -> [Pfx ++ HH | TT]
-             end || [HH|TT] <- LL],
+      LL1 = [case R of
+               _ when is_binary(R) ->
+                 <<(list_to_binary(Pfx))/binary, R/binary>>;
+               [HH|TT] when is_binary(HH) ->
+                 [<<(list_to_binary(Pfx))/binary, HH/binary>> | TT];
+               [HH|TT] when is_list(HH) ->
+                 [Pfx ++ HH | TT]
+             end || R <- LL],
       if
         Unlist -> [I || [I] <- LL1];
         true   -> LL1
