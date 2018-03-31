@@ -26,42 +26,67 @@
 %%%-----------------------------------------------------------------------------
 -module(iif).
 
--export([ife/2, ife/3, ifne/2, ifne/3, iif/3, iif/4]).
+-export([ife/2, ife/3, ifne/2, ifne/3, iif/3, iif/4, format_ne/3]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
-% If empty
+%%%-----------------------------------------------------------------------------
+%%% External API
+%%%-----------------------------------------------------------------------------
+
+%% @doc Return `Value' if first argument is one of: `[]', `false', `undefined'.
+%%      Otherwise return the value of the first argument.
 ife([],         Value) -> execute([], Value);
 ife(false,      Value) -> execute([], Value);
 ife(undefined,  Value) -> execute([], Value);
 ife(Test,      _Value) -> Test.
 
+%% @doc Return `Empty' if first argument is one of: `[]', `false', `undefined'.
+%%      Otherwise, if `NotEmpty' is `fun()', evaluate it, or if it's `fun(Arg)'
+%%      evaluate it with `Value' argument.
 ife([],         Empty,_NotEmpty) -> execute([], Empty);
 ife(false,      Empty,_NotEmpty) -> execute([], Empty);
 ife(undefined,  Empty,_NotEmpty) -> execute([], Empty);
 ife(Value,     _Empty, NotEmpty) -> execute(Value, NotEmpty).
 
+%% @doc Return `Value' if first argument is not one of: `[]', `false', `undefined'.
+%%      Otherwise, if `Value' is `fun()', evaluate it, or if it's `fun(Arg)'
+%%      evaluate it with `Test' argument.
 % If not empty
 ifne([],       _Value) -> [];
 ifne(false,    _Value) -> [];
 ifne(undefined,_Value) -> [];
 ifne(Test,      Value) -> execute(Test, Value).
 
+%% @doc Return `NotEmpty' if first argument is not one of: `[]', `false', `undefined'.
+%%      Otherwise, if `NotEmpty' is `fun()', evaluate it, or if it's `fun(Arg)'
+%%      evaluate it with `Value' argument.
 ifne([],       _NotEmpty, Empty) -> execute([], Empty);
 ifne(false,    _NotEmpty, Empty) -> execute([], Empty);
 ifne(undefined,_NotEmpty, Empty) -> execute([], Empty);
 ifne(Value,     NotEmpty,_Empty) -> execute(Value, NotEmpty).
 
-% If then else
+%% @doc Return `True' if first argument is `true' or return `False' if
+%%      the first argument is one of: `[]', `false', `undefined'.
 iif([],            _True, False) -> execute([], False);
 iif(false,         _True, False) -> execute([], False);
 iif(undefined,     _True, False) -> execute([], False);
 iif(true,           True,_False) -> execute([], True).
 
+%% @doc Return `True' if first two arguments match
 iif(Value, Value,   True,_False) -> execute(Value, True);
 iif(Value,_Other,  _True, False) -> execute(Value, False).
+
+%% @doc Format if first argument is not empty 
+format_ne(false, _Fmt, _Args) -> [];
+format_ne([],    _Fmt, _Args) -> [];
+format_ne(_True,  Fmt,  Args) -> io_lib:format(Fmt, Args).
+
+%%%-----------------------------------------------------------------------------
+%%% Internal functions
+%%%-----------------------------------------------------------------------------
 
 execute(_, F) when is_function(F,0) -> F();
 execute(V, F) when is_function(F,1) -> F(V);
