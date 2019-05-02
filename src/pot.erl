@@ -15,6 +15,26 @@
 %% DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+%% @see https://github.com/yuce/pot
+%% POT is an Erlang library for generating one time passwords.
+%% It supports both HMAC-based one time passwords (HOTP) and time based ones (TOTP).
+%% The generated passwords are compatible with
+%% [Google Authenticator](http://en.wikipedia.org/wiki/Google_Authenticator).
+%%
+%% POT is an almost direct translation of the Python
+%% [OneTimePass](https://github.com/tadeck/onetimepass) library.
+%%
+%% POT should work with any recent version of
+%% [Erlang/OTP](http://www.erlang.org/), [Elixir](http://elixir-lang.org/)
+%% and other Erlang VM based languages.
+%%
+%% In order to learn more about one time password generation, see the following
+%% Wikipedia articles:
+
+%% - [Google Authenticator](http://en.wikipedia.org/wiki/Google_Authenticator)
+%% - [HMAC-based One-time Password Algorithm](http://en.wikipedia.org/wiki/HMAC-based_One-time_Password_Algorithm)
+%% - [Time-based One-time Password Algorithm](http://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm)
+
 -module(pot).
 
 -export([valid_token/1, valid_token/2]).
