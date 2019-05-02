@@ -731,10 +731,10 @@ cluster_runmany(Fun, Fuse, [Task|TaskList], [N|Nodes], Running, Results) ->
 			   ok;
 			 exit:Reason ->
 			   Parent ! {self(), error, Reason};
-			 error:R ->
-			   Parent ! {self(), error, {R, erlang:get_stacktrace()}};
-			 throw:R ->
-			   Parent ! {self(), error, {{nocatch, R}, erlang:get_stacktrace()}}
+       error:R:STrace ->
+			   Parent ! {self(), error, {R, STrace}};
+       throw:R:STrace ->
+			   Parent ! {self(), error, {{nocatch, R}, STrace}}
 			 end
 	   end,
     Pid = spawn(N, Fun3),

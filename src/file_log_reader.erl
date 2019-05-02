@@ -252,8 +252,8 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
     catch
         throw:ignore ->
             ignore;
-        T:E ->
-            {stop, {T, E, erlang:get_stacktrace()}}
+        T:E:STrace ->
+            {stop, {T, E, STrace}}
     end.
 
 %%-----------------------------------------------------------------------------
@@ -279,8 +279,8 @@ run(#state{fd=FD, pos=Pos, end_pos=EndPos, max_size=MaxChunkSz, done=false} = S)
                 throw:{eof, PState} ->
                     end_of_file(ok, S#state{pstate=PState});
                 %% Some other error occured - abort:
-                E:W ->
-                    end_of_file({E, W, erlang:get_stacktrace()}, S)
+                E:W:STrace ->
+                    end_of_file({E, W, STrace}, S)
             end;
         {ok, _Data} ->
             schedule_timer(S);
