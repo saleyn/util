@@ -76,17 +76,25 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% <dt>th_dir</dt>
 %%      <dd>Table header row padding direction (both|leading|trailing)</dd>
 %% <dt>td_dir</dt>
-%%      <dd>Table row padding direction (both|leading|trailing)</dd>
+%%      <dd>Table row padding direction (both|leading|trailing) or
+%%          function `fun(Value, Type::number|string, ColNo::integer()) ->
+%%          {Direction::both|leading|trailing, PadChar::char()}` that is
+%%          applied to every column's value</dd>
 %% <dt>td_start</dt>
 %%      <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
 %% <dt>td_sep</dt>
-%%      <dd>Column separator (default `" | "')</dd>
+%%      <dd>Column separator (default `" | "`)</dd>
 %% <dt>tr_sep</dt>
-%%      <dd>Row separator (default `"-"')</dd>
+%%      <dd>Row separator (default `"-"`)</dd>
 %% <dt>tr_sep_td</dt>
 %%      <dd>Column delimiter used in separating rows (`"+"`)</dd>
 %% <dt>prefix</dt>
 %%      <dd>Prepend each row with this string</dd>
+%% <dt>translate</dt>
+%%      <dd>Value translation function `fun(Value) -> Value1` applied
+%%          to every column</dd>
+%% <dt>footer_rows</dt>
+%%      <dd>Number of footer rows (def: 0)</dd>
 %% <dt>td_formats</dt>
 %%      <dd>A tuple containing column formats. Each value is either
 %%          a format string passed to `io_lib:format/2' or a function
@@ -94,15 +102,22 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% </dl>
 %% Example:
 %% ```
-%% 1> stringx:pretty_print_table([a,b,c], [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}],
-%%      #opts{td_dir=both, td_formats=
+%% 1> stringx:pretty_print_table([a,b,c], [{a, 10, ccc}, {bxxx, 200.00123, 'Done'},
+%%                                         {undefined, "Total:", 100}],
+%%      #opts{
+%%        td_dir=both, footer_rows=1,
+%%        translate=fun(undefined) -> ""; (V) -> V end,
+%%        td_formats=
 %%          {undefined, fun(V) when is_integer(V) -> {number, integer_to_list(V)};
 %%                         (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])}
-%%                      end, "~w"}}).
+%%                      end, "~w"}
+%%      }).
 %%  a   |     b     |   c
 %% -----+-----------+-------
 %%  a   |        10 |  ccc
 %% bxxx | 200.00123 | 'Done'
+%% -----+-----------+-------
+%%      |     Total |    100
 %% -----+-----------+-------
 %% '''
 %% @end
@@ -192,20 +207,29 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
   KeyStrs = take_nth(Opts#opts.td_start, [element(2, to_string(Key)) || Key <- Keys0]),
-  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts#opts.td_formats)) || V   <- Rows0],
+  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts#opts.td_formats, Opts#opts.translate)) || V   <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
-  Col     = fun({_,Str}, {Type, Width}) ->
-              {Dir,Pad} = case Type of
-                            number -> {leading, Opts#opts.number_pad};
-                            _      -> {Opts#opts.td_dir, $\s}
-                          end,
-              string:pad(Str, Width, Dir, Pad)
+  Col     = fun
+              (I, {_,Str}, {Type, Width}) when is_function(Opts#opts.td_dir, 3) ->
+                {Dir,Pad} =
+                  case (Opts#opts.td_dir)(Str, Type, I) of
+                    default when Type == number -> {leading,  Opts#opts.number_pad};
+                    default                     -> {trailing, $\s};
+                    Val                         -> {Val,      $\s}
+                  end,
+                string:pad(Str, Width, Dir, Pad);
+              (_I, {_,Str}, {Type, Width}) ->
+                {Dir,Pad} = case Type of
+                              number -> {leading, Opts#opts.number_pad};
+                              _      -> {Opts#opts.td_dir, $\s}
+                            end,
+                string:pad(Str, Width, Dir, Pad)
             end,
   AddSpLn = length([C || C <- Opts#opts.td_sep, C == $\s]),
   AddSpH  = string:copies(Opts#opts.tr_sep, AddSpLn div 2),
   AddSpT  = string:copies(Opts#opts.tr_sep, AddSpLn - (AddSpLn div 2)),
   Row     = fun(Row) ->
-              R0 = [Col(Str, W) || {Str,W} <- lists:zip(Row, Ws)],
+              R0 = [Col(I,Str, W) || {I,Str,W} <- lists:zip3(lists:seq(1, length(Row)), Row, Ws)],
               [Opts#opts.prefix, lists:join(Opts#opts.td_sep, R0)]
             end,
   Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.tr_sep, W)}
@@ -220,8 +244,15 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
             true ->
               []
             end,
-  [Opts#opts.prefix, Header, Delim, string:join([Row(R) || R <- Rows], "\n"),
-   if Delim==[] -> ""; true -> "\n" end, Delim].
+  {Body, Footer} =
+            if Opts#opts.footer_rows > 0 ->
+              lists:split(length(Rows) - Opts#opts.footer_rows, Rows);
+            true ->
+              {Rows, []}
+            end,
+  [Opts#opts.prefix, Header, Delim, string:join([Row(R) || R <- Body], "\n"),
+    if Footer==[] -> ""; true -> [$\n, Delim, string:join([Row(R) || R <- Footer], "\n")] end,
+    if Delim==[]  -> ""; true -> $\n end, Delim].
 
 aligned_format(Fmt, Rows) ->
   {match, FF} = re:run(Fmt, "(~-?s)", [global, {capture, [1], list}]),
@@ -425,24 +456,27 @@ type(T, undefined) -> T;
 type(T, T)         -> T;
 type(_, _)         -> string.
 
-to_strings(Keys, Values, undefined) ->
-  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)));
-to_strings(Keys, Values, Formats) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, tuple_to_list(Formats));
-to_strings(Keys, Values, Formats) when is_list(Formats), length(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, Formats).
+to_strings(Keys, Values, undefined, Translate) ->
+  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), Translate);
+to_strings(Keys, Values, Formats, Translate) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
+  to_strings1(Keys, Values, tuple_to_list(Formats), Translate);
+to_strings(Keys, Values, Formats, Translate) when is_list(Formats), length(Formats) == length(Keys) ->
+  to_strings1(Keys, Values, Formats, Translate).
 
-to_strings1([], _, _) ->
+to_strings1([], _, _, _) ->
   [];
-to_strings1([K|Keys], Map, [F|Formats]) when is_map(Map) ->
-  [to_string(maps:get(K, Map), F) | to_strings1(Keys, Map, Formats)];
-to_strings1(_Keys, List, Formats) when is_list(List), is_list(Formats) ->
-  [to_string(Entry, F) || {Entry, F} <- lists:zip(List, Formats)];
-to_strings1(Keys, Tuple, Formats) when is_tuple(Tuple), is_list(Formats) ->
-  to_strings1(Keys, tuple_to_list(Tuple), Formats).
+to_strings1([K|Keys], Map, [F|Formats], Translate) when is_map(Map) ->
+  [to_string(maps:get(K, Map, Translate), F) | to_strings1(Keys, Map, Formats, Translate)];
+to_strings1(_Keys, List, Formats, Translate) when is_list(List), is_list(Formats) ->
+  [to_string(Entry, F, Translate) || {Entry, F} <- lists:zip(List, Formats)];
+to_strings1(Keys, Tuple, Formats, Translate) when is_tuple(Tuple), is_list(Formats) ->
+  to_strings1(Keys, tuple_to_list(Tuple), Formats, Translate).
 
 to_string(V) ->
   to_string(V, undefined).
+
+to_string(V, Fmt, undefined) -> to_string(V, Fmt);
+to_string(V, Fmt, Fun) when is_function(Fun, 1) -> to_string(Fun(V), Fmt).
 
 to_string(V, Fmt) when is_list(Fmt) ->
   {guess_type(V), io_lib:format(Fmt, [V])};
