@@ -91,7 +91,8 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% <dt>prefix</dt>
 %%      <dd>Prepend each row with this string</dd>
 %% <dt>translate</dt>
-%%      <dd>Value translation function `fun(Value) -> Value1` applied
+%%      <dd>Value translation function
+%%          `fun(Value, ColNo::integer()) -> Value1` applied
 %%          to every column</dd>
 %% <dt>footer_rows</dt>
 %%      <dd>Number of footer rows (def: 0)</dd>
@@ -457,31 +458,31 @@ type(T, T)         -> T;
 type(_, _)         -> string.
 
 to_strings(Keys, Values, undefined, Translate) ->
-  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), Translate);
+  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), Translate, 1);
 to_strings(Keys, Values, Formats, Translate) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, tuple_to_list(Formats), Translate);
+  to_strings1(Keys, Values, tuple_to_list(Formats), Translate, 1);
 to_strings(Keys, Values, Formats, Translate) when is_list(Formats), length(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, Formats, Translate).
+  to_strings1(Keys, Values, Formats, Translate, 1).
 
-to_strings1([], _, _, _) ->
+to_strings1([], _, _, _, _) ->
   [];
-to_strings1([K|Keys], Map, [F|Formats], Translate) when is_map(Map) ->
-  [to_string(maps:get(K, Map, Translate), F) | to_strings1(Keys, Map, Formats, Translate)];
-to_strings1(_Keys, List, Formats, Translate) when is_list(List), is_list(Formats) ->
-  [to_string(Entry, F, Translate) || {Entry, F} <- lists:zip(List, Formats)];
-to_strings1(Keys, Tuple, Formats, Translate) when is_tuple(Tuple), is_list(Formats) ->
-  to_strings1(Keys, tuple_to_list(Tuple), Formats, Translate).
+to_strings1([K|Keys], Map, [F|Formats], Translate, I) when is_map(Map) ->
+  [to_string(maps:get(K, Map, Translate), F, I) | to_strings1(Keys, Map, Formats, Translate, I+1)];
+to_strings1(_Keys, List, Formats, Translate, I) when is_list(List), is_list(Formats) ->
+  [to_string(Entry, F, Translate, J) || {J, Entry, F} <- lists:zip3(lists:seq(I, I+length(Formats)-1), List, Formats)];
+to_strings1(Keys, Tuple, Formats, Translate, I) when is_tuple(Tuple), is_list(Formats) ->
+  to_strings1(Keys, tuple_to_list(Tuple), Formats, Translate, I).
 
 to_string(V) ->
-  to_string(V, undefined).
+  to_string(V, undefined, undefined).
 
-to_string(V, Fmt, undefined) -> to_string(V, Fmt);
-to_string(V, Fmt, Fun) when is_function(Fun, 1) -> to_string(Fun(V), Fmt).
+to_string(V, Fmt, undefined, I) -> to_string(V, Fmt, I);
+to_string(V, Fmt, Translate, I) when is_function(Translate, 2) -> to_string(Translate(V, I), Fmt, I).
 
-to_string(V, Fmt) when is_list(Fmt) ->
+to_string(V, Fmt,_I) when is_list(Fmt) ->
   {guess_type(V), io_lib:format(Fmt, [V])};
-to_string(V, Fmt) when is_function(Fmt, 1) ->
-  case Fmt(V) of
+to_string(V, Fmt, I) when is_function(Fmt, 2) ->
+  case Fmt(V, I) of
     R when is_tuple(R)
          , tuple_size(R)==2
          , (element(1,R)==number orelse element(1,R)==string) ->
@@ -491,7 +492,7 @@ to_string(V, Fmt) when is_function(Fmt, 1) ->
     R ->
       {string, R}
   end;
-to_string(V, undefined) ->
+to_string(V, undefined, _Pos) ->
   to_string1(V).
   
 to_string1(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};
