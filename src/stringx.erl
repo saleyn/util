@@ -94,7 +94,7 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% </dl>
 %% Example:
 %% ```
-%% 1> stringx:pretty_print_table({a,b,c}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}],
+%% 1> stringx:pretty_print_table([a,b,c], [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}],
 %%      #opts{td_dir=both, td_formats=
 %%          {undefined, fun(V) when is_integer(V) -> {number, integer_to_list(V)};
 %%                         (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])}
@@ -108,7 +108,7 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% @end
 %%-------------------------------------------------------------------------
 -spec pretty_table([string()], [Row :: tuple()|list()|map()], #opts{}) -> list().
-pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
+pretty_table(HeaderRowKeys, Rows, Opts) ->
   pretty_table1(HeaderRowKeys, Rows, Opts).
 
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
@@ -172,6 +172,22 @@ dropws1(L     ) -> L.
 dropws2([],   Acc) -> dropws1(Acc);
 dropws2(Word, Acc) -> Word ++ Acc.
 
+pretty_table1(Keys, Rows, Opts) when is_list(Keys), is_list(Rows), is_list(Opts) ->
+  ConvertOpts = fun
+    ({number_pad,V}, R) -> R#opts{number_pad= V};
+    ({out_header,V}, R) -> R#opts{out_header= V};
+    ({out_sep   ,V}, R) -> R#opts{out_sep   = V}; 
+    ({th_dir    ,V}, R) -> R#opts{th_dir    = V}; 
+    ({td_dir    ,V}, R) -> R#opts{td_dir    = V}; 
+    ({td_start  ,V}, R) -> R#opts{td_start  = V}; 
+    ({td_sep    ,V}, R) -> R#opts{td_sep    = V}; 
+    ({tr_sep    ,V}, R) -> R#opts{tr_sep    = V}; 
+    ({tr_sep_td ,V}, R) -> R#opts{tr_sep_td = V}; 
+    ({prefix    ,V}, R) -> R#opts{prefix    = V}; 
+    ({td_formats,V}, R) -> R#opts{td_formats= V}
+  end, 
+  ROpts = lists:foldl(ConvertOpts, #opts{}, Opts),
+  pretty_table1(Keys, Rows, ROpts);
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
@@ -200,7 +216,7 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
               []
             end,
   Delim   = if Opts#opts.out_sep ->
-              [lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT, [T || {_,T} <- Header0]),$\n];
+              [Opts#opts.prefix,lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT, [T || {_,T} <- Header0]),$\n];
             true ->
               []
             end,
