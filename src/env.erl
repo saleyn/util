@@ -219,7 +219,7 @@ get_rel_path() ->
 
 home_dir() ->
   case os:type() of
-    {win32,_} -> os:getenv("USERPROFILE");
+    {win32,_} -> normalize_path(os:getenv("USERPROFILE"));
     {_,_}     -> os:getenv("HOME")
   end.
 
