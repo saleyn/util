@@ -27,9 +27,9 @@
 %% @doc Perform replacement of environment variable values in the OsPath.
 %% ```
 %% Example:
-%%   conf_util:subst_env_path("~/app")       -> "/home/cuser/app"
-%%   conf_util:subst_env_path("${HOME}/app") -> "/home/cuser/app"
-%%   conf_util:subst_env_path("$USER/app")   -> "cuser/app"
+%%   env:subst_env_path("~/app")       -> "/home/cuser/app"
+%%   env:subst_env_path("${HOME}/app") -> "/home/cuser/app"
+%%   env:subst_env_path("$USER/app")   -> "cuser/app"
 %% '''
 %% @see os:getenv/1
 %% @end
@@ -49,10 +49,10 @@ subst_env_path(OsPath) ->
 %%      variables are looked up).
 %% ```
 %% Example:
-%%   conf_util:subst_env_path("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
-%%   conf_util:subst_env_path("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
-%%   conf_util:subst_env_path("$A/",  [{a, "/aaa"}]) -> "/aaa/"
-%%   conf_util:subst_env_path("${A}/",[{a, "/aaa"}]) -> "/aaa/"
+%%   env:subst_env_path("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
+%%   env:subst_env_path("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
+%%   env:subst_env_path("$A/",  [{a, "/aaa"}]) -> "/aaa/"
+%%   env:subst_env_path("${A}/",[{a, "/aaa"}]) -> "/aaa/"
 %% '''
 %% @see os:getenv/1
 %% @end
@@ -84,25 +84,25 @@ internal_var("ROOTDIR")     -> {ok, get_root_dir()};
 internal_var("RELPATH")     -> {ok, get_rel_path()};     % Releases/Version
 internal_var(_)             -> undefined.
 
-env_var(unix, "$$", _) ->
+env_var(OS, "$$", _) when OS==unix; OS==win ->
     "$";
-env_var(unix, "~" = Key, Bindings) ->
+env_var(OS, "~" = Key, Bindings) when OS==unix; OS==win ->
     case get_var("HOME", Bindings) of
     {ok, Value} -> {Key, Value};
     _           -> Key
     end;
-env_var(unix, [$~ | User] = Word, Bindings) ->
+env_var(OS, [$~ | User] = Word, Bindings) when OS==unix; OS==win ->
     case get_var("HOME", Bindings) of
     {ok, Value} -> {"~", filename:join(filename:dirname(Value), User)};
     _           -> Word
     end;
-env_var(unix, [$$, ${ | Env] = Word, Bindings) ->
+env_var(OS, [$$, ${ | Env] = Word, Bindings) when OS==unix; OS==win ->
     Key = string:strip(Env, right, $}),
     case get_var(Key, Bindings) of
     {ok, Value} -> {Key, Value};
     _           -> Word
     end;
-env_var(unix, [$$ | Key] = Word, Bindings) ->
+env_var(OS, [$$ | Key] = Word, Bindings) when OS==unix; OS==win ->
     case get_var(Key, Bindings) of
     {ok, Value} -> {Key, Value};
     _           -> Word
@@ -120,6 +120,8 @@ env_var(_, Other, _Bindings) ->
 
 get_var(Name, Bindings) ->
     case try_get_binding(Name, Bindings) of
+    undefined when Name == "HOME" ->
+        {ok, home_dir()};
     undefined ->
         case os:getenv(Name) of
         false -> internal_var(Name);
