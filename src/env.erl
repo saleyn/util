@@ -1,16 +1,17 @@
 %%%----------------------------------------------------------------------------
-%%% @doc Configuration utils
+%%% @doc Environment utils
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @copyright 2012 Serge Aleynikov
 %%% @end
 %%%----------------------------------------------------------------------------
 %%% Created: 2012-09-21
 %%%----------------------------------------------------------------------------
--module(conf_util).
+-module(env).
 -author('saleyn@gmail.com').
 
 %% API
--export([subst_env_path/1, subst_env_path/2, get_env/3]).
+-export([subst_env_path/1, subst_env_path/2, get_env/3, home_dir/0,
+         normalize_path/1]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -216,6 +217,25 @@ get_rel_path() ->
     % current release dir
     filename:join(get_rels_dir(), Ver).
 
+home_dir() ->
+  case os:type() of
+    {win32,_} -> os:getenv("USERPROFILE");
+    {_,_}     -> os:getenv("HOME")
+  end.
+
+normalize_path(Path) ->
+  case os:type() of
+    {win32,_} ->
+ 			F = fun Norm([$\\ | T]) -> [$/ | Norm(T)];
+              Norm([H   | T]) -> [H  | Norm(T)];
+              Norm([]       ) -> []
+          end,
+      F(Path);
+    {_,_} ->
+      Path
+  end.
+
+  
 %%%----------------------------------------------------------------------------
 %%% Test Cases
 %%%----------------------------------------------------------------------------
