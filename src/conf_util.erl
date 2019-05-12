@@ -152,7 +152,7 @@ env_subst(Text, {unix, _}, Bindings) ->
         "(?|(?:\\$\\$)|(?:~[^/$]*)|(?:\\${[A-Za-z][A-Za-z_0-9]*})|(?:\\$[A-Za-z][A-Za-z_0-9]*))",
         Bindings);
 env_subst(Text, {win32, _}, Bindings) ->
-    env_subst(Text, win, "(?|(?:\\%\\%)|(?:%[A-Za-z][A-Za-z_0-9]*%))", Bindings).
+    env_subst(Text, win, "(?|(?:\\%\\%)|(?:%[A-Za-z][A-Za-z_0-9]*%)|(?:~[^/$]*)|(?:\\${[A-Za-z][A-Za-z_0-9]*})|(?:\\$[A-Za-z][A-Za-z_0-9]*))", Bindings).
 
 env_subst(Text, OsType, Pattern, Bindings) ->
     case re:run(Text, Pattern, [global,{capture, all}]) of
