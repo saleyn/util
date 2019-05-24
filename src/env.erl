@@ -86,24 +86,24 @@ internal_var(_)             -> undefined.
 
 env_var(OS, "$$", _) when OS==unix; OS==win ->
     "$";
-env_var(OS, "~" = Key, Bindings) when OS==unix; OS==win ->
-    case get_var("HOME", Bindings) of
+env_var(OS, [$~] = Key, Bindings) when OS==unix; OS==win ->
+    case get_var(OS, "HOME", Bindings) of
     {ok, Value} -> {Key, Value};
     _           -> Key
     end;
 env_var(OS, [$~ | User] = Word, Bindings) when OS==unix; OS==win ->
-    case get_var("HOME", Bindings) of
-    {ok, Value} -> {"~", filename:join(filename:dirname(Value), User)};
+    case get_var(OS, "HOME", Bindings) of
+    {ok, Value} -> {[$~], filename:join(filename:dirname(Value), User)};
     _           -> Word
     end;
 env_var(OS, [$$, ${ | Env] = Word, Bindings) when OS==unix; OS==win ->
     Key = string:strip(Env, right, $}),
-    case get_var(Key, Bindings) of
+    case get_var(OS, Key, Bindings) of
     {ok, Value} -> {Key, Value};
     _           -> Word
     end;
 env_var(OS, [$$ | Key] = Word, Bindings) when OS==unix; OS==win ->
-    case get_var(Key, Bindings) of
+    case get_var(OS, Key, Bindings) of
     {ok, Value} -> {Key, Value};
     _           -> Word
     end;
@@ -111,17 +111,17 @@ env_var(win, "%%", _) ->
     "%";
 env_var(win, [$% | Env] = Word, Bindings) ->
     Key = string:strip(Env, right, $%),
-    case get_var(Key, Bindings) of
+    case get_var(win, Key, Bindings) of
     {ok, Value} -> {Key, Value};
     _           -> Word
     end;
 env_var(_, Other, _Bindings) ->
     Other.
 
-get_var(Name, Bindings) ->
+get_var(OS, Name, Bindings) ->
     case try_get_binding(Name, Bindings) of
     undefined when Name == "HOME" ->
-        {ok, home_dir()};
+        {ok, home_dir(OS)};
     undefined ->
         case os:getenv(Name) of
         false -> internal_var(Name);
@@ -221,9 +221,14 @@ get_rel_path() ->
 
 home_dir() ->
   case os:type() of
-    {win32,_} -> normalize_path(os:getenv("USERPROFILE"));
-    {_,_}     -> os:getenv("HOME")
+    {win32,_} -> home_dir(win);
+    {_,_}     -> home_dir(linux)
   end.
+
+home_dir(win) ->
+  normalize_path(os:getenv("USERPROFILE"));
+home_dir(_) ->
+  os:getenv("HOME").
 
 normalize_path(Path) ->
   case os:type() of
