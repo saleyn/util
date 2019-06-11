@@ -434,6 +434,8 @@ take_nth(I,[_|T])         -> take_nth(I-1, T).
 ws([H|T], Ws)             -> ws(T, ws1(H, Ws));
 ws([], Ws)                -> Ws.
 
+ws1([{T,undefined}|Vs], [{Type,Max}|Ms]) ->
+  [{type(T,Type),Max}|ws1(Vs,Ms)];
 ws1([{T,V}|Vs], [{Type,Max}|Ms]) ->
   [{type(T,Type),max(string:length(V),Max)}|ws1(Vs,Ms)];
 ws1([], []) -> [].
