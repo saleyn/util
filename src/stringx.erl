@@ -199,20 +199,13 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
   Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts#opts.td_formats)) || V <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
   Col     = fun
-              ({_,Str}, {number, Width}) ->
+              ({number,Str}, {_, Width}) ->
                 string:pad(Str, Width, leading, Opts#opts.number_pad);
-              ({_,undefined}, {_Type,Width}) when is_atom(Opts#opts.td_dir) ->
+              ({_,undefined}, {_,Width}) when is_atom(Opts#opts.td_dir) ->
                 string:pad("", Width,  Opts#opts.td_dir, $\s);
-              ({_,Str}, {_Type, Width}) when is_atom(Opts#opts.td_dir) ->
-%              ({_,Str}, {Type, Width}) when is_function(Opts#opts.td_dir, 3) ->
-%                string:pad(Str, Width, (Opts#opts.td_dir)(, Pad)
-%                
-%              {Dir,Pad} = case Type of
-%                            number -> {leading, Opts#opts.number_pad};
-%                            _      -> {Opts#opts.td_dir, $\s}
-%                          end,
+              ({_,Str}, {_, Width}) when is_atom(Opts#opts.td_dir) ->
                 string:pad(Str, Width, Opts#opts.td_dir, $\s);
-              ({_,_Str}, {_Type, _Width}) ->
+              ({_,_Str}, {_, _Width}) ->
                 throw({invalid_option, td_dir, Opts#opts.td_dir})
             end,
   AddSpLn = length([C || C <- Opts#opts.td_sep, C == $\s]),
