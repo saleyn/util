@@ -189,7 +189,8 @@ translate_excludes(ColNames, ExcludeNamesAndPos, StartPos) ->
 
 filter_out([], _)              -> [];
 filter_out([_|T1], [true |T2]) -> filter_out(T1, T2);
-filter_out([H|T1], [false|T2]) -> [H|filter_out(T1, T2)].
+filter_out([H|T1], [false|T2]) -> [H|filter_out(T1, T2)];
+filter_out([H|T1], []) ->         [H|filter_out(T1, [])].
 
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
