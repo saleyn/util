@@ -201,6 +201,8 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
   Col     = fun
               ({_,Str}, {number, Width}) ->
                 string:pad(Str, Width, leading, Opts#opts.number_pad);
+              ({_,undefined}, {_Type,Width}) when is_atom(Opts#opts.td_dir) ->
+                string:pad("", Width,  Opts#opts.td_dir, $\s);
               ({_,Str}, {_Type, Width}) when is_atom(Opts#opts.td_dir) ->
 %              ({_,Str}, {Type, Width}) when is_function(Opts#opts.td_dir, 3) ->
 %                string:pad(Str, Width, (Opts#opts.td_dir)(, Pad)
