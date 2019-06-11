@@ -76,26 +76,19 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% <dt>th_dir</dt>
 %%      <dd>Table header row padding direction (both|leading|trailing)</dd>
 %% <dt>td_dir</dt>
-%%      <dd>Table row padding direction (both|leading|trailing) or
-%%          function `fun(Value, Type::number|string, ColNo::integer()) ->
-%%          {Direction::both|leading|trailing, PadChar::char()}` that is
-%%          applied to every column's value</dd>
+%%      <dd>Table row padding direction (both|leading|trailing)</dd>
 %% <dt>td_start</dt>
 %%      <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
+%% <dt>td_exclulde</dt>
+%%      <dd>List of column ID's (starting with 1) or names to exclude</dd>
 %% <dt>td_sep</dt>
-%%      <dd>Column separator (default `" | "`)</dd>
+%%      <dd>Column separator (default `" | "')</dd>
 %% <dt>tr_sep</dt>
-%%      <dd>Row separator (default `"-"`)</dd>
+%%      <dd>Row separator (default `"-"')</dd>
 %% <dt>tr_sep_td</dt>
 %%      <dd>Column delimiter used in separating rows (`"+"`)</dd>
 %% <dt>prefix</dt>
 %%      <dd>Prepend each row with this string</dd>
-%% <dt>translate</dt>
-%%      <dd>Value translation function
-%%          `fun(Value, ColNo::integer()) -> Value1` applied
-%%          to every column</dd>
-%% <dt>footer_rows</dt>
-%%      <dd>Number of footer rows (def: 0)</dd>
 %% <dt>td_formats</dt>
 %%      <dd>A tuple containing column formats. Each value is either
 %%          a format string passed to `io_lib:format/2' or a function
@@ -103,28 +96,22 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% </dl>
 %% Example:
 %% ```
-%% 1> stringx:pretty_print_table([a,b,c], [{a, 10, ccc}, {bxxx, 200.00123, 'Done'},
-%%                                         {undefined, "Total:", 100}],
-%%      #opts{
-%%        td_dir=both, footer_rows=1,
-%%        translate=fun(undefined) -> ""; (V) -> V end,
-%%        td_formats=
+%% 1> stringx:pretty_print_table(
+%%      {a,b,c,d}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}, {abc, 100.0, xx}],
+%%      #opts{td_dir=both, td_exclude=[d], td_formats=
 %%          {undefined, fun(V) when is_integer(V) -> {number, integer_to_list(V)};
 %%                         (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])}
-%%                      end, "~w"}
-%%      }).
+%%                      end, "~w"}}).
 %%  a   |     b     |   c
 %% -----+-----------+-------
 %%  a   |        10 |  ccc
 %% bxxx | 200.00123 | 'Done'
 %% -----+-----------+-------
-%%      |     Total |    100
-%% -----+-----------+-------
 %% '''
 %% @end
 %%-------------------------------------------------------------------------
 -spec pretty_table([string()], [Row :: tuple()|list()|map()], #opts{}) -> list().
-pretty_table(HeaderRowKeys, Rows, Opts) ->
+pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
   pretty_table1(HeaderRowKeys, Rows, Opts).
 
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
@@ -188,72 +175,58 @@ dropws1(L     ) -> L.
 dropws2([],   Acc) -> dropws1(Acc);
 dropws2(Word, Acc) -> Word ++ Acc.
 
-pretty_table1(Keys, Rows, Opts) when is_list(Keys), is_list(Rows), is_list(Opts) ->
-  ConvertOpts = fun
-    ({number_pad,V}, R) -> R#opts{number_pad= V};
-    ({out_header,V}, R) -> R#opts{out_header= V};
-    ({out_sep   ,V}, R) -> R#opts{out_sep   = V}; 
-    ({th_dir    ,V}, R) -> R#opts{th_dir    = V}; 
-    ({td_dir    ,V}, R) -> R#opts{td_dir    = V}; 
-    ({td_start  ,V}, R) -> R#opts{td_start  = V}; 
-    ({td_sep    ,V}, R) -> R#opts{td_sep    = V}; 
-    ({tr_sep    ,V}, R) -> R#opts{tr_sep    = V}; 
-    ({tr_sep_td ,V}, R) -> R#opts{tr_sep_td = V}; 
-    ({prefix    ,V}, R) -> R#opts{prefix    = V}; 
-    ({td_formats,V}, R) -> R#opts{td_formats= V}
-  end, 
-  ROpts = lists:foldl(ConvertOpts, #opts{}, Opts),
-  pretty_table1(Keys, Rows, ROpts);
+translate_excludes(ColNames, ExcludeNamesAndPos, StartPos) ->
+  {IDs, Names} = lists:partition(fun(I) -> is_integer(I) end, ExcludeNamesAndPos),
+  Cols         = if is_tuple(ColNames) -> ColNames; true -> list_to_tuple(ColNames) end,
+  TransNames   = fun G([_|L], I, T) when I > tuple_size(Cols) -> G(L,1,T);
+                     G([A|L], I, T) when element(I,Cols) == A -> G(L,I+1,setelement(I, T, true));
+                     G([],   _I, T) -> T;
+                     G(L,     I, T) -> G(L,I+1,T)
+                 end,
+  BaseExcludes = erlang:make_tuple(tuple_size(Cols), false, [{I, true} || I <- IDs]),
+  Excludes     = TransNames(Names, 1, BaseExcludes),
+  take_nth(StartPos, tuple_to_list(Excludes)).
+
+filter_out([], _)              -> [];
+filter_out([_|T1], [true |T2]) -> filter_out(T1, T2);
+filter_out([H|T1], [false|T2]) -> [H|filter_out(T1, T2)].
+
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
+  Exclude = translate_excludes(Keys0, Opts#opts.td_exclude, Opts#opts.td_start),
   KeyStrs = take_nth(Opts#opts.td_start, [element(2, to_string(Key)) || Key <- Keys0]),
-  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts#opts.td_formats, Opts#opts.translate)) || V   <- Rows0],
+  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts#opts.td_formats)) || V <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
-  Col     = fun
-              (I, {_,Str}, {Type, Width}) when is_function(Opts#opts.td_dir, 3) ->
-                {Dir,Pad} =
-                  case (Opts#opts.td_dir)(Str, Type, I) of
-                    default when Type == number -> {leading,  Opts#opts.number_pad};
-                    default                     -> {trailing, $\s};
-                    Val                         -> {Val,      $\s}
-                  end,
-                string:pad(Str, Width, Dir, Pad);
-              (_I, {_,Str}, {Type, Width}) ->
-                {Dir,Pad} = case Type of
-                              number -> {leading, Opts#opts.number_pad};
-                              _      -> {Opts#opts.td_dir, $\s}
-                            end,
-                string:pad(Str, Width, Dir, Pad)
+  Col     = fun({_,Str}, {Type, Width}) ->
+              {Dir,Pad} = case Type of
+                            number -> {leading, Opts#opts.number_pad};
+                            _      -> {Opts#opts.td_dir, $\s}
+                          end,
+              string:pad(Str, Width, Dir, Pad)
             end,
   AddSpLn = length([C || C <- Opts#opts.td_sep, C == $\s]),
   AddSpH  = string:copies(Opts#opts.tr_sep, AddSpLn div 2),
   AddSpT  = string:copies(Opts#opts.tr_sep, AddSpLn - (AddSpLn div 2)),
   Row     = fun(Row) ->
-              R0 = [Col(I,Str, W) || {I,Str,W} <- lists:zip3(lists:seq(1, length(Row)), Row, Ws)],
+              R0 = filter_out([Col(Str, W) || {Str,W} <- lists:zip(Row, Ws)], Exclude),
               [Opts#opts.prefix, lists:join(Opts#opts.td_sep, R0)]
             end,
   Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.tr_sep, W)}
               || {Str,{_,W}} <- lists:zip(KeyStrs, Ws)],
   Header  = if Opts#opts.out_header ->
-              [lists:join(Opts#opts.td_sep, [H || {H,_} <- Header0]),$\n];
+              [lists:join(Opts#opts.td_sep, filter_out([H || {H,_} <- Header0], Exclude)),$\n];
             true ->
               []
             end,
   Delim   = if Opts#opts.out_sep ->
-              [Opts#opts.prefix,lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT, [T || {_,T} <- Header0]),$\n];
+              [lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT,
+                filter_out([T || {_,T} <- Header0], Exclude)),$\n];
             true ->
               []
             end,
-  {Body, Footer} =
-            if Opts#opts.footer_rows > 0 ->
-              lists:split(length(Rows) - Opts#opts.footer_rows, Rows);
-            true ->
-              {Rows, []}
-            end,
-  [Opts#opts.prefix, Header, Delim, string:join([Row(R) || R <- Body], "\n"),
-    if Footer==[] -> ""; true -> [$\n, Delim, string:join([Row(R) || R <- Footer], "\n")] end,
-    if Delim==[]  -> ""; true -> $\n end, Delim].
+  [Opts#opts.prefix, Header, Delim, string:join(filter_out([Row(R) || R <- Rows], Exclude), "\n"),
+   if Delim==[] -> ""; true -> "\n" end, Delim].
 
 aligned_format(Fmt, Rows) ->
   {match, FF} = re:run(Fmt, "(~-?s)", [global, {capture, [1], list}]),
@@ -285,8 +258,9 @@ align_rows(Rows) ->
 -spec align_rows(Rows    :: [tuple()|binary()|list()],
                  Options :: [{pad,    Dir::[trailing|leading|both|
                                             {Pos::integer()|last,trailing|leading|both|none}]} |
-                             {return, Ret::tuple|list} |
-                             {prefix,       string()}  |
+                             {exclude,Cols::[integer()]} |
+                             {return, Ret::tuple|list}   |
+                             {prefix,       string()}    |
                              {ignore_empty, boolean()}]) ->
        [AlignedRow::tuple()|list()].
 %% `Rows' is a list. All rows must have the same arity except if a row is
@@ -303,6 +277,8 @@ align_rows(Rows) ->
 %%     <dd>Prefix first item in each row with this string</dd>
 %% <dt>{ignore_empty, boolean()}</dt>
 %%     <dd>Don't pad trailing empty columns if this option is true</dd>
+%% <dt>{exclude, [integer()]}</dt>
+%%     <dd>Exclude given column numbers</dd>
 %% </dt>
 %% @end
 %%-------------------------------------------------------------------------
@@ -413,23 +389,32 @@ align_rows1(Rows, Options) when is_list(Rows), is_list(Options) ->
           true  -> R;
           false -> [lists:flatten(PAD(S, W, D)) || {W,S,D} <- SkE(lists:zip3(LW,R,DD))]
          end || R <- RR],
-  case proplists:get_value(prefix, Options, []) of
+  LL1 = case [I || I <- proplists:get_value(exclude, Options, []), is_integer(I), I > 0] of
+          [] -> LL;
+          EX -> lists:map(fun(LR) ->
+                  [I || I <- tuple_to_list(
+                              lists:foldl(fun(I, T) ->
+                                setelement(I, T, false)
+                                end, list_to_tuple(LR), EX)), I =/= false]
+                  end, LL)
+        end,
+  case  proplists:get_value(prefix,  Options, []) of
     [] when Unlist ->
-      [I || [I] <- LL];
+      [I || [I] <- LL1];
     [] ->
-      LL;
+      LL1;
     Pfx ->
-      LL1 = [case R of
+      LL2 = [case R of
                _ when is_binary(R) ->
                  <<(list_to_binary(Pfx))/binary, R/binary>>;
                [HH|TT] when is_binary(HH) ->
                  [<<(list_to_binary(Pfx))/binary, HH/binary>> | TT];
                [HH|TT] when is_list(HH) ->
                  [Pfx ++ HH | TT]
-             end || R <- LL],
+             end || R <- LL1],
       if
-        Unlist -> [I || [I] <- LL1];
-        true   -> LL1
+        Unlist -> [I || [I] <- LL2];
+        true   -> LL2
       end
   end.
 
@@ -457,32 +442,29 @@ type(T, undefined) -> T;
 type(T, T)         -> T;
 type(_, _)         -> string.
 
-to_strings(Keys, Values, undefined, Translate) ->
-  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), Translate, 1);
-to_strings(Keys, Values, Formats, Translate) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, tuple_to_list(Formats), Translate, 1);
-to_strings(Keys, Values, Formats, Translate) when is_list(Formats), length(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, Formats, Translate, 1).
+to_strings(Keys, Values, undefined) ->
+  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)));
+to_strings(Keys, Values, Formats) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
+  to_strings1(Keys, Values, tuple_to_list(Formats));
+to_strings(Keys, Values, Formats) when is_list(Formats), length(Formats) == length(Keys) ->
+  to_strings1(Keys, Values, Formats).
 
-to_strings1([], _, _, _, _) ->
+to_strings1([], _, _) ->
   [];
-to_strings1([K|Keys], Map, [F|Formats], Translate, I) when is_map(Map) ->
-  [to_string(maps:get(K, Map, Translate), F, I) | to_strings1(Keys, Map, Formats, Translate, I+1)];
-to_strings1(_Keys, List, Formats, Translate, I) when is_list(List), is_list(Formats) ->
-  [to_string(Entry, F, Translate, J) || {J, Entry, F} <- lists:zip3(lists:seq(I, I+length(Formats)-1), List, Formats)];
-to_strings1(Keys, Tuple, Formats, Translate, I) when is_tuple(Tuple), is_list(Formats) ->
-  to_strings1(Keys, tuple_to_list(Tuple), Formats, Translate, I).
+to_strings1([K|Keys], Map, [F|Formats]) when is_map(Map) ->
+  [to_string(maps:get(K, Map), F) | to_strings1(Keys, Map, Formats)];
+to_strings1(_Keys, List, Formats) when is_list(List), is_list(Formats) ->
+  [to_string(Entry, F) || {Entry, F} <- lists:zip(List, Formats)];
+to_strings1(Keys, Tuple, Formats) when is_tuple(Tuple), is_list(Formats) ->
+  to_strings1(Keys, tuple_to_list(Tuple), Formats).
 
 to_string(V) ->
-  to_string(V, undefined, undefined).
+  to_string(V, undefined).
 
-to_string(V, Fmt, undefined, I) -> to_string(V, Fmt, I);
-to_string(V, Fmt, Translate, I) when is_function(Translate, 2) -> to_string(Translate(V, I), Fmt, I).
-
-to_string(V, Fmt,_I) when is_list(Fmt) ->
+to_string(V, Fmt) when is_list(Fmt) ->
   {guess_type(V), io_lib:format(Fmt, [V])};
-to_string(V, Fmt, I) when is_function(Fmt, 2) ->
-  case Fmt(V, I) of
+to_string(V, Fmt) when is_function(Fmt, 1) ->
+  case Fmt(V) of
     R when is_tuple(R)
          , tuple_size(R)==2
          , (element(1,R)==number orelse element(1,R)==string) ->
@@ -492,7 +474,7 @@ to_string(V, Fmt, I) when is_function(Fmt, 2) ->
     R ->
       {string, R}
   end;
-to_string(V, undefined, _Pos) ->
+to_string(V, undefined) ->
   to_string1(V).
   
 to_string1(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};

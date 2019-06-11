@@ -8,6 +8,7 @@
   th_dir     = both     :: both|leading|trailing, % table header padding dir
   td_dir     = trailing :: both|leading|trailing, % table row    padding dir
   td_start   = 1        :: integer(), % Start printing from this field number
+  td_exclude = []       :: list(),    % Exclude columns (start with 1) or names
   td_sep     = " | "    :: string(),  % Column separator
   tr_sep     = "-"      :: string(),
   tr_sep_td  = "+"      :: string(),  % Delimiter header/footer column sep
