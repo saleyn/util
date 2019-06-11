@@ -1,12 +1,18 @@
 # See LICENSE for licensing information.
 
+ifeq ($(shell uname -o), Cygwin)
+	EXT=".cmd"
+else
+  EXT=
+endif
+
 .PHONY: all all-fast clean clean-docs github-docs tar
 
 PROJECT := $(notdir $(PWD))
 TARBALL := $(PROJECT)
 
 REBAR   := $(which rebar3 2> /dev/null)
-REBAR   := $(if $(REBAR),$(REBAR),rebar)
+REBAR   := $(if $(REBAR),$(REBAR),rebar)$(EXT)
 
 empty   :=
 space   := $(empty) $(empty)

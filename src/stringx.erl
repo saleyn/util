@@ -486,3 +486,50 @@ to_string1(T)                          -> {string, io_lib:format("~tp", [T])}.
 guess_type(V)     when is_integer(V)   -> number;
 guess_type(V)     when is_float(V)     -> number;
 guess_type(_)                          -> string.
+
+%%--------------------------------------------------------------------
+%% Tests
+%%--------------------------------------------------------------------
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+align_rows_test() ->
+  ?assertEqual(
+    [{"cc    ","x1"},{"'Done'","x2"},{"xx    ","x3"}],
+    stringx:align_rows([{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2},
+                        {abc, 100.0, xx,x3}],
+                       [{exclude, [1,2]}])
+
+  ),
+  ?assertEqual(
+    [{"x1"},{"x2"},{"x3"}],
+    stringx:align_rows([{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2},
+                        {abc, 100.0, xx,x3}], [{exclude, [1,2,3]}])
+  ),
+  ?assertEqual(
+    [{"a   ","10      ","cc    ","x1"},
+     {"bxxx","200.0012","'Done'","x2"},
+     {"abc ","100.0000","xx    ","x3"}],
+    stringx:align_rows([{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2},
+                        {abc, 100.0, xx,x3}], [])
+  ).
+
+pretty_table_test() ->
+  ?assertEqual(
+    " a   |     b    \n"
+    "-----+----------\n"
+    " a   |        10\n"
+    "bxxx | 200.00123\n"
+    "-----+----------\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c,d},
+      [{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2}, {abc, 100.0, xx,x3}],
+      #opts{td_dir=both, td_exclude=[3,4],
+        td_formats={
+          undefined,
+          fun(V) when is_integer(V) -> {number, integer_to_list(V)};
+             (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])} end,
+          "~w",
+          undefined}}))).
+
+-endif.
