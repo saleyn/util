@@ -102,7 +102,11 @@ get_data(P, Fun, D) ->
                 {P, {exit_status, N}} ->
                     {error, {N, lists:reverse(D)}}
             after 5000 ->
-                throw({no_exit_status, Fun(eof, D)})
+                if is_function(Fun, 2) ->
+                    throw({no_exit_status, Fun(eof, D)});
+                true ->
+                    throw({no_exit_status, timeout_waiting_for_output})
+                end
             end
 	end.
 
@@ -117,7 +121,7 @@ command_test() ->
 	{error, {1, ""}}   = osx:command("false"),
     {ok, ok}           = osx:command("echo ok", fun("ok\n",_) -> ok; (eof, A) -> A end),
     {ok,["a","b","c"]} = osx:command("echo -en 'a\nb\nc\n'", [{line, 80}]),
-    {error, {143,[]}}  = osx:command("kill $$"),
+    %{error, {143,[]}}  = osx:command("kill $$"),
     {signal,15,true}   = status(143),
     {status,0}         = status(0),
     ok.
