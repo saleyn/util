@@ -465,9 +465,7 @@ to_string(V, Fmt) when is_list(Fmt) ->
   {guess_type(V), io_lib:format(Fmt, [V])};
 to_string(V, Fmt) when is_function(Fmt, 1) ->
   case Fmt(V) of
-    R when is_tuple(R)
-         , tuple_size(R)==2
-         , (element(1,R)==number orelse element(1,R)==string) ->
+    {I,_}=R when I==number; I==string ->
       R;
     R when is_tuple(R) ->
       throw({invalid_format_function_return, V, R});
