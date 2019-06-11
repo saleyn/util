@@ -481,6 +481,7 @@ to_string1(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};
 to_string1(Float) when is_float(Float) -> {number, io_lib:format("~.4f",[Float])};
 to_string1(Str)   when is_list(Str)    -> {string, Str};
 to_string1(Bin)   when is_binary(Bin)  -> {string, binary_to_list(Bin)};
+to_string1(undefined)                  -> {string, ""};
 to_string1(T)                          -> {string, io_lib:format("~tp", [T])}.
 
 guess_type(V)     when is_integer(V)   -> number;
