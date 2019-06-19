@@ -119,7 +119,7 @@ get_data(P, Fun, D) ->
 command_test() ->
 	{ok,    ["ok\n"]}  = osx:command("echo ok"),
 	{error, {1, ""}}   = osx:command("false"),
-    {ok, ok}           = osx:command("echo ok", fun(eol, {"ok\n", []}) -> ok; (eof, A) -> A end),
+    {ok, ok}           = osx:command("echo ok", fun(data, {"ok\n", []}) -> []; (eof, []) -> ok end),
     {ok,["a","b","c"]} = osx:command("echo -en 'a\nb\nc\n'", [{line, 80}]),
     %{error, {143,[]}}  = osx:command("kill $$"),
     {signal,15,true}   = status(143),
