@@ -81,15 +81,15 @@ get_data(P, Fun, D) ->
 		{P, {data, {eol, Line}}} when Fun =:= undefined ->
             get_data(P, Fun, [Line|D]);
 		{P, {data, {eol, Line}}} when is_function(Fun, 2) ->
-            get_data(P, Fun, Fun(Line, D));
+            get_data(P, Fun, Fun(eol, {Line, D}));
 		{P, {data, {noeol, Line}}} when Fun =:= undefined ->
             get_data(P, Fun, [Line|D]);
 		{P, {data, {noeol, Line}}} when is_function(Fun, 2) ->
-            get_data(P, Fun, Fun(Line, D));
+            get_data(P, Fun, Fun(noeol, {Line, D}));
 		{P, {data, D1}} when Fun =:= undefined ->
             get_data(P, Fun, [D1|D]);
 		{P, {data, D1}} when is_function(Fun, 2) ->
-			get_data(P, Fun, Fun(D1, D));
+			get_data(P, Fun, Fun(data, {D1, D}));
 		{P, eof} ->
 			port_close(P),
             receive
@@ -119,7 +119,7 @@ get_data(P, Fun, D) ->
 command_test() ->
 	{ok,    ["ok\n"]}  = osx:command("echo ok"),
 	{error, {1, ""}}   = osx:command("false"),
-    {ok, ok}           = osx:command("echo ok", fun("ok\n",_) -> ok; (eof, A) -> A end),
+    {ok, ok}           = osx:command("echo ok", fun(eol, {"ok\n", []}) -> ok; (eof, A) -> A end),
     {ok,["a","b","c"]} = osx:command("echo -en 'a\nb\nc\n'", [{line, 80}]),
     %{error, {143,[]}}  = osx:command("kill $$"),
     {signal,15,true}   = status(143),

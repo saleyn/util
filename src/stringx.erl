@@ -14,7 +14,7 @@
 -author('saleyn@gmail.com').
 
 %% External API
--export([titlecase/1, wordcount/1, wordwrap/2]).
+-export([titlecase/1, wordwrap/2]).
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
 -export([align_rows/1, align_rows/2, aligned_format/2, aligned_format/3]).
@@ -32,14 +32,6 @@
 -spec titlecase(string()) -> string().
 titlecase(S) when is_list(S) ->
   titlecase(S, []).
-
-%%-------------------------------------------------------------------------
-%% @doc Count number of words in a string
-%% @end
-%%-------------------------------------------------------------------------
--spec wordcount(string()) -> string().
-wordcount(S) ->
-  wordcount(S, 0).
 
 %%-------------------------------------------------------------------------
 %% @doc Wrap words words in a string
@@ -135,11 +127,6 @@ titlecase([C | T], [$  |_] = Acc) when C >= $a, C =< $z ->
   titlecase(T, [C + ($A - $a) | Acc]);
 titlecase([C | T], Acc) ->
   titlecase(T, [C | Acc]).
-
-wordcount([],  N)                    -> N;
-wordcount([C], N) when C =/= $       -> N+1;
-wordcount([C,$ |T], N) when C =/= $  -> wordcount([$ |T], N+1);
-wordcount([_   |T], N)               -> wordcount(T, N).
 
 wordwrap([], Acc, WordAcc, _LineLen, _Margin) ->
   lists:reverse(WordAcc ++ Acc);

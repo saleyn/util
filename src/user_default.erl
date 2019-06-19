@@ -82,7 +82,7 @@ dbgon(Module, Fun) when is_atom(Fun) ->
    ok;
 
 dbgon(Module, File) when is_list(File) ->
-   {ok,_} = dbg:tracer(file, dbg:trace_port(file, File)),
+   {ok,_} = dbg:tracer(port, dbg:trace_port(file, File)),
    dbg:p(all,call),
    dbgadd(Module).
 
