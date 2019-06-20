@@ -32,7 +32,7 @@
 %%   io:format("Received body: ~p\n", [Resp])
 %% ```
 
--export([start_tunnel/4]).
+-export([start_tunnel/3]).
 -export([connect/0, connect/3, direct_tcpip/3, direct_stream_local/2, open_channel/6]).
 
 -define(DIRECT_TCPIP, "direct-tcpip").
@@ -64,10 +64,12 @@ connect(Host, Port, Opts) when (is_list(Host) orelse is_tuple(Host)), is_integer
 %%     # Send a TCP message
 %%     %HTTPoison.Response{body: body} = HTTPoison.get!("127.0.0.1:8080")
 %%     IO.puts("Received body: #{body})
--spec start_tunnel(pid(), tcp|local, tuple(), list()) -> {ok, pid()} | {error, term()}.
-start_tunnel(Pid, Transport, To, Opts) when is_tuple(To), is_list(Opts)
-                                          , (Transport==tcp orelse Transport==local) ->
+-spec start_tunnel(pid(), tcp|local, tuple()|integer()) -> {ok, pid()} | {error, term()}.
+start_tunnel(Pid, Transport, To) when (is_tuple(To) orelse is_integer(To))
+                                    , (Transport==tcp orelse Transport==local) ->
   case {Transport, To} of
+    {tcp, ToPort} when is_integer(ToPort) ->
+      direct_tcpip(Pid, {"localhost", ToPort}, {"localhost", ToPort});
     {tcp, {From, To}} when is_integer(From), is_integer(To) ->
       direct_tcpip(Pid, {"localhost", From}, {"localhost", To});
     {tcp, {From, {ToHost, ToPort}=To}} when is_integer(From), is_list(ToHost), is_integer(ToPort) ->
@@ -82,15 +84,15 @@ start_tunnel(Pid, Transport, To, Opts) when is_tuple(To), is_list(Opts)
 
 %% @doc Creates a ssh directtcp-ip forwarded channel to a remote port.
 %% The returned channel together with a ssh connection reference (returned from `:ssh.connect/4`) can be used
-%% to send messages with `:ssh_connection.send/3`
-%% returns: `{:ok, channel}` or `{:error, reason}`.
+%% to send messages with `ssh_connection:send/3`
+%% returns: `{ok, channel}` or `{error, reason}`.
 %% ## Examples:
 %%     msg = "GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.47.0\r\nAccept: */*\r\n\r\n"
 %%     {ok, Pid} = ssh_tunnel:connect("192.168.1.10", 22),
 %%     {ok, Ch} = ssh_tunnel:direct_tcpip(Pid, {"127.0.0.1", 8080}, {"192.168.1.10", 80}),
 %%     ok = ssh_connection:send(Pid, Ch, Msg),
 %%     recieve do
-%%       {ssh_cm, _, {data, channel, _, Data}} -> io:format("Data: ~p\n", [Data])
+%%       {ssh_cm, _, {data, Channel, _, Data}} -> io:format("Data: ~p\n", [Data])
 %%     end
 -spec direct_tcpip(pid(), From::location(), To::location()) -> {ok, integer()} | {error, term()}.
 direct_tcpip(Pid, {OrigHost, OrigPort} = _From, {RemHost, RemPort} = _To) when is_pid(Pid) ->
