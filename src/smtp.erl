@@ -594,12 +594,11 @@ str2b64_end([])          -> [].
 boundary_bin([]) ->
     undefined;
 boundary_bin(_) ->
-    {A,B,C} = erlang:timestamp(),
-    random:seed(A,B,C),
+    rand:seed(exs64),
     <<"Boundary_(", (list_to_binary(random_list(10)))/binary, ")">>.
 
 random_list(0) -> [];
-random_list(N) -> [64+random:uniform(25), 96+random:uniform(25) | random_list(N-1)].
+random_list(N) -> [64+rand:uniform(25), 96+rand:uniform(25) | random_list(N-1)].
 
 %%
 
