@@ -1,4 +1,5 @@
-%% Copyright (c) 2014-2017 Yüce Tekol
+%% @doc Google Authenticator
+%% @copyright Copyright (c) 2014-2017 Yüce Tekol
 %
 %% Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 %% and associated documentation files (the "Software"), to deal in the Software without
@@ -14,8 +15,8 @@
 %% NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 %% DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-%% @see https://github.com/yuce/pot
+%
+%% @link https://github.com/yuce/pot
 %% POT is an Erlang library for generating one time passwords.
 %% It supports both HMAC-based one time passwords (HOTP) and time based ones (TOTP).
 %% The generated passwords are compatible with

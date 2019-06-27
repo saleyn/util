@@ -1,6 +1,5 @@
 -module(ssh_tunnel).
 %% @doc Module for creating SSH tunnels using `ssh`.
-%% @author Serge Aleynikov
 %% @see https://github.com/drowzy/ssh_tunnel
 %%
 %% It provides functions to create forwarded ssh channels, similair
@@ -46,9 +45,9 @@
 connect() -> connect({127,0,0,1}, 22, []).
 
 %% @doc Create a connetion to a remote host with the provided options.
-%% This function is mostly used as convenience wrapper around `:ssh_connect/3`
+%% This function is mostly used as convenience wrapper around `ssh_connect/3'
 %% and does not support all options.
-%% returns: `{ok, Connection}` or `{error, Reason}`.
+%% returns: `{ok, Connection}' or `{error, Reason}'.
 %% @see https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html
 -spec connect(list()|tuple(), integer(), list()) -> {ok, pid()} | {error, term()}.
 connect(Host, Port, Opts) when (is_list(Host) orelse is_tuple(Host)), is_integer(Port), is_list(Opts) ->

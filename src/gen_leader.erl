@@ -1182,7 +1182,7 @@ dbg_opts(Name, Opts) ->
 format_status(Opt, StatusData) ->
     [PDict, SysState, Parent, Debug, [_Mode, Server, _Role, E]] = StatusData,
     Header = lists:concat(["Status for generic server ", E#election.name]),
-    Log = sys:get_debug(log, Debug, []),
+    Log = proplists:get_value(log, Debug, []),
     #server{mod = Mod, state = State} = Server,
     Specific =
         case erlang:function_exported(Mod, format_status, 2) of
