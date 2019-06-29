@@ -18,18 +18,55 @@
 <h2><a name="description">Description</a></h2>Implements miscelaneous string functions
   
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#pretty_print_table-1">pretty_print_table/1</a></td><td></td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#align_rows-1">align_rows/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#align_rows-2">align_rows/2</a></td><td>Align rows of terms by stringifying them to uniform column width.</td></tr>
+<tr><td valign="top"><a href="#aligned_format-2">aligned_format/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#aligned_format-3">aligned_format/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pretty_print_table-1">pretty_print_table/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#pretty_print_table-2">pretty_print_table/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#pretty_print_table-3">pretty_print_table/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#pretty_table-1">pretty_table/1</a></td><td>Pretty print list of maps to list.</td></tr>
 <tr><td valign="top"><a href="#pretty_table-2">pretty_table/2</a></td><td>Pretty print table of lists/tuples/maps to list.</td></tr>
 <tr><td valign="top"><a href="#pretty_table-3">pretty_table/3</a></td><td>Pretty print table of lists/tuples/maps to list.</td></tr>
 <tr><td valign="top"><a href="#titlecase-1">titlecase/1</a></td><td>Convert words in a string to capitalize first letter of each word.</td></tr>
-<tr><td valign="top"><a href="#wordcount-1">wordcount/1</a></td><td>Count number of words in a string.</td></tr>
 <tr><td valign="top"><a href="#wordwrap-2">wordwrap/2</a></td><td>Wrap words words in a string.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="align_rows-1">align_rows/1</a></h3>
+<div class="spec">
+<p><tt>align_rows(Rows) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="align_rows-2">align_rows/2</a></h3>
+<div class="spec">
+<p><pre>align_rows(Rows :: [tuple() | binary() | list()],
+           Options ::
+               [{pad,
+                 Dir ::
+                     [trailing | leading | both |
+                      {Pos :: integer() | last,
+                       trailing | leading | both | none}]} |
+                {exclude, Cols :: [integer()]} |
+                {return, Ret :: tuple | list} |
+                {prefix, string()} |
+                {ignore_empty, boolean()}]) -&gt;
+              [AlignedRow :: tuple() | list()]</pre></p>
+</div><p>Align rows of terms by stringifying them to uniform column width.
+       If some row doesn't need to be aligned, pass its value as a binary.
+  <code>Options</code> can be:
+ </p>
+
+<h3 class="function"><a name="aligned_format-2">aligned_format/2</a></h3>
+<div class="spec">
+<p><tt>aligned_format(Fmt, Rows) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="aligned_format-3">aligned_format/3</a></h3>
+<div class="spec">
+<p><tt>aligned_format(Fmt, Rows, Directions) -&gt; any()</tt></p>
+</div>
 
 <h3 class="function"><a name="pretty_print_table-1">pretty_print_table/1</a></h3>
 <div class="spec">
@@ -48,14 +85,14 @@
 
 <h3 class="function"><a name="pretty_table-1">pretty_table/1</a></h3>
 <div class="spec">
-<p><pre>pretty_table(LofMaps0 :: [#{}]) -&gt; list()</pre></p>
+<p><pre>pretty_table(LofMaps0 :: [map()]) -&gt; list()</pre></p>
 </div><p>Pretty print list of maps to list.</p>
 <p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
 
 <h3 class="function"><a name="pretty_table-2">pretty_table/2</a></h3>
 <div class="spec">
 <p><pre>pretty_table(HeaderRowKeys :: [string()],
-             Rows :: [Row :: tuple() | list() | #{}]) -&gt;
+             Rows :: [Row :: tuple() | list() | map()]) -&gt;
                 list()</pre></p>
 </div><p>Pretty print table of lists/tuples/maps to list.</p>
 <p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
@@ -63,17 +100,8 @@
 <h3 class="function"><a name="pretty_table-3">pretty_table/3</a></h3>
 <div class="spec">
 <p><pre>pretty_table(HeaderRowKeys :: [string()],
-             Rows :: [Row :: tuple() | list() | #{}],
-             Opts ::
-                 #opts{number_pad = char(),
-                       th_dir = both | leading | trailing,
-                       td_dir = both | leading | trailing,
-                       td_start = integer(),
-                       td_sep = string(),
-                       tr_sep = string(),
-                       tr_sep_td = string(),
-                       prefix = string(),
-                       td_formats = tuple()}) -&gt;
+             Rows :: [Row :: tuple() | list() | map()],
+             Opts :: #opts{}) -&gt;
                 list()</pre></p>
 </div><p>Pretty print table of lists/tuples/maps to list.
   The following options control formatting behavior:
@@ -86,6 +114,8 @@
        <dd>Table row padding direction (both|leading|trailing)</dd>
   <dt>td_start</dt>
        <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
+  <dt>td_exclulde</dt>
+       <dd>List of column ID's (starting with 1) or names to exclude</dd>
   <dt>td_sep</dt>
        <dd>Column separator (default <code>" | "</code>)</dd>
   <dt>tr_sep</dt>
@@ -98,17 +128,24 @@
        &lt;dd&gt;A tuple containing column formats. Each value is either
            a format string passed to `io_lib:format/2</code> or a function
            <code>fun(Value) -&gt; {number|string, FormattedValue::string()}</code></dd>
-  </dl></p>
+  </dl>
+  Example:
+  <pre>  1&gt; stringx:pretty_print_table(
+       {a,b,c,d}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}, {abc, 100.0, xx}],
+       #opts{td_dir=both, td_exclude=[d], td_formats=
+           {undefined, fun(V) when is_integer(V) -&gt; {number, integer_to_list(V)};
+                          (V) when is_float(V)   -&gt; {number, float_to_list(V, [{decimals, 5}])}
+                       end, "~w"}}).
+   a   |     b     |   c
+  -----+-----------+-------
+   a   |        10 |  ccc
+  bxxx | 200.00123 | 'Done'
+  -----+-----------+-------</pre></p>
 
 <h3 class="function"><a name="titlecase-1">titlecase/1</a></h3>
 <div class="spec">
 <p><pre>titlecase(S :: string()) -&gt; string()</pre></p>
 </div><p>Convert words in a string to capitalize first letter of each word.</p>
-
-<h3 class="function"><a name="wordcount-1">wordcount/1</a></h3>
-<div class="spec">
-<p><pre>wordcount(S :: string()) -&gt; string()</pre></p>
-</div><p>Count number of words in a string</p>
 
 <h3 class="function"><a name="wordwrap-2">wordwrap/2</a></h3>
 <div class="spec">

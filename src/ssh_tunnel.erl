@@ -1,20 +1,20 @@
 -module(ssh_tunnel).
-%% @doc Module for creating SSH tunnels using `ssh`.
-%% @see https://github.com/drowzy/ssh_tunnel
+%% @doc Module for creating SSH tunnels using `ssh'.
+%% [https://github.com/drowzy/ssh_tunnel]
 %%
 %% It provides functions to create forwarded ssh channels, similair
-%% to how other channels can be created using `ssh_connection`.
+%% to how other channels can be created using `ssh_connection'.
 %% There are two type of channels supported
 %% * `directtcp-ip` - Forwards a port from the client machine to the remote machine.
-%%   This is the same as `ssh -nNT -L 8080:forward.example.com:9000 user@sshserver.example.com`
-%% * `direct-streamlocal` - Forwards to a unix domain socket.
-%%   This is the same as `ssh -nNT -L 8080:/var/lib/mysql/mysql.sock user@sshserver.example.com`
-%% When using `direct_tcpip/3` or `direct_stream_local/2` directly there
+%%   This is the same as `ssh -nNT -L 8080:forward.example.com:9000 user@sshserver.example.com'
+%% * `direct-streamlocal' - Forwards to a unix domain socket.
+%%   This is the same as `ssh -nNT -L 8080:/var/lib/mysql/mysql.sock user@sshserver.example.com'
+%% When using `direct_tcpip/3' or `direct_stream_local/2' directly there
 %% will not be any local port or socket bound, this can either be done
-%% using `ssh_tunnel` or by manually sending data with `ssh_connection.send/3`.
-%% Although `connect/1` can be used to connect to the remote host, other
+%% using `ssh_tunnel' or by manually sending data with `ssh_connection.send/3'.
+%% Although `connect/1' can be used to connect to the remote host, other
 %% methods are supported.
-%% One can use [SSHex](https://github.com/rubencaro/sshex), `ssh:connect/3`
+%% One can use [SSHex](https://github.com/rubencaro/sshex), `ssh:connect/3'
 %% for instance.
 %%
 %% ## Tunnels
@@ -29,7 +29,7 @@
 %%   % Send a TCP message for instance HTTP
 %%   Resp = HTTPoison.get!("127.0.0.1:8080"),
 %%   io:format("Received body: ~p\n", [Resp])
-%% ```
+%% '''
 
 -export([start_tunnel/3]).
 -export([connect/0, connect/3, direct_tcpip/3, direct_stream_local/2, open_channel/6]).
@@ -48,7 +48,7 @@ connect() -> connect({127,0,0,1}, 22, []).
 %% This function is mostly used as convenience wrapper around `ssh_connect/3'
 %% and does not support all options.
 %% returns: `{ok, Connection}' or `{error, Reason}'.
-%% @see https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html
+%% [https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html]
 -spec connect(list()|tuple(), integer(), list()) -> {ok, pid()} | {error, term()}.
 connect(Host, Port, Opts) when (is_list(Host) orelse is_tuple(Host)), is_integer(Port), is_list(Opts) ->
   Config = defaults(Opts),
@@ -82,9 +82,9 @@ start_tunnel(Pid, Transport, To) when (is_tuple(To) orelse is_integer(To))
   end.
 
 %% @doc Creates a ssh directtcp-ip forwarded channel to a remote port.
-%% The returned channel together with a ssh connection reference (returned from `:ssh.connect/4`) can be used
-%% to send messages with `ssh_connection:send/3`
-%% returns: `{ok, channel}` or `{error, reason}`.
+%% The returned channel together with a ssh connection reference (returned
+%% from `:ssh.connect/4') can be used to send messages with `ssh_connection:send/3'
+%% returns: `{ok, channel}' or `{error, reason}'.
 %% ## Examples:
 %%     msg = "GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.47.0\r\nAccept: */*\r\n\r\n"
 %%     {ok, Pid} = ssh_tunnel:connect("192.168.1.10", 22),
@@ -104,16 +104,16 @@ direct_tcpip(Pid, {OrigHost, OrigPort} = _From, {RemHost, RemPort} = _To) when i
 
 %% @doc Creates a ssh stream local-forward channel to a remote unix domain socket.
 %% It sends the request that the server make a connection to its local Unix domain socket.
-%% The returned channel together with a ssh connection reference (returned from `ssh:connect/4`)
-%% can be used to send messages with `ssh_connection:send/3`.
-%% returns: `{ok, Channel}` or `{error, Reason}`.
+%% The returned channel together with a ssh connection reference (returned from `ssh:connect/4')
+%% can be used to send messages with `ssh_connection:send/3'.
+%% returns: `{ok, Channel}` or `{error, Reason}'.
 %% Ex:
 %% ```
 %% msg = "GET /images/json HTTP/1.1\r\nHost: /var/run/docker.sock\r\nAccept: */*\r\n\r\n"
 %% {ok, Pid} = ssh_tunnel:connect("192.168.90.15", 22),
 %% {ok, Ch}  = ssh_tunnel:direct_stream_local(Pid, "/var/run/docker.sock"),
 %% ok = ssh_connection.send(Pid, Ch, Msg)
-%% ```
+%% '''
 -spec direct_stream_local(pid(), string()) -> {ok, integer()} | {error, term()}.
 direct_stream_local(Pid, SocketPath) when is_pid(Pid), is_list(SocketPath) ->
   SPath = list_to_binary(SocketPath),

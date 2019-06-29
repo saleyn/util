@@ -16,7 +16,7 @@
 %% DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 %% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %
-%% @link https://github.com/yuce/pot
+%% [https://github.com/yuce/pot]
 %% POT is an Erlang library for generating one time passwords.
 %% It supports both HMAC-based one time passwords (HOTP) and time based ones (TOTP).
 %% The generated passwords are compatible with

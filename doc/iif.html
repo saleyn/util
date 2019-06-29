@@ -16,45 +16,61 @@
 
 <h2><a name="description">Description</a></h2>Conditional expression functions
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#ife-2">ife/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#ife-3">ife/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#ifne-2">ifne/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#ifne-3">ifne/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#iif-3">iif/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#iif-4">iif/4</a></td><td></td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#format_ne-3">format_ne/3</a></td><td>Format if first argument is not empty.</td></tr>
+<tr><td valign="top"><a href="#ife-2">ife/2</a></td><td>Return <code>Value</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#ife-3">ife/3</a></td><td>Return <code>Empty</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#ifne-2">ifne/2</a></td><td>Return <code>Value</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#ifne-3">ifne/3</a></td><td>Return <code>NotEmpty</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#iif-3">iif/3</a></td><td>Return <code>True</code> if first argument is <code>true</code> or return <code>False</code> if
+       the first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</td></tr>
+<tr><td valign="top"><a href="#iif-4">iif/4</a></td><td>Return <code>True</code> if first two arguments match.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
+<h3 class="function"><a name="format_ne-3">format_ne/3</a></h3>
+<div class="spec">
+<p><tt>format_ne(True, Fmt, Args) -&gt; any()</tt></p>
+</div><p>Format if first argument is not empty</p>
+
 <h3 class="function"><a name="ife-2">ife/2</a></h3>
 <div class="spec">
 <p><tt>ife(Test, Value) -&gt; any()</tt></p>
-</div>
+</div><p>Return <code>Value</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise return the value of the first argument.</p>
 
 <h3 class="function"><a name="ife-3">ife/3</a></h3>
 <div class="spec">
 <p><tt>ife(Value, Empty, NotEmpty) -&gt; any()</tt></p>
-</div>
+</div><p>Return <code>Empty</code> if first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise, if <code>NotEmpty</code> is <code>fun()</code>, evaluate it, or if it's <code>fun(Arg)</code>
+       evaluate it with <code>Value</code> argument.</p>
 
 <h3 class="function"><a name="ifne-2">ifne/2</a></h3>
 <div class="spec">
 <p><tt>ifne(Test, Value) -&gt; any()</tt></p>
-</div>
+</div><p>Return <code>Value</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise, if <code>Value</code> is <code>fun()</code>, evaluate it, or if it's <code>fun(Arg)</code>
+       evaluate it with <code>Test</code> argument.
+ If not empty</p>
 
 <h3 class="function"><a name="ifne-3">ifne/3</a></h3>
 <div class="spec">
 <p><tt>ifne(Value, NotEmpty, Empty) -&gt; any()</tt></p>
-</div>
+</div><p>Return <code>NotEmpty</code> if first argument is not one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.
+       Otherwise, if <code>NotEmpty</code> is <code>fun()</code>, evaluate it, or if it's <code>fun(Arg)</code>
+       evaluate it with <code>Value</code> argument.</p>
 
 <h3 class="function"><a name="iif-3">iif/3</a></h3>
 <div class="spec">
 <p><tt>iif(X1, True, False) -&gt; any()</tt></p>
-</div>
+</div><p>Return <code>True</code> if first argument is <code>true</code> or return <code>False</code> if
+       the first argument is one of: <code>[]</code>, <code>false</code>, <code>undefined</code>.</p>
 
 <h3 class="function"><a name="iif-4">iif/4</a></h3>
 <div class="spec">
 <p><tt>iif(Value, Other, True, False) -&gt; any()</tt></p>
-</div>
+</div><p>Return <code>True</code> if first two arguments match</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
