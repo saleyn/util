@@ -129,15 +129,13 @@ trim(String,_) ->
     String.
 
 do_format(Level,Data,[lev|Format],Config) ->
-    [[$[,level_to_chr(Level),$],$\s]|do_format(Level,Data,Format,Config)];
+    [$[,level_to_chr(Level),$]|do_format(Level,Data,Format,Config)];
 do_format(Level,Data,[level|Format],Config) ->
     [to_string(level,Level,Config)|do_format(Level,Data,Format,Config)];
-do_format(Level,#{mfa:={M,_,_},line:=L}=Data,[modline|Format],Config) ->
-    [atom_to_list(M),$:,integer_to_list(L)|do_format(Level,Data,Format,Config)];
 do_format(Level,#{pid:=Pid}=Data,[regname|Format],Config) ->
-    case erlang:process_info(registered_name, Pid) of
+    case erlang:process_info(Pid, registered_name) of
         {_, Name} ->
-            [$<,atom_to_list(Name),$>,$\s|do_format(Level,Data,Format,Config)];
+            [$<,atom_to_list(Name),$>|do_format(Level,Data,Format,Config)];
         [] ->
             [to_string(Pid,Config)|do_format(Level,Data,Format,Config)]
     end;
@@ -162,6 +160,8 @@ do_format(Level,Data,[Str|Format],Config) ->
 do_format(_Level,_Data,[],_Config) ->
     [].
 
+value(modline,#{mfa:={M,_,_},line:=L}) ->
+    {ok, [atom_to_list(M),$:,integer_to_list(L)]};
 value(Key,Meta) when is_map_key(Key,Meta) ->
     {ok,maps:get(Key,Meta)};
 value([Key|Keys],Meta) when is_map_key(Key,Meta) ->
@@ -349,6 +349,10 @@ format_time_unit(SysTime, millisecond) -> [$. | i3l((SysTime div 1000) rem 1000)
 format_time_unit(SysTime, microsecond) -> [$. | i6l(SysTime rem 1000000)];
 format_time_unit(_SysTime, _)          -> [].
 
+usec_to_unit(USec, microsecond) -> USec;
+usec_to_unit(USec, millisecond) -> USec div 1000;
+usec_to_unit(USec, _)           -> USec div 1000000.
+
 %% SysTime is the system time in microseconds
 format_time(SysTime,#{time_offset:=none,time_designator:=Des,time_unit:=Unit}=Config)
   when is_integer(SysTime) ->
@@ -364,9 +368,10 @@ format_time(SysTime,#{time_offset:=none,time_designator:=Des,time_unit:=Unit}=Co
     
 format_time(SysTime,#{time_offset:=Offset,time_designator:=Des,time_unit:=Unit})
   when is_integer(SysTime) ->
-    calendar:system_time_to_rfc3339(SysTime,[{unit,Unit},
-                                             {offset,Offset},
-                                             {time_designator,Des}]).
+    calendar:system_time_to_rfc3339(usec_to_unit(SysTime, Unit),
+                                    [{unit,Unit},
+                                     {offset,Offset},
+                                     {time_designator,Des}]).
 
 %% SysTime is the system time in microseconds
 timestamp_to_datetimemicro(SysTime,Config) when is_integer(SysTime) ->
@@ -543,7 +548,7 @@ do_check_config([{time_unit,Unit}|Config]) ->
     case lists:member(Unit, [second,millisecond,microsecond]) of
         true ->
             do_check_config(Config);
-        error ->
+        false ->
             {error,{invalid_formatter_config,?MODULE,{time_util, Unit}}}
     end;
 do_check_config([{time_designator,Char}|Config]) when Char>=0, Char=<255 ->
