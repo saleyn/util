@@ -201,15 +201,12 @@ format_regname(Key,Pid,Data) ->
     case erlang:process_info(Pid, registered_name) of
         {_, Name} when Key==regpid, is_map_key(mfa,Data) ->
             #{mfa := {M,_,_}} = Data,
-            if M == Name ->
-                [$*|do_format(Level,Data,Format,Config)];
-            true ->
-                [atom_to_list(Name)|do_format(Level,Data,Format,Config)]
+            if
+                M == Name -> "*";
+                true      -> atom_to_list(Name)
             end;
-        {_, Name} ->
-            [atom_to_list(Name)|do_format(Level,Data,Format,Config)];
-        [] ->
-            [pid_to_list(Pid,true)|do_format(Level,Data,Format,Config)]
+        {_, Name} -> atom_to_list(Name);
+        []        -> pid_to_list(Pid,true)
     end.
 
 pid_to_list(Pid,false) ->
