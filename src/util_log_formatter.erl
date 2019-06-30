@@ -19,7 +19,8 @@
 %%
 -module(util_log_formatter).
 
-%% Log formatter
+%% @doc Log formatter
+%% Derived from //kernel/logger/logger_formatter
 %%
 %% This implementation is copied from logger_fomatter.erl and adds the
 %% following features:
@@ -32,8 +33,14 @@
 %%   * lev - prints "[X]" to the log to indicate the log level, where
 %%           `X` is the first capitalized letter of the log level.
 %%   * modline - prints 'Module:Line' to the log.
-%%   * regname - prints '<RegisteredName>' of the process or its pid
+%%   * regpid  - prints:
+%%                 `*' - if the registered name of the caller's pid
+%%                       matches caller's module name.
+%%                 `RegisteredName' - of the calling process
+%%                 `X.Y.Z' - pid of the caller with leading `0.' stripped.
+%%   * regname - prints `<RegisteredName>' of the process or its pid
 %%               if the process is not registered
+%% @end
 
 -export([format/2]).
 -export([check_config/1]).
@@ -132,13 +139,9 @@ do_format(Level,Data,[lev|Format],Config) ->
     [level_to_chr(Level)|do_format(Level,Data,Format,Config)];
 do_format(Level,Data,[level|Format],Config) ->
     [to_string(level,Level,Config)|do_format(Level,Data,Format,Config)];
-do_format(Level,#{pid:=Pid}=Data,[regname|Format],Config) ->
-    case erlang:process_info(Pid, registered_name) of
-        {_, Name} ->
-            [$<,atom_to_list(Name),$>|do_format(Level,Data,Format,Config)];
-        [] ->
-            [to_string(Pid,Config)|do_format(Level,Data,Format,Config)]
-    end;
+do_format(Level,#{pid:=Pid}=Data,[I|Format],Config) when I==regname; I==regpid ->
+    [format_regname(I,Pid,Data)|do_format(Level,Data,Format,Config)];
+
 do_format(Level,Data,[{Key,IfExist,Else}|Format],Config) ->
     String =
         case value(Key,Data) of
@@ -183,7 +186,7 @@ to_string(X,_) when is_atom(X) ->
 to_string(X,_) when is_integer(X) ->
     integer_to_list(X);
 to_string(X,_) when is_pid(X) ->
-    pid_to_list(X);
+    pid_to_list(X,false);
 to_string(X,_) when is_reference(X) ->
     ref_to_list(X);
 to_string(X,Config) when is_list(X) ->
@@ -193,6 +196,30 @@ to_string(X,Config) when is_list(X) ->
     end;
 to_string(X,Config) ->
     io_lib:format(p(Config),[X]).
+
+format_regname(Key,Pid,Data) ->
+    case erlang:process_info(Pid, registered_name) of
+        {_, Name} when Key==regpid, is_map_key(mfa,Data) ->
+            #{mfa := {M,_,_}} = Data,
+            if M == Name ->
+                [$*|do_format(Level,Data,Format,Config)];
+            true ->
+                [atom_to_list(Name)|do_format(Level,Data,Format,Config)]
+            end;
+        {_, Name} ->
+            [atom_to_list(Name)|do_format(Level,Data,Format,Config)];
+        [] ->
+            [pid_to_list(Pid,true)|do_format(Level,Data,Format,Config)]
+    end.
+
+pid_to_list(Pid,false) ->
+    pid_to_list(Pid);
+pid_to_list(Pid,true)  ->
+    RemoveLast = fun G([_]) -> []; G([H|T]) -> [H|G(T)] end,
+    RemoveLast(case pid_to_list(Pid) of
+                  "<0." ++ Rest -> Rest;
+                  [_|Rest]      -> Rest
+               end).
 
 printable_list([]) ->
     false;

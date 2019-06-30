@@ -40,7 +40,8 @@
 
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#check_config-1">check_config/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#format-2">format/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#format-2">format/2</a></td><td>Log formatter  
+Derived from //kernel/logger/logger_formatter.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
@@ -55,7 +56,27 @@
 <div class="spec">
 <p><pre>format(LogEvent, Config) -&gt; <a href="unicode.html#type-chardata">unicode:chardata()</a></pre>
 <ul class="definitions"><li><pre>LogEvent = <a href="logger.html#type-log_event">logger:log_event()</a></pre></li><li><pre>Config = <a href="#type-config">config()</a></pre></li></ul></p>
-</div>
+</div><p><p>Log formatter  
+Derived from //kernel/logger/logger_formatter</p>
+ 
+  <p>This implementation is copied from logger_fomatter.erl and adds the  
+following features:    
+* config option: time_offset = none        
+when provided, no time zone offset will be written to the log.    
+* time_unit = second | millisecond | microsecond        
+controls time stamp granularity in the log.</p>
+ 
+    Additional template formatting atoms:
+    * lev - prints "[X]" to the log to indicate the log level, where
+            <code>X` is the first capitalized letter of the log level.
+    * modline - prints</code>Module:Line' to the log.
+    * regpid  - prints:
+                  <code>*</code> - if the registered name of the caller's pid
+                        matches caller's module name.
+                  <code>RegisteredName</code> - of the calling process
+                  <code>X.Y.Z</code> - pid of the caller with leading <code>0.</code> stripped.
+    * regname - prints <code>&lt;RegisteredName&gt;</code> of the process or its pid
+                if the process is not registered</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
