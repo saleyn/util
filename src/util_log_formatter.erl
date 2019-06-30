@@ -129,7 +129,7 @@ trim(String,_) ->
     String.
 
 do_format(Level,Data,[lev|Format],Config) ->
-    [$[,level_to_chr(Level),$]|do_format(Level,Data,Format,Config)];
+    [level_to_chr(Level)|do_format(Level,Data,Format,Config)];
 do_format(Level,Data,[level|Format],Config) ->
     [to_string(level,Level,Config)|do_format(Level,Data,Format,Config)];
 do_format(Level,#{pid:=Pid}=Data,[regname|Format],Config) ->
