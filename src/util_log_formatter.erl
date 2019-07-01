@@ -28,6 +28,8 @@
 %%       when provided, no time zone offset will be written to the log.
 %%   * time_unit = second | millisecond | microsecond
 %%       controls time stamp granularity in the log.
+%%   * report_prefix = string()
+%%       inserts given prefix before `msg' for logging a report (default: "\n").
 %%
 %%   Additional template formatting atoms:
 %%   * lev - prints "[X]" to the log to indicate the log level, where
@@ -60,7 +62,8 @@
                     time_offset     => integer() | [byte()]
                                      | none,  %% Extension
                     %%--- Extension
-                    time_unit       => atom()
+                    time_unit       => atom(),
+                    report_prefix   => boolean()
                    }.
 -type template() :: [metakey() | {metakey(),template(),template()} | string()].
 -type metakey() :: atom() | [atom()].
@@ -73,7 +76,11 @@
 format(#{level:=Level,msg:=Msg0,meta:=Meta},Config0)
   when is_map(Config0) ->
     Config = add_default_config(Config0),
-    Meta1 = maybe_add_legacy_header(Level,Meta,Config),
+    Meta0 = maybe_add_legacy_header(Level,Meta,Config),
+    Meta1 = case Msg0 of
+                {report, _} -> Meta0#{report => true};
+                _           -> Meta0
+            end,
     Template = maps:get(template,Config),
     {BT,AT0} = lists:splitwith(fun(msg) -> false; (_) -> true end, Template),
     {DoMsg,AT} =
@@ -227,11 +234,11 @@ format_msg({string,Chardata},Meta,Config) ->
     format_msg({"~ts",[Chardata]},Meta,Config);
 format_msg({report,_}=Msg,Meta,#{report_cb:=Fun}=Config)
   when is_function(Fun,1); is_function(Fun,2) ->
-    format_msg(Msg,Meta#{report_cb=>Fun},maps:remove(report_cb,Config));
+    format_msg(Msg,Meta#{report=>true,report_cb=>Fun},maps:remove(report_cb,Config));
 format_msg({report,Report},#{report_cb:=Fun}=Meta,Config) when is_function(Fun,1) ->
     try Fun(Report) of
         {Format,Args} when is_list(Format), is_list(Args) ->
-            format_msg({Format,Args},maps:remove(report_cb,Meta),Config);
+            format_msg({Format,Args},maps:remove(report_cb,Meta#{report=>true}),Config);
         Other ->
             P = p(Config),
             format_msg({"REPORT_CB/1 ERROR: "++P++"; Returned: "++P,
@@ -265,19 +272,24 @@ format_msg({report,Report},Meta,Config) ->
     format_msg({report,Report},
                Meta#{report_cb=>fun logger:format_report/1},
                Config);
-format_msg(Msg,_Meta,#{depth:=Depth,chars_limit:=CharsLimit,
-                       single_line:=Single}) ->
+format_msg(Msg,Meta,#{depth:=Depth,chars_limit:=CharsLimit,
+                      single_line:=Single,report_prefix:=RepPfx}) ->
     Opts = chars_limit_to_opts(CharsLimit),
-    format_msg(Msg, Depth, Opts, Single).
+    format_msg(Msg, Depth, Opts, Single, maps:get(report,Meta,false), RepPfx).
 
 chars_limit_to_opts(unlimited) -> [];
 chars_limit_to_opts(CharsLimit) -> [{chars_limit,CharsLimit}].
 
-format_msg({Format0,Args},Depth,Opts,Single) ->
+format_msg({Format0,Args},Depth,Opts,Single,WasReport,RepPrefix) ->
     try
         Format1 = io_lib:scan_format(Format0, Args),
-        Format = reformat(Format1, Depth, Single),
-        io_lib:build_text(Format,Opts)
+        Format  = reformat(Format1, Depth, Single),
+        Res     = io_lib:build_text(Format,Opts),
+        if WasReport and not Single ->
+            [RepPrefix | Res];
+        true ->
+            Res
+        end
     catch C:R:S ->
             P = p(Single),
             FormatError = "FORMAT ERROR: "++P++" - "++P,
@@ -286,7 +298,8 @@ format_msg({Format0,Args},Depth,Opts,Single) ->
                     %% already been here - avoid failing cyclically
                     erlang:raise(C,R,S);
                 _ ->
-                    format_msg({FormatError,[Format0,Args]},Depth,Opts,Single)
+                    format_msg({FormatError,[Format0,Args]},
+                               Depth,Opts,Single,WasReport,RepPrefix)
             end
     end.
 
@@ -468,7 +481,8 @@ add_default_config(Config0) ->
           error_logger_notice_header=>info,
           legacy_header=>false,
           single_line=>true,
-          time_designator=>$T},
+          time_designator=>$T,
+          report_prefix=>"\n"},
     MaxSize = get_max_size(maps:get(max_size,Config0,undefined)),
     Depth = get_depth(maps:get(depth,Config0,undefined)),
     Offset = get_offset(maps:get(time_offset,Config0,undefined)),
@@ -574,6 +588,13 @@ do_check_config([{time_unit,Unit}|Config]) ->
             do_check_config(Config);
         false ->
             {error,{invalid_formatter_config,?MODULE,{time_util, Unit}}}
+    end;
+do_check_config([{report_prefix,Pfx}|Config]) when is_list(Pfx) ->
+    case io_lib:printable_latin1_list(Pfx) of
+        true ->
+            do_check_config(Config);
+        false ->
+            {error,{invalid_formatter_config,?MODULE,{report_prefix, Pfx}}}
     end;
 do_check_config([{time_designator,Char}|Config]) when Char>=0, Char=<255 ->
     case io_lib:printable_latin1_list([Char]) of
