@@ -83,8 +83,14 @@ pretty_table(HeaderRowKeys, Rows) ->
 %%      <dd>Prepend each row with this string</dd>
 %% <dt>td_formats</dt>
 %%      <dd>A tuple containing column formats. Each value is either
-%%          a format string passed to `io_lib:format/2' or a function
-%%          `fun(Value) -> {number|string, FormattedValue::string()}'</dd>
+%%          a format string passed to `io_lib:format/2' or a function taking
+%%          either one argument
+%%          `fun(Value) -> {number|string, FormattedValue::string()}'
+%%          or three arguments
+%%          `fun(Key,Value,Row::tuple()|map()) -> {number|string, FormattedValue::string()}'.
+%%          This three argument function can perform calculation of the field
+%%          value based on values of other fields in the `Row'.
+%%      </dd>
 %% </dl>
 %% Example:
 %% ```
@@ -445,27 +451,32 @@ to_strings(Keys, Values, Formats) when is_list(Formats), length(Formats) == leng
 to_strings1([], _, _) ->
   [];
 to_strings1([K|Keys], Map, [F|Formats]) when is_map(Map) ->
-  [to_string(maps:get(K, Map), F) | to_strings1(Keys, Map, Formats)];
+  [to_string(K, maps:get(K, Map), Map, F) | to_strings1(Keys, Map, Formats)];
 to_strings1(_Keys, List, Formats) when is_list(List), is_list(Formats) ->
-  [to_string(Entry, F) || {Entry, F} <- lists:zip(List, Formats)];
-to_strings1(Keys, Tuple, Formats) when is_tuple(Tuple), is_list(Formats) ->
-  to_strings1(Keys, tuple_to_list(Tuple), Formats).
+  Row = list_to_tuple(List),
+  [to_string(undefined, Entry, Row, F) || {Entry, F} <- lists:zip(List, Formats)];
+to_strings1(Keys, Row, Formats) when is_tuple(Row), is_list(Formats) ->
+  List = tuple_to_list(Row),
+  [to_string(Key, Entry, Row, F) || {Key, Entry, F} <- lists:zip3(Keys, List, Formats)].
 
 to_string(V) ->
-  to_string(V, undefined).
+  to_string(undefined, V, undefined, undefined).
 
-to_string(V, Fmt) when is_list(Fmt) ->
+to_string(_K, V, _Row, Fmt) when is_list(Fmt) ->
   {guess_type(V), io_lib:format(Fmt, [V])};
-to_string(V, Fmt) when is_function(Fmt, 1) ->
+to_string(_K, V, _Row, Fmt) when is_function(Fmt, 1) ->
   case Fmt(V) of
-    {I,_}=R when I==number; I==string ->
-      R;
-    R when is_tuple(R) ->
-      throw({invalid_format_function_return, V, R});
-    R ->
-      {string, R}
+    {I,_}=R when I==number; I==string -> R;
+    R       when is_tuple(R)          -> throw({invalid_format_function_return, V, R});
+    R                                 -> {string, R}
   end;
-to_string(V, undefined) ->
+to_string(K, V, Row, Fmt) when is_function(Fmt, 3) ->
+  case Fmt(K, V, Row) of
+    {I,_}=R when I==number; I==string -> R;
+    R       when is_tuple(R)          -> throw({invalid_format_function_return, V, R});
+    R                                 -> {string, R}
+  end;
+to_string(_K, V, _Row, undefined) ->
   to_string1(V).
   
 to_string1(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};
@@ -523,5 +534,24 @@ pretty_table_test() ->
              (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])} end,
           "~w",
           undefined}}))).
+
+pretty_table_calc_format_test() ->
+  ?assertEqual(
+    "a  | b  | c \n"
+    "---+----+---\n"
+    "10 | 20 | 30\n"
+    "30 | 40 | 70\n"
+    "---+----+---\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c},
+      [{10, 20, 0}, {30, 40, 0}],
+      #opts{td_dir=both,
+        td_formats={
+          undefined,
+          undefined,
+          fun(c,V,Row) when is_integer(V) -> {number, integer_to_list(lists:sum(tuple_to_list(Row)))};
+             (_,V,_)   when is_integer(V) -> {number, integer_to_list(V)} end
+        }}))).
+
 
 -endif.
