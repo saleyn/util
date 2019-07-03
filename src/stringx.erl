@@ -159,33 +159,7 @@ pretty_table(HeaderRowKeys, Rows) ->
 %%-------------------------------------------------------------------------
 -spec pretty_table([string()], [Row :: tuple()|list()|map()], Opts::map()) -> list().
 pretty_table(HeaderRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
-  DefOpts = maps:from_list(lists:zip(record_info(fields, opts), tl(tuple_to_list(#opts{})))),
-  MOpts   = maps:merge(DefOpts, MapOpts),
-  #{number_pad:=NP, out_header:=OH, out_sep:=OS, th_dir:=THD, td_dir:=TDD,
-    td_start:=TDST, td_exclude:=TDE, td_sep:=TDS,tr_sep:=TRS, tr_sep_td:=TRSTD,
-    prefix:=Prf,    translate :=TR,  footer_rows:=FR,         td_formats:=TDF,
-    thousands:=THS, ccy_sym:=CCY, ccy_sep    :=CS, ccy_pos:=CP} = MOpts,
-  Opts = #opts{
-    number_pad = NP,
-    out_header = OH,
-    out_sep    = OS,
-    th_dir     = THD,
-    td_dir     = TDD,
-    td_start   = TDST,
-    td_exclude = TDE,
-    td_sep     = TDS,
-    tr_sep     = TRS,
-    tr_sep_td  = TRSTD,
-    prefix     = Prf,
-    translate  = TR,
-    footer_rows= FR,
-    td_formats = TDF,
-    thousands  = THS,
-    ccy_sym = CCY,
-    ccy_sep    = CS,
-    ccy_pos    = CP
-  },
-  pretty_table1(HeaderRowKeys, Rows, Opts);
+  pretty_table0(HeaderRowKeys, Rows, MapOpts);
 
 pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
   pretty_table1(HeaderRowKeys, Rows, Opts).
@@ -197,7 +171,7 @@ pretty_print_table(HeaderRowKeys, Rows) ->
   io:put_chars(pretty_table1(HeaderRowKeys, Rows, #opts{})).
 
 pretty_print_table(HeaderRowKeys, Rows, Opts) ->
-  io:put_chars(pretty_table1(HeaderRowKeys, Rows, Opts)).
+  io:put_chars(pretty_table0(HeaderRowKeys, Rows, Opts)).
 
 %%%------------------------------------------------------------------------
 %%% Internal functions
@@ -246,6 +220,8 @@ dropws1(L     ) -> L.
 dropws2([],   Acc) -> dropws1(Acc);
 dropws2(Word, Acc) -> Word ++ Acc.
 
+translate_excludes(_, I, _) when I==undefined; I==[] ->
+  [];
 translate_excludes(ColNames, ExcludeNamesAndPos, StartPos) ->
   {IDs, Names} = lists:partition(fun(I) -> is_integer(I) end, ExcludeNamesAndPos),
   Cols         = if is_tuple(ColNames) -> ColNames; true -> list_to_tuple(ColNames) end,
@@ -262,6 +238,37 @@ filter_out([], _)              -> [];
 filter_out([_|T1], [true |T2]) -> filter_out(T1, T2);
 filter_out([H|T1], [false|T2]) -> [H|filter_out(T1, T2)];
 filter_out([H|T1], []) ->         [H|filter_out(T1, [])].
+
+pretty_table0(HdrRowKeys, Rows, #opts{} = Opts) ->
+  pretty_table1(HdrRowKeys, Rows, Opts);
+pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
+  DefOpts = maps:from_list(lists:zip(record_info(fields, opts), tl(tuple_to_list(#opts{})))),
+  MOpts   = maps:merge(DefOpts, MapOpts),
+  #{number_pad:=NP, out_header:=OH, out_sep:=OS, th_dir:=THD, td_dir:=TDD,
+    td_start:=TDST, td_exclude:=TDE, td_sep:=TDS,tr_sep:=TRS, tr_sep_td:=TRSTD,
+    prefix:=Prf,    translate :=TR,  footer_rows:=FR,         td_formats:=TDF,
+    thousands:=THS, ccy_sym:=CCY, ccy_sep    :=CS, ccy_pos:=CP} = MOpts,
+  Opts = #opts{
+    number_pad = NP,
+    out_header = OH,
+    out_sep    = OS,
+    th_dir     = THD,
+    td_dir     = TDD,
+    td_start   = TDST,
+    td_exclude = TDE,
+    td_sep     = TDS,
+    tr_sep     = TRS,
+    tr_sep_td  = TRSTD,
+    prefix     = Prf,
+    translate  = TR,
+    footer_rows= FR,
+    td_formats = TDF,
+    thousands  = THS,
+    ccy_sym = CCY,
+    ccy_sep    = CS,
+    ccy_pos    = CP
+  },
+  pretty_table1(HdrRowKeys, Rows, Opts).
 
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
@@ -591,8 +598,9 @@ to_string1(Bin,_Opts)   when is_binary(Bin)  -> {string, binary_to_list(Bin)};
 to_string1(undefined,_Opts)                  -> {string, ""};
 to_string1(T,_Opts)                          -> {string, io_lib:format("~tp", [T])}.
 
-format_ccy(I, Decimals, #opts{ccy_sym=Sym, ccy_sep=Sep, ccy_pos=Pos}) ->
-  format_number(I, Decimals, Decimals, #{ccy_sym=>Sym, ccy_sep=>Sep, ccy_pos=>Pos, return=>list}).
+format_ccy(I, Decimals, #opts{ccy_sym=Sym, ccy_sep=Sep, ccy_pos=Pos, thousands=Th}) ->
+  format_number(I, Decimals, Decimals, #{ccy_sym=>Sym, ccy_sep=>Sep, ccy_pos=>Pos,
+                                         thousands=>Th, return=>list}).
 
 guess_type(V)     when is_integer(V)   -> number;
 guess_type(V)     when is_float(V)     -> number;
