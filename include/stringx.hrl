@@ -15,8 +15,12 @@
   prefix     = ""       :: string(),  % Use this prefix in front of each row
   translate,                          % Value translation function `(Val) -> any()`
   footer_rows= 0        :: integer(), % Number of footer rows
-  td_formats :: tuple() % Optional tuple containing value format for columns
-                        % (each item is either a Fmt string or fun(Value)).
+  td_formats :: tuple(),              % Optional tuple containing value format for columns
+                                      % (each item is either a Fmt string or fun(Value)).
+  thousands       :: string()|binary(),% Number thousands separator
+  ccy_sym         :: string()|binary(),% Currency prefix/suffix
+  ccy_sep = <<"">>:: string()|binary(),% Currency separator
+  ccy_pos = left  :: left|right        % Currency symbol position
 }).
 
 

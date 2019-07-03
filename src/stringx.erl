@@ -30,13 +30,14 @@
 -type formatted_number() :: binary().
 -type precision()        :: integer().
 -type decimals()         :: 0..253. % see types for erlang:float_to_binary/2
--type ccy_symbol()       :: binary() | string().
+-type ccy_sym()          :: binary() | string().
 -type format_number_opts() :: #{
 	thousands     => binary() | string(),
 	decimal_point => binary() | string(),  % Default: "."
-	ccy_symbol    => ccy_symbol(),
+	ccy_sym       => ccy_sym(),
 	ccy_pos       => left | right,
-	ccy_sep       => binary() | string()
+	ccy_sep       => binary() | string(),
+  return        => binary | list         % Default: binary
 }.
 
 -type pretty_print_opts() :: #{
@@ -51,9 +52,18 @@
   tr_sep     => string(),
   tr_sep_td  => string(),  % Delimiter header/footer column sep
   prefix     => string(),  % Use this prefix in front of each row
+  thousands  => string()|binary(),       % Thousands separator for numbers
   translate  => fun((term()) -> term()), % Value translation function `(Val) -> any()`
   footer_rows=> integer(), % Number of footer rows
-  td_formats => tuple()    % Optional tuple containing value format for columns
+  td_formats => tuple()|
+                fun((ColVal::term()) -> {string, string()}|
+                                        {number, string()|number()}|
+                                        {number, Decimals::integer(), ColVal::number()}|
+                                        {ccy,    number()}),  % Optional tuple containing value format for columns
+  thousands  => string()|binary(),       % Number thousands separator
+  ccy_sym => string()|binary(),       % Currency prefix/suffix
+  ccy_sep    => string()|binary(),       % Currency symbol separator
+  ccy_pos    => left|right               % Currency symbol position
 }.
 
 -export_type([format_number_opts/0, pretty_print_opts/0]).
@@ -153,7 +163,8 @@ pretty_table(HeaderRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
   MOpts   = maps:merge(DefOpts, MapOpts),
   #{number_pad:=NP, out_header:=OH, out_sep:=OS, th_dir:=THD, td_dir:=TDD,
     td_start:=TDST, td_exclude:=TDE, td_sep:=TDS,tr_sep:=TRS, tr_sep_td:=TRSTD,
-    prefix:=Prf,    translate :=TR,  footer_rows:=FR,         td_formats:=TDF} = MOpts,
+    prefix:=Prf,    translate :=TR,  footer_rows:=FR,         td_formats:=TDF,
+    thousands:=THS, ccy_sym:=CCY, ccy_sep    :=CS, ccy_pos:=CP} = MOpts,
   Opts = #opts{
     number_pad = NP,
     out_header = OH,
@@ -168,7 +179,11 @@ pretty_table(HeaderRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
     prefix     = Prf,
     translate  = TR,
     footer_rows= FR,
-    td_formats = TDF
+    td_formats = TDF,
+    thousands  = THS,
+    ccy_sym = CCY,
+    ccy_sep    = CS,
+    ccy_pos    = CP
   },
   pretty_table1(HeaderRowKeys, Rows, Opts);
 
@@ -253,7 +268,7 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
 pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
   Exclude = translate_excludes(Keys0, Opts#opts.td_exclude, Opts#opts.td_start),
   KeyStrs = take_nth(Opts#opts.td_start, [element(2, to_string(Key)) || Key <- Keys0]),
-  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts#opts.td_formats)) || V <- Rows0],
+  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts)) || V <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
   Col     = fun
               ({number,Str}, {_, Width}) ->
@@ -505,49 +520,79 @@ type(T, T)         -> T;
 type(_, _)         -> string.
 
 to_strings(Keys, Values, undefined) ->
-  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)));
-to_strings(Keys, Values, Formats) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, tuple_to_list(Formats));
-to_strings(Keys, Values, Formats) when is_list(Formats), length(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, Formats).
+  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), #opts{});
+to_strings(Keys, Values, #opts{td_formats=Formats}=O) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
+  to_strings1(Keys, Values, tuple_to_list(Formats), O);
+to_strings(Keys, Values, #opts{td_formats=Formats}=O) when (is_list(Formats) andalso length(Formats)==length(Keys))
+                                                           orelse is_function(Formats, 1)
+                                                           orelse is_function(Formats, 3) ->
+  to_strings1(Keys, Values, Formats, O).
 
-to_strings1([], _, _) ->
+to_strings1([], _, _, _) ->
   [];
-to_strings1([K|Keys], Map, [F|Formats]) when is_map(Map) ->
-  [to_string(K, maps:get(K, Map), Map, F) | to_strings1(Keys, Map, Formats)];
-to_strings1(_Keys, List, Formats) when is_list(List), is_list(Formats) ->
+to_strings1([K|Keys], Map, [F|Formats], Opts) when is_map(Map) ->
+  [to_string(K, maps:get(K, Map), Map, F, Opts) | to_strings1(Keys, Map, Formats, Opts)];
+to_strings1([K|Keys], Map, Fmt, Opts) when is_map(Map) andalso (is_function(Fmt,1) orelse is_function(Fmt, 3)) ->
+  [to_string(K, maps:get(K, Map), Map, Fmt, Opts) | to_strings1(Keys, Map, Fmt, Opts)];
+to_strings1(_Keys, List, Fmt, Opts) when is_list(List) andalso (is_function(Fmt,1) orelse is_function(Fmt,3)) ->
   Row = list_to_tuple(List),
-  [to_string(undefined, Entry, Row, F) || {Entry, F} <- lists:zip(List, Formats)];
-to_strings1(Keys, Row, Formats) when is_tuple(Row), is_list(Formats) ->
+  [to_string(undefined, Entry, Row, Fmt, Opts) || Entry <- List];
+to_strings1(_Keys, List, Formats, Opts) when is_list(List), is_list(Formats) ->
+  Row = list_to_tuple(List),
+  [to_string(undefined, Entry, Row, F, Opts) || {Entry, F} <- lists:zip(List, Formats)];
+to_strings1(Keys, Row, Fmt, Opts) when is_tuple(Row) andalso (is_function(Fmt,1) orelse is_function(Fmt,3)) ->
+  [to_string(K, Entry, Row, Fmt, Opts) || {K, Entry} <- lists:zip(Keys, tuple_to_list(Row))];
+to_strings1(Keys, Row, Formats, Opts) when is_tuple(Row), is_list(Formats) ->
   List = tuple_to_list(Row),
-  [to_string(Key, Entry, Row, F) || {Key, Entry, F} <- lists:zip3(Keys, List, Formats)].
+  [to_string(K, Entry, Row, F, Opts) || {K, Entry, F} <- lists:zip3(Keys, List, Formats)].
 
 to_string(V) ->
-  to_string(undefined, V, undefined, undefined).
+  to_string(undefined, V, undefined, undefined, undefined).
 
-to_string(_K, V, _Row, Fmt) when is_list(Fmt) ->
+to_string(_K, V, _Row, Fmt, _Opts) when is_list(Fmt) ->
   {guess_type(V), io_lib:format(Fmt, [V])};
-to_string(_K, V, _Row, Fmt) when is_function(Fmt, 1) ->
-  case Fmt(V) of
-    {I,_}=R when I==number; I==string -> R;
-    R       when is_tuple(R)          -> throw({invalid_format_function_return, V, R});
-    R                                 -> {string, R}
-  end;
-to_string(K, V, Row, Fmt) when is_function(Fmt, 3) ->
-  case Fmt(K, V, Row) of
-    {I,_}=R when I==number; I==string -> R;
-    R       when is_tuple(R)          -> throw({invalid_format_function_return, V, R});
-    R                                 -> {string, R}
-  end;
-to_string(_K, V, _Row, undefined) ->
-  to_string1(V).
+to_string(_K, V, _Row, Fmt, Opts) when is_function(Fmt, 1) ->
+  Res = Fmt(V),
+  to_string2(Res, Opts);
+to_string(K, V, Row, Fmt, Opts) when is_function(Fmt, 3) ->
+  Res = Fmt(K, V, Row),
+  to_string2(Res, Opts);
+to_string(_K, V, _Row, undefined, Opts) ->
+  to_string1(V, Opts).
   
-to_string1(Int)   when is_integer(Int) -> {number, integer_to_list(Int)};
-to_string1(Float) when is_float(Float) -> {number, io_lib:format("~.4f",[Float])};
-to_string1(Str)   when is_list(Str)    -> {string, Str};
-to_string1(Bin)   when is_binary(Bin)  -> {string, binary_to_list(Bin)};
-to_string1(undefined)                  -> {string, ""};
-to_string1(T)                          -> {string, io_lib:format("~tp", [T])}.
+to_string2({number,R}, Opts) when is_number(R) -> to_string1(R, Opts);
+to_string2({number, Dec, I}, Opts) when is_number(Dec) ->
+  {number, format_number(I, Dec, Dec, #{thousands=>Opts#opts.thousands, return=>list})};
+to_string2({number,L}=R,_Opts) when is_list(L) -> R;
+to_string2({string,L}=R,_Opts) when is_list(L) -> R;
+to_string2({ccy,I},Opts)     when is_number(I) -> {number, format_ccy(I, 2, Opts)};
+to_string2({ccy,Decimals,I},Opts) when is_integer(Decimals)
+                                , is_number(I) -> {number, format_ccy(I, Decimals, Opts)};
+to_string2(R,_) when is_tuple(R)               -> throw({invalid_format_function_return, R});
+to_string2(R,_) when is_list(R)                -> {string, R}.
+  
+to_string1(V) ->
+  to_string1(V, undefined).
+
+to_string1(I, #opts{thousands=undefined}) when is_number(I) -> to_string1(I, undefined);
+to_string1(I, #opts{thousands=Thousands}) when is_number(I) -> to_string1(I, Thousands);
+to_string1(I, undefined) when is_integer(I)  -> {number, integer_to_list(I)};
+to_string1(I, Thousands) when is_integer(I)
+                            ,(is_binary(Thousands) orelse is_list(Thousands))
+                                             -> {number, format_integer(I, #{thousands=>Thousands,
+                                                                             return=>list})};
+to_string1(F, undefined) when is_float(F)    -> {number, io_lib:format("~.4f",[F])};
+to_string1(F, Thousands) when is_float(F)
+                            ,(is_binary(Thousands) orelse is_list(Thousands))
+                                             -> {number, format_number(F, 4,4, #{thousands=>Thousands,
+                                                                                 return=>list})};
+to_string1(Str,_Opts)   when is_list(Str)    -> {string, Str};
+to_string1(Bin,_Opts)   when is_binary(Bin)  -> {string, binary_to_list(Bin)};
+to_string1(undefined,_Opts)                  -> {string, ""};
+to_string1(T,_Opts)                          -> {string, io_lib:format("~tp", [T])}.
+
+format_ccy(I, Decimals, #opts{ccy_sym=Sym, ccy_sep=Sep, ccy_pos=Pos}) ->
+  format_number(I, Decimals, Decimals, #{ccy_sym=>Sym, ccy_sep=>Sep, ccy_pos=>Pos, return=>list}).
 
 guess_type(V)     when is_integer(V)   -> number;
 guess_type(V)     when is_float(V)     -> number;
@@ -557,8 +602,6 @@ guess_type(_)                          -> string.
 -define(DEFAULT_PRICE_DECIMALS, 2).
 -define(THOUSANDS_SEP, <<"">>).
 -define(DECIMAL_POINT, <<".">>).
--define(CURRENCY_POSITION, left).
--define(CURRENCY_SEP, <<"">>).
 
 -spec format_integer(integer()) -> formatted_number().
 format_integer(Integer) ->
@@ -572,8 +615,12 @@ format_integer(Integer, Opts) when is_integer(Integer), is_map(Opts) ->
 %% @see format_number/4
 %% @end
 -spec format_number(number(), precision(), decimals()) -> formatted_number().
-format_number(Number, Precision, Decimals) when is_float(Number); is_integer(Number) ->
-	format_number(Number, Precision, Decimals, #{}).
+format_number(N, Precision, Decimals) when (is_float(N) orelse is_integer(N))
+                                         ,  is_integer(Precision)
+                                         ,  is_integer(Decimals) ->
+	format_number(N, Precision, Decimals, #{});
+format_number(N, Precision, Opts) when is_map(Opts) ->
+  format_number(N, Precision, Precision, Opts).
 
 %% @doc
 %% Formats Number by adding thousands separator between each set of 3
@@ -610,15 +657,14 @@ format_price(Price) ->
 %% The same as uef_format:format_price/3 with #{} as the third argument.
 %% @see format_price/3
 %% @end
--spec format_price(Number :: number(), Precision :: precision()) ->
-  FormattedPrice :: formatted_number().
+-spec format_price(Number::number(), Precision::precision()) -> formatted_number().
 format_price(Price, Precision) ->
 	format_price(Price, Precision, #{}).
 
 %% format_price/3
--spec format_price(Number :: number(), Precision :: precision(),
-        CcySymbol_OR_Options :: format_number_opts() | ccy_symbol()) ->
-          FormattedPrice :: formatted_number().
+-spec format_price(Number::number(), Precision::precision(),
+        CcySymbol_OR_Options::format_number_opts() | ccy_sym()) ->
+          FormattedPrice::formatted_number().
 %% @doc
 %% Formats Number in price-like style.
 %% Returns a binary containing FormattedPrice formatted with a specified
@@ -632,7 +678,7 @@ format_price(Price, Precision) ->
 format_price(Price, Precision, Opts) when is_map(Opts) ->
 	format_number(Price, Precision, ?DEFAULT_PRICE_DECIMALS, Opts);
 format_price(Price, Precision, CurSymbol) when is_binary(CurSymbol) orelse is_list(CurSymbol) ->
-	format_number(Price, Precision, ?DEFAULT_PRICE_DECIMALS, #{ccy_symbol => CurSymbol});
+	format_number(Price, Precision, ?DEFAULT_PRICE_DECIMALS, #{ccy_sym => CurSymbol});
 format_price(Price, Precision, Opts) ->
 	erlang:error({badarg, Opts}, [Price, Precision, Opts]).
 
@@ -654,7 +700,7 @@ round_number(Number, Precision) ->
 
 %% do_format_number/3
 -spec do_format_number(number(), decimals(), format_number_opts()) -> formatted_number().
-do_format_number(Number, Decimals, Opts) when is_float(Number) ->
+do_format_number(Number, Decimals, Opts) when is_float(Number), is_integer(Decimals), is_map(Opts) ->
 	PositiveNumber = case Number < 0 of
 		false -> Number;
 		true  -> erlang:abs(Number)
@@ -669,7 +715,7 @@ do_format_number(Number, Decimals, Opts) when is_float(Number) ->
 do_format_number(Number, _, Opts) when is_integer(Number) ->
   do_format_num(Number, integer_to_binary(Number), <<>>, Opts).
 
-do_format_num(Number, IntegerPart, DecimalPart, Opts) ->
+do_format_num(Number, IntegerPart, DecimalPart, Opts) when is_map(Opts) ->
 	HeadSize = erlang:byte_size(IntegerPart) rem 3,
 	<<Head:HeadSize/binary, IntRest/binary>> = IntegerPart, % ex: <<"12", "345678">> = <<"12345678">>
 	ThousandParts = split_thousands(IntRest), % ex: <<"345678">> -> [<<"345">>, <<678>>]
@@ -697,28 +743,37 @@ do_format_num(Number, IntegerPart, DecimalPart, Opts) ->
 
 %% format_number_with_ccy/2
 -spec format_number_with_ccy(binary(), map()) -> binary().
-format_number_with_ccy(FmtNum, #{ccy_symbol := CurSymbol0} = Opts) ->
-	CurSymbol = maybe_to_binary(CurSymbol0),
-	CurSep = maybe_to_binary(maps:get(ccy_sep, Opts, ?CURRENCY_SEP)),
-	case maps:get(ccy_pos, Opts, ?CURRENCY_POSITION) of
-		left -> <<CurSymbol/binary, CurSep/binary, FmtNum/binary>>;
-		_ -> <<FmtNum/binary, CurSep/binary, CurSymbol/binary>>
-	end;
-format_number_with_ccy(FmtNum, _) ->
-	FmtNum.
+format_number_with_ccy(FmtNum, #{ccy_sym := CurSymbol0} = Opts) ->
+	CurSym = maybe_to_binary(CurSymbol0),
+	CurSep = maybe_to_binary(maps:get(ccy_sep, Opts, <<"">>)),
+  format_number_return(
+    case maps:get(ccy_pos, Opts, left) of
+      left -> <<CurSym/binary, CurSep/binary, FmtNum/binary>>;
+      _ -> <<FmtNum/binary, CurSep/binary, CurSym/binary>>
+    end,
+    maps:get(return, Opts, binary));
+format_number_with_ccy(FmtNum, Opts) ->
+	format_number_return(FmtNum, maps:get(return, Opts, binary)).
+
+format_number_return(Bin, binary) when is_binary(Bin) ->
+  Bin;
+format_number_return(Bin, list) when is_binary(Bin) ->
+  binary_to_list(Bin);
+format_number_return(Bin, list) when is_list(Bin) ->
+  Bin;
+format_number_return(_Bin, Type) ->
+  erlang:error({badarg, {return, Type}}).
 
 %% maybe_to_binary/1
 -spec maybe_to_binary(binary() | string()) -> binary().
-maybe_to_binary(B) when is_binary(B) ->
-	B;
+maybe_to_binary(B) when is_binary(B) -> B;
 maybe_to_binary(L) when is_list(L) ->
 	case unicode:characters_to_binary(L, utf8, utf8) of
 		B when is_binary(B) -> B;
-		_ -> erlang:error(badarg)
+		_ -> erlang:error({badarg, L})
 	end;
-maybe_to_binary(_)->
-	erlang:error(badarg).
-
+maybe_to_binary(T)->
+	erlang:error({badarg, T}).
 
 %% split_thousands/1
 -spec split_thousands(binary()) -> [<<_:24>>].
@@ -785,6 +840,24 @@ pretty_table_test() ->
           "~w",
           undefined}}))).
 
+pretty_table_ccy_thousands_test() ->
+  ?assertEqual(
+    " a   |    b     |  c  \n"
+    "-----+----------+-----\n"
+    "$ 10 | 1,000.00 |    1\n"
+    " $ 2 | 1,123.56 | 1000\n"
+    "-----+----------+-----\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c},
+      [{10, 1000.0, 1}, {2, 1123.56, 1000}],
+      #opts{td_dir=both, thousands=",", ccy_sym="$", ccy_sep=" ",
+        td_formats=
+          fun(a,V,_) when is_integer(V) -> {ccy, 0, V};
+             (_,V,_) when is_integer(V) -> {number, integer_to_list(V)};
+             (_,V,_) when is_float(V)   -> {number, 2, V} end
+          }))
+  ).
+
 pretty_table_calc_format_test() ->
   ?assertEqual(
     "a  | b  | c \n"
@@ -836,14 +909,14 @@ format_number_test_() -> [
 	?_assertEqual(<<"999,999,999,999.99">>, format_price(999999999999.99,  2, #{thousands => <<",">>})),
 	?_assertEqual(<<"USD 1,234,567,890==4600">>,
     format_number(1234567890.4567, 2, 4, #{thousands => ",",
-      decimal_point => "==", ccy_symbol => "USD", ccy_sep => " ", ccy_pos => left})),
+      decimal_point => "==", ccy_sym => "USD", ccy_sep => " ", ccy_pos => left})),
 	?_assertEqual(<<"$1000.88">>, format_price(1000.8767, 4, "$")),
 	?_assertEqual(<<"1000.88 руб."/utf8>>, format_price(1000.8767, 4,
-    #{ccy_symbol => <<"руб."/utf8>>, ccy_sep => " ", ccy_pos => right})),
+    #{ccy_sym => <<"руб."/utf8>>, ccy_sep => " ", ccy_pos => right})),
 	?_assertEqual(<<"1000.88 руб."/utf8>>, format_price(1000.8767, 4,
-    #{ccy_symbol => "руб.", ccy_sep => " ", ccy_pos => right})),
+    #{ccy_sym => "руб.", ccy_sep => " ", ccy_pos => right})),
 	?_assertEqual(<<"€€1000.00"/utf8>>, format_price(1000, 4,
-    #{ccy_symbol => "€", ccy_sep => "€", ccy_pos => left})),
+    #{ccy_sym => "€", ccy_sep => "€", ccy_pos => left})),
 	?_assertEqual(format_number(100, 2, 3), format_number(100, 2, 3, #{})),
 	?_assertEqual(format_price(1000), format_price(1000, 2)),
 	?_assertEqual(format_price(1000), format_price(1000, 2, <<>>)),
