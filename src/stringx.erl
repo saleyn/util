@@ -108,7 +108,31 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% '''
 %% @end
 %%-------------------------------------------------------------------------
--spec pretty_table([string()], [Row :: tuple()|list()|map()], #opts{}) -> list().
+-spec pretty_table([string()], [Row :: tuple()|list()|map()], Opts::map()) -> list().
+pretty_table(HeaderRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
+  DefOpts = maps:from_list(lists:zip(record_info(fields, opts), tl(tuple_to_list(#opts{})))),
+  MOpts   = maps:merge(DefOpts, MapOpts),
+  #{number_pad:=NP, out_header:=OH, out_sep:=OS, th_dir:=THD, td_dir:=TDD,
+    td_start:=TDST, td_exclude:=TDE, td_sep:=TDS,tr_sep:=TRS, tr_sep_td:=TRSTD,
+    prefix:=Prf,    translate :=TR,  footer_rows:=FR,         td_formats:=TDF} = MOpts,
+  Opts = #opts{
+    number_pad = NP,
+    out_header = OH,
+    out_sep    = OS,
+    th_dir     = THD,
+    td_dir     = TDD,
+    td_start   = TDST,
+    td_exclude = TDE,
+    td_sep     = TDS,
+    tr_sep     = TRS,
+    tr_sep_td  = TRSTD,
+    prefix     = Prf,
+    translate  = TR,
+    footer_rows= FR,
+    td_formats = TDF
+  },
+  pretty_table1(HeaderRowKeys, Rows, Opts);
+
 pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
   pretty_table1(HeaderRowKeys, Rows, Opts).
 
@@ -553,5 +577,21 @@ pretty_table_calc_format_test() ->
              (_,V,_)   when is_integer(V) -> {number, integer_to_list(V)} end
         }}))).
 
+pretty_table_map_opts_test() ->
+  ?assertEqual(
+    " a   |     b    \n"
+    "-----+----------\n"
+    " a   |        10\n"
+    "bxxx | 200.00123\n"
+    "-----+----------\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c,d},
+      [{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2}, {abc, 100.0, xx,x3}],
+      #{td_dir => both, td_exclude => [3,4], td_formats => {
+          undefined,
+          fun(V) when is_integer(V) -> {number, integer_to_list(V)};
+             (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])} end,
+          "~w",
+          undefined}}))).
 
 -endif.
