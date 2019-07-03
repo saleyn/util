@@ -10,6 +10,10 @@
 %%%------------------------------------------------------------------------
 %%% Created 2005-09-25
 %%%------------------------------------------------------------------------
+%%% format_number/3,4, format_price/1,2,3 functions are taken from
+%%% [https://github.com/DOBRO/uef-lib/blob/master/src/uef_format.erl]
+%%% Copyright (c) 2019, Sergei Semichev <chessvegas@chessvegas.com>
+%%%------------------------------------------------------------------------
 -module(stringx).
 -author('saleyn@gmail.com').
 
@@ -18,6 +22,41 @@
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
 -export([align_rows/1, align_rows/2, aligned_format/2, aligned_format/3]).
+
+-export([format_integer/1, format_integer/2, format_number/3, format_number/4]).
+-export([format_price/1, format_price/2, format_price/3]).
+-export([round_price/1, round_number/2, binary_join/2]).
+
+-type formatted_number() :: binary().
+-type precision()        :: integer().
+-type decimals()         :: 0..253. % see types for erlang:float_to_binary/2
+-type ccy_symbol()       :: binary() | string().
+-type format_number_opts() :: #{
+	thousands     => binary() | string(),
+	decimal_point => binary() | string(),  % Default: "."
+	ccy_symbol    => ccy_symbol(),
+	ccy_pos       => left | right,
+	ccy_sep       => binary() | string()
+}.
+
+-type pretty_print_opts() :: #{
+  number_pad => char(),    % Padding character for numbers
+  out_header => boolean(), % Output header row
+  out_sep    => boolean(), % Output separator rows
+  th_dir     => both|leading|trailing, % table header padding dir
+  td_dir     => both|leading|trailing, % table row    padding dir
+  td_start   => integer(), % Start printing from this field number
+  td_exclude => list(),    % Exclude columns (start with 1) or names
+  td_sep     => string(),  % Column separator
+  tr_sep     => string(),
+  tr_sep_td  => string(),  % Delimiter header/footer column sep
+  prefix     => string(),  % Use this prefix in front of each row
+  translate  => fun((term()) -> term()), % Value translation function `(Val) -> any()`
+  footer_rows=> integer(), % Number of footer rows
+  td_formats => tuple()    % Optional tuple containing value format for columns
+}.
+
+-export_type([format_number_opts/0, pretty_print_opts/0]).
 
 -include("stringx.hrl").
 
@@ -514,6 +553,193 @@ guess_type(V)     when is_integer(V)   -> number;
 guess_type(V)     when is_float(V)     -> number;
 guess_type(_)                          -> string.
 
+-define(DEFAULT_PRICE_PRECISION, 2).
+-define(DEFAULT_PRICE_DECIMALS, 2).
+-define(THOUSANDS_SEP, <<"">>).
+-define(DECIMAL_POINT, <<".">>).
+-define(CURRENCY_POSITION, left).
+-define(CURRENCY_SEP, <<"">>).
+
+-spec format_integer(integer()) -> formatted_number().
+format_integer(Integer) ->
+  format_integer(Integer, #{}).
+-spec format_integer(integer(), format_number_opts()) -> formatted_number().
+format_integer(Integer, Opts) when is_integer(Integer), is_map(Opts) ->
+  do_format_number(Integer, 0, Opts).
+
+%% @doc
+%% The same as uef_format:format_number/4 with #{} as the forth argument.
+%% @see format_number/4
+%% @end
+-spec format_number(number(), precision(), decimals()) -> formatted_number().
+format_number(Number, Precision, Decimals) when is_float(Number); is_integer(Number) ->
+	format_number(Number, Precision, Decimals, #{}).
+
+%% @doc
+%% Formats Number by adding thousands separator between each set of 3
+%% digits to the left of the decimal point, substituting Decimals for
+%% the decimal point, and rounding to the specified Precision.
+%% Returns a binary value.
+%% @end
+-spec format_number(number(), precision(), decimals(), format_number_opts()) ->
+        formatted_number().
+format_number(Number, Precision, Decimals, Opts) when is_integer(Number) ->
+	format_number(erlang:float(Number), Precision, Decimals, Opts);
+format_number(Number, Precision, Decimals, Opts) when is_float(Number) ->
+	Precision2 = case Precision > 0 andalso Decimals < Precision of
+		true  -> Decimals;
+		false -> Precision
+	end,
+	Rounded = round_number(Number, Precision2), % round to Precision2 before formatting
+	do_format_number(Rounded, Decimals, Opts).
+
+%% @doc
+%% Formats Number in price-like style.
+%% Returns a binary containing FormattedPrice formatted with a precision
+%% of 2 and decimal digits of 2. The same as format_price/2 with a precision
+%% of 2 as the second argument. See uef_format:format_price/2 docs.
+%% @end
+-spec format_price(Number:: number()) -> FormattedPrice :: formatted_number().
+format_price(Price) ->
+	format_price(Price, ?DEFAULT_PRICE_PRECISION).
+
+%% @doc
+%% Formats Number in price-like style.
+%% Returns a binary containing FormattedPrice formatted with a specified
+%% precision as the second argument and decimal digits of 2.
+%% The same as uef_format:format_price/3 with #{} as the third argument.
+%% @see format_price/3
+%% @end
+-spec format_price(Number :: number(), Precision :: precision()) ->
+  FormattedPrice :: formatted_number().
+format_price(Price, Precision) ->
+	format_price(Price, Precision, #{}).
+
+%% format_price/3
+-spec format_price(Number :: number(), Precision :: precision(),
+        CcySymbol_OR_Options :: format_number_opts() | ccy_symbol()) ->
+          FormattedPrice :: formatted_number().
+%% @doc
+%% Formats Number in price-like style.
+%% Returns a binary containing FormattedPrice formatted with a specified
+%% precision as the second argument, decimal digits of 2,
+%% and with ccy symbol (or options) as the third argument.
+%% If CcySymbol_OR_Options is a map the functions works as format_number/4
+%% with decimal digits of 2 as the third argument and with options as the forth one.
+%% If CcySymbol_OR_Options is a binary or a string, the corresponding
+%% ccy symbol is added to the left.
+%% @end
+format_price(Price, Precision, Opts) when is_map(Opts) ->
+	format_number(Price, Precision, ?DEFAULT_PRICE_DECIMALS, Opts);
+format_price(Price, Precision, CurSymbol) when is_binary(CurSymbol) orelse is_list(CurSymbol) ->
+	format_number(Price, Precision, ?DEFAULT_PRICE_DECIMALS, #{ccy_symbol => CurSymbol});
+format_price(Price, Precision, Opts) ->
+	erlang:error({badarg, Opts}, [Price, Precision, Opts]).
+
+%% round_price/1
+-spec round_price(Number :: number()) -> float().
+%% @doc Rounds the number to the precision of 2.
+round_price(Price) -> round_number(Price, 2).
+
+%% round_number/2
+-spec round_number(Number :: number(), Precision :: integer()) -> float().
+%% @doc Rounds the number to the specified precision.
+round_number(Number, Precision) ->
+	P = math:pow(10, Precision),
+	erlang:round(Number * P) / P.
+
+%%%------------------------------------------------------------------------------
+%%%   Internal functions
+%%%------------------------------------------------------------------------------
+
+%% do_format_number/3
+-spec do_format_number(number(), decimals(), format_number_opts()) -> formatted_number().
+do_format_number(Number, Decimals, Opts) when is_float(Number) ->
+	PositiveNumber = case Number < 0 of
+		false -> Number;
+		true  -> erlang:abs(Number)
+	end,
+	BinNum = erlang:float_to_binary(PositiveNumber, [{decimals, Decimals}]),
+	{IntegerPart, DecimalPart} = case binary:split(BinNum, <<".">>) of
+		[I, D] -> {I, D}; % ex: <<"12.345">> -> [<<"12">>, <<"345">>]
+		[I] -> {I, <<>>} % ex: <<"12345">> -> [<<"12345">>] (when Precision < 1)
+	end,
+  do_format_num(Number, IntegerPart, DecimalPart, Opts);
+
+do_format_number(Number, _, Opts) when is_integer(Number) ->
+  do_format_num(Number, integer_to_binary(Number), <<>>, Opts).
+
+do_format_num(Number, IntegerPart, DecimalPart, Opts) ->
+	HeadSize = erlang:byte_size(IntegerPart) rem 3,
+	<<Head:HeadSize/binary, IntRest/binary>> = IntegerPart, % ex: <<"12", "345678">> = <<"12345678">>
+	ThousandParts = split_thousands(IntRest), % ex: <<"345678">> -> [<<"345">>, <<678>>]
+	AllIntegerParts = case HeadSize > 0 of
+		true  -> [Head|ThousandParts];
+		false -> ThousandParts
+	end,
+	ThousandsSep = maybe_to_binary(maps:get(thousands, Opts, ?THOUSANDS_SEP)),
+	% Join with thousands separator
+	FormattedIntegerPart = <<(binary_join(AllIntegerParts, ThousandsSep))/binary>>,
+	PositiveFormattedNumber = case DecimalPart of
+		<<>> ->
+			FormattedIntegerPart;
+		_    ->
+			DecimalPoint = maybe_to_binary(maps:get(decimal_point, Opts, ?DECIMAL_POINT)),
+			<<FormattedIntegerPart/binary, DecimalPoint/binary, DecimalPart/binary>>
+	end,
+	% Insert "-" before number if negative
+	FormattedNumber1 = case Number < 0 of
+		false -> PositiveFormattedNumber;
+		true  -> <<"-", PositiveFormattedNumber/binary>>
+	end,
+	% Format with ccy options
+	format_number_with_ccy(FormattedNumber1, Opts).
+
+%% format_number_with_ccy/2
+-spec format_number_with_ccy(binary(), map()) -> binary().
+format_number_with_ccy(FmtNum, #{ccy_symbol := CurSymbol0} = Opts) ->
+	CurSymbol = maybe_to_binary(CurSymbol0),
+	CurSep = maybe_to_binary(maps:get(ccy_sep, Opts, ?CURRENCY_SEP)),
+	case maps:get(ccy_pos, Opts, ?CURRENCY_POSITION) of
+		left -> <<CurSymbol/binary, CurSep/binary, FmtNum/binary>>;
+		_ -> <<FmtNum/binary, CurSep/binary, CurSymbol/binary>>
+	end;
+format_number_with_ccy(FmtNum, _) ->
+	FmtNum.
+
+%% maybe_to_binary/1
+-spec maybe_to_binary(binary() | string()) -> binary().
+maybe_to_binary(B) when is_binary(B) ->
+	B;
+maybe_to_binary(L) when is_list(L) ->
+	case unicode:characters_to_binary(L, utf8, utf8) of
+		B when is_binary(B) -> B;
+		_ -> erlang:error(badarg)
+	end;
+maybe_to_binary(_)->
+	erlang:error(badarg).
+
+
+%% split_thousands/1
+-spec split_thousands(binary()) -> [<<_:24>>].
+split_thousands(Bin) ->
+	split_thousands(Bin, []).
+
+%% split_thousands/2
+-spec split_thousands(binary(), [<<_:24>>]) -> [<<_:24>>].
+split_thousands(<<>>, List) ->
+	lists:reverse(List);
+split_thousands(Bin, List) ->
+	<<B:3/binary, Rest/binary>> = Bin,
+	split_thousands(Rest, [B | List]).
+
+binary_join([], _Sep) -> <<>>;
+binary_join([Bin], _Sep) -> Bin;
+binary_join([Head|Tail], Sep) ->
+	lists:foldl(fun(Value, Acc) ->
+		<<Acc/binary, Sep/binary, Value/binary>>
+	end, Head, Tail).
+
 %%--------------------------------------------------------------------
 %% Tests
 %%--------------------------------------------------------------------
@@ -594,4 +820,48 @@ pretty_table_map_opts_test() ->
           "~w",
           undefined}}))).
 
+format_number_test_() -> [
+	?_assertEqual(<<"1.00">>, format_number(1, 2, 2, #{})),
+	?_assertEqual(<<"1.99">>, format_number(1.99, 2, 2, #{})),
+	?_assertEqual(<<"2.00">>, format_number(1.99, 1, 2, #{})),
+	?_assertEqual(<<"1">>,    format_integer(1)),
+	?_assertEqual(<<"1,000">>,format_integer(1000, #{thousands => <<",">>})),
+	?_assertEqual(<<"2,000,000">>,    format_integer(2000000, #{thousands => <<",">>})),
+	?_assertEqual(<<"1 000 999.00">>, format_number(1000999, 2, 2, #{thousands => <<" ">>})),
+	?_assertEqual(<<"2,000,000.00">>, format_number(2000000, 2, 2, #{thousands => <<",">>})),
+	?_assertEqual(<<"9 999 999 999">>, format_integer(9999999999, #{thousands => <<" ">>})),
+	?_assertEqual(<<"9 999 999 999.00">>, format_number(9999999999, 2, 2, #{thousands => <<" ">>})),
+	?_assertEqual(<<"99 999 999 999.99">>, format_price(99999999999.99, 2, #{thousands => <<" ">>})),
+	?_assertEqual(<<"999 999 999 999.99">>, format_price(999999999999.99, 2, #{thousands => <<" ">>})),
+	?_assertEqual(<<"999,999,999,999.99">>, format_price(999999999999.99,  2, #{thousands => <<",">>})),
+	?_assertEqual(<<"USD 1,234,567,890==4600">>,
+    format_number(1234567890.4567, 2, 4, #{thousands => ",",
+      decimal_point => "==", ccy_symbol => "USD", ccy_sep => " ", ccy_pos => left})),
+	?_assertEqual(<<"$1000.88">>, format_price(1000.8767, 4, "$")),
+	?_assertEqual(<<"1000.88 руб."/utf8>>, format_price(1000.8767, 4,
+    #{ccy_symbol => <<"руб."/utf8>>, ccy_sep => " ", ccy_pos => right})),
+	?_assertEqual(<<"1000.88 руб."/utf8>>, format_price(1000.8767, 4,
+    #{ccy_symbol => "руб.", ccy_sep => " ", ccy_pos => right})),
+	?_assertEqual(<<"€€1000.00"/utf8>>, format_price(1000, 4,
+    #{ccy_symbol => "€", ccy_sep => "€", ccy_pos => left})),
+	?_assertEqual(format_number(100, 2, 3), format_number(100, 2, 3, #{})),
+	?_assertEqual(format_price(1000), format_price(1000, 2)),
+	?_assertEqual(format_price(1000), format_price(1000, 2, <<>>)),
+	?_assertEqual(format_price(1000), format_number(1000, 2, 2, #{}))
+].
+
+round_number_test_() ->	[
+	?_assertEqual(1.0,     round_price(1)),
+	?_assertEqual(1.01,    round_price(1.01)),
+	?_assertEqual(1.01,    round_price(1.015)),
+	?_assertEqual(1.02,    round_price(1.025)),
+	?_assertEqual(1.02,    round_price(1.0155)),
+	?_assertEqual(1.015,   round_number(1.015, 3)),
+	?_assertEqual(2.0,     round_number(1.9999, 1)),
+	?_assertEqual(2.0,     round_number(1.9999, 2)),
+	?_assertEqual(1.9999,  round_number(1.9999, 4)),
+	?_assertEqual(-1.9999, round_number(-1.9999, 4)),
+	?_assertEqual(-2.0,    round_number(-1.9999, 3)),
+	?_assertEqual(10000.0, round_number(9999.999999, 5))
+].
 -endif.
