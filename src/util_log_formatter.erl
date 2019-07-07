@@ -34,6 +34,7 @@
 %%   Additional template formatting atoms:
 %%   * lev - prints "[X]" to the log to indicate the log level, where
 %%           `X` is the first capitalized letter of the log level.
+%%   * 'LEVEL' - same as 'level' but is printed in upper case.
 %%   * modline - prints 'Module:Line' to the log.
 %%   * regpid  - prints:
 %%                 `*' - if the registered name of the caller's pid
@@ -75,7 +76,14 @@
       Config :: config().
 format(#{level:=Level,msg:=Msg0,meta:=Meta},Config0)
   when is_map(Config0) ->
-    Config = add_default_config(Config0),
+    Config1 = add_default_config(Config0),
+    #{single_line:=SingleLine, report_prefix:=RepPfx} = Config1,
+    Config = if SingleLine ->
+               Pfx = [C || C <- RepPfx, not lists:member(C, [$\n, $\r])],
+               Config1#{report_prefix=>Pfx};
+             true ->
+               Config1
+             end,
     Meta0 = maybe_add_legacy_header(Level,Meta,Config),
     Meta1 = case Msg0 of
                 {report, _} -> Meta0#{report => true};
@@ -146,6 +154,8 @@ do_format(Level,Data,[lev|Format],Config) ->
     [level_to_chr(Level)|do_format(Level,Data,Format,Config)];
 do_format(Level,Data,[level|Format],Config) ->
     [to_string(level,Level,Config)|do_format(Level,Data,Format,Config)];
+do_format(Level,Data,['LEVEL'|Format],Config) ->
+    [string:uppercase(to_string(level,Level,Config))|do_format(Level,Data,Format,Config)];
 do_format(Level,#{pid:=Pid}=Data,[I|Format],Config) when I==regname; I==regpid ->
     [format_regname(I,Pid,Data)|do_format(Level,Data,Format,Config)];
 
@@ -482,7 +492,7 @@ add_default_config(Config0) ->
           legacy_header=>false,
           single_line=>true,
           time_designator=>$T,
-          report_prefix=>"\n"},
+          report_prefix=>""},
     MaxSize = get_max_size(maps:get(max_size,Config0,undefined)),
     Depth = get_depth(maps:get(depth,Config0,undefined)),
     Offset = get_offset(maps:get(time_offset,Config0,undefined)),
