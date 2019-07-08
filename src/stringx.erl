@@ -571,7 +571,7 @@ to_string2({number,R}, Opts) when is_number(R) -> to_string1(R, Opts);
 to_string2({number, Dec, I}, Opts) when is_number(Dec) ->
   {number, format_number(I, Dec, Dec, #{thousands=>Opts#opts.thousands, return=>list})};
 to_string2({number,L}=R,_Opts) when is_list(L) -> R;
-to_string2({string,L}=R,_Opts) when is_list(L) -> R;
+to_string2({string,L},   Opts)                 -> to_string1(L, Opts);
 to_string2({ccy,I},Opts)     when is_number(I) -> {number, format_ccy(I, 2, Opts)};
 to_string2({ccy,Decimals,I},Opts) when is_integer(Decimals)
                                 , is_number(I) -> {number, format_ccy(I, Decimals, Opts)};
