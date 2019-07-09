@@ -5,13 +5,18 @@
 
 -define(AAD, <<"AES256GCM">>).
 
+encrypt(Text, KeyPlainText) when (is_list(Text) orelse is_binary(Text)), is_list(KeyPlainText) ->
+  Key = make_key(KeyPlainText),
+  {encrypt(Text, Key), Key};
+
 encrypt(Text, Key) when (is_list(Text) orelse is_binary(Text)), is_binary(Key), byte_size(Key) =:= 32 ->
   IV = crypto:strong_rand_bytes(16), % create random Initialisation Vector
   {Ciphertext, Tag} = crypto:block_encrypt(aes_gcm, Key, IV, {?AAD, Text, 16}),
-  <<IV/binary, Tag/binary, Ciphertext/binary>>. % "return" iv with the cipher tag & ciphertext
+  Time = erlang:system_time(microsecond),
+  <<IV/binary, Tag/binary, Time:64/integer, Ciphertext/binary>>. % "return" iv with the cipher tag & ciphertext
 
 decrypt(Encrypted, Key) when is_binary(Encrypted), is_binary(Key), byte_size(Key) =:= 32 ->
-  <<IV:16/binary, Tag:16/binary, Ciphertext/binary>> = Encrypted,
+  <<IV:16/binary, Tag:16/binary, _Time:64/integer, Ciphertext/binary>> = Encrypted,
   crypto:block_decrypt(aes_gcm, Key, IV, {?AAD, Ciphertext, Tag}).
 
 make_key(PlainKey) when is_list(PlainKey); is_binary(PlainKey) ->
@@ -21,6 +26,8 @@ make_key(PlainKey) when is_list(PlainKey); is_binary(PlainKey) ->
 encrypt_base64(Text, KeyBase64) ->
   base64:encode(encrypt(Text, base64:decode(KeyBase64))).
 
+decrypt_base64(EncryptedBase64, KeyBase64) when is_list(EncryptedBase64) ->
+  decrypt_base64(list_to_binary(EncryptedBase64), KeyBase64);
 decrypt_base64(EncryptedBase64, KeyBase64) when is_binary(EncryptedBase64) ->
   decrypt(base64:decode(EncryptedBase64), base64:decode(KeyBase64)).
 
