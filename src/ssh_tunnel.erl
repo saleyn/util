@@ -59,7 +59,7 @@ connect(Host, Port, Opts) when (is_list(Host) orelse is_tuple(Host)), is_integer
 %% passing messages between the TCP client and ssh connection.
 %% ## Examples
 %%     {ok, SSH} = ssh_tunnel:connect("sshserver.example.com", 22),
-%%     {ok, Pid} = ssh_tunnel:start_tunnel(Pid, tcpip, {8080, {"192.168.90.15", 80}})
+%%     {ok, Pid} = ssh_tunnel:start_tunnel(Pid, tcp, {8080, {"192.168.90.15", 80}})
 %%     # Send a TCP message
 %%     %HTTPoison.Response{body: body} = HTTPoison.get!("127.0.0.1:8080")
 %%     IO.puts("Received body: #{body})
@@ -126,10 +126,11 @@ open_channel(Pid, Type, Msg, WindowSize, MaxPktSz, Timeout) ->
     {open_error, _, Reason, _}  -> {error, to_string(Reason)}
   end.
 
-defaults(_Opts) ->
+defaults(Opts) ->
   [
     {user_interaction, false},
-    {silently_accept_hosts, true}
+    {silently_accept_hosts, true} |
+    Opts
   ].
 
 to_string(A) when is_atom(A)   -> atom_to_list(A);
