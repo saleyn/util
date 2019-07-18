@@ -26,7 +26,7 @@
 %%%-----------------------------------------------------------------------------
 -module(iif).
 
--export([ife/2, ife/3, ifne/2, ifne/3, iif/3, iif/4, format_ne/3]).
+-export([ife/2, ife/3, ifne/2, ifne/3, iif/3, iif/4, nvl/2, format_ne/3]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -42,6 +42,8 @@ ife([],         Value) -> execute([], Value);
 ife(false,      Value) -> execute([], Value);
 ife(undefined,  Value) -> execute([], Value);
 ife(Test,      _Value) -> Test.
+
+nvl(Value, IfNull)     -> ife(Value, IfNull).
 
 %% @doc Return `Empty' if first argument is one of: `[]', `false', `undefined'.
 %%      Otherwise, if `NotEmpty' is `fun()', evaluate it, or if it's `fun(Arg)'
