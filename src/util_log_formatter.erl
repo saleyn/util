@@ -223,7 +223,7 @@ format_regname(Key,Pid,Data) ->
                 true      -> atom_to_list(Name)
             end;
         {_, Name} -> atom_to_list(Name);
-        []        -> pid_to_list(Pid,true)
+        _         -> pid_to_list(Pid,true)
     end.
 
 pid_to_list(Pid,false) ->
