@@ -30,6 +30,9 @@
 %%       controls time stamp granularity in the log.
 %%   * report_prefix = string()
 %%       inserts given prefix before `msg' for logging a report (default: "\n").
+%%   * report_term_depth = integer()
+%%       max depth of terms included in the reports. Use `infinity' for
+%%       unlimited (default: 50)
 %%
 %%   Additional template formatting atoms:
 %%   * lev - prints "[X]" to the log to indicate the log level, where
@@ -52,19 +55,20 @@
 
 %%%-----------------------------------------------------------------
 %%% Types
--type config() :: #{chars_limit     => pos_integer() | unlimited,
-                    depth           => pos_integer() | unlimited,
-                    legacy_header   => boolean(),
-                    max_size        => pos_integer() | unlimited,
-                    report_cb       => logger:report_cb(),
-                    single_line     => boolean(),
-                    template        => template(),
-                    time_designator => byte(),
-                    time_offset     => integer() | [byte()]
-                                     | none,  %% Extension
+-type config() :: #{chars_limit       => pos_integer() | unlimited,
+                    depth             => pos_integer() | unlimited,
+                    legacy_header     => boolean(),
+                    max_size          => pos_integer() | unlimited,
+                    report_cb         => logger:report_cb(),
+                    single_line       => boolean(),
+                    template          => template(),
+                    time_designator   => byte(),
+                    time_offset       => integer() | [byte()]
+                                       | none,  %% Extension
                     %%--- Extension
-                    time_unit       => atom(),
-                    report_prefix   => boolean()
+                    time_unit         => atom(),
+                    report_prefix     => boolean(),
+                    report_term_depth => integer()
                    }.
 -type template() :: [metakey() | {metakey(),template(),template()} | string()].
 -type metakey() :: atom() | [atom()].
@@ -89,6 +93,33 @@ format(#{level:=Level,msg:=Msg0,meta:=Meta},Config0)
                 {report, _} -> Meta0#{report => true};
                 _           -> Meta0
             end,
+    Meta2 = case Config of
+                #{report_cb := RCB} when is_function(RCB, 1); is_function(RCB, 2) ->
+                    Meta1#{report_cb => RCB};
+                #{report_term_depth:=MDep} ->
+                    Meta1#{report_cb =>
+                        fun(R) ->
+                          RR = case R of
+                                 #{label:=_, report:=R1} when is_map(R1) ->
+                                   maps:to_list(R1);
+                                 #{label:=_, report:=R1} when is_list(R1) ->
+                                   R1;
+                                 _ when is_map(R) ->
+                                   maps:to_list(R);
+                                 _ when is_list(R) ->
+                                   R
+                               end,
+                          try
+                            MLen = case [T || {T,_} <- RR] of
+                                    [] -> 0;
+                                    L  -> lists:max([length(lists:flatten(io_lib:format("~tp",[I]))) || I <- L])
+                                   end,
+                            format_report(integer_to_list(MLen), MDep, RR)
+                          catch _:E ->
+                            throw({invalid_report, E, RR})
+                          end
+                        end}
+            end,
     Template = maps:get(template,Config),
     {BT,AT0} = lists:splitwith(fun(msg) -> false; (_) -> true end, Template),
     {DoMsg,AT} =
@@ -96,8 +127,8 @@ format(#{level:=Level,msg:=Msg0,meta:=Meta},Config0)
             [msg|Rest] -> {true,Rest};
             _ ->{false,AT0}
         end,
-    B = do_format(Level,Meta1,BT,Config),
-    A = do_format(Level,Meta1,AT,Config),
+    B = do_format(Level,Meta2,BT,Config),
+    A = do_format(Level,Meta2,AT,Config),
     MsgStr =
         if DoMsg ->
                 Config1 =
@@ -112,7 +143,7 @@ format(#{level:=Level,msg:=Msg0,meta:=Meta},Config0)
                                 end,
                             Config#{chars_limit=>Size}
                     end,
-                MsgStr0 = format_msg(Msg0,Meta1,Config1),
+                MsgStr0 = format_msg(Msg0,Meta2,Config1),
                 case maps:get(single_line,Config) of
                     true ->
                         %% Trim leading and trailing whitespaces, and replace
@@ -256,7 +287,7 @@ format_msg({report,Report},#{report_cb:=Fun}=Meta,Config) when is_function(Fun,1
     catch C:R:S ->
             P = p(Config),
             format_msg({"REPORT_CB/1 CRASH: "++P++"; Reason: "++P,
-                        [Report,{C,R,logger:filter_stacktrace(?MODULE,S)}]},
+                        [Report,{C,R,S}]},
                        Meta,Config)
     end;
 format_msg({report,Report},#{report_cb:=Fun}=Meta,Config) when is_function(Fun,2) ->
@@ -278,10 +309,6 @@ format_msg({report,Report},#{report_cb:=Fun}=Meta,Config) when is_function(Fun,2
                         [Report,{C,R,logger:filter_stacktrace(?MODULE,S)}]},
                        Meta,Config)
     end;
-format_msg({report,Report},Meta,Config) ->
-    format_msg({report,Report},
-               Meta#{report_cb=>fun logger:format_report/1},
-               Config);
 format_msg(Msg,Meta,#{depth:=Depth,chars_limit:=CharsLimit,
                       single_line:=Single,report_prefix:=RepPfx}) ->
     Opts = chars_limit_to_opts(CharsLimit),
@@ -312,6 +339,51 @@ format_msg({Format0,Args},Depth,Opts,Single,WasReport,RepPrefix) ->
                                Depth,Opts,Single,WasReport,RepPrefix)
             end
     end.
+
+-spec format_report(MaxTagLen::integer(),
+                    MaxTermDepth::integer()|infinity,
+                    Report) -> FormatArgs
+			when Report     :: logger:report(),
+           FormatArgs :: {io:format(),[term()]}.
+format_report(MaxTagLen, MaxDepth, Report) when is_map(Report) ->
+    format_report(MaxTagLen, MaxDepth, maps:to_list(Report));
+format_report(MaxTagLen, MaxDepth, Report) when is_list(Report) ->
+    case lists:flatten(Report) of
+        [] ->
+            {"~tp",[[]]};
+        FlatList ->
+            case io_lib:printable_unicode_list(FlatList) of
+                true ->
+                    {"~ts",[FlatList]};
+                false ->
+                    format_term_list(MaxTagLen, MaxDepth, Report,[],[])
+            end
+    end;
+format_report(_MaxTagLen, infinity, Report) ->
+    {"~tp",[Report]};
+format_report(_MaxTagLen, MaxDepth, Report) ->
+    {"~tP",[Report, MaxDepth]}.
+
+format_term_list(MaxTagLen,MaxDepth, [{Tag,Data}|T],Format,Args) ->
+    {PorS, ArgsP} =
+        case string_p(Data) of
+            true  -> {"s", []};
+            false -> {"P", [MaxDepth]}
+        end,
+    format_term_list(MaxTagLen,MaxDepth, T,
+        ["    ~"++MaxTagLen++"ts: ~t"++PorS|Format],ArgsP++[Data,to_string(Tag)|Args]);
+format_term_list(MaxTagLen,MaxDepth, [Data|T],Format,Args) ->
+    format_term_list(MaxTagLen,MaxDepth, T,["    ~tp"|Format],[Data|Args]);
+format_term_list(_MaxTagLen,_MaxDepth, [],Format,Args) ->
+    {lists:flatten(lists:join($\n,lists:reverse(Format))),lists:reverse(Args)}.
+
+string_p([])                 -> true;
+string_p(L) when is_list(L)  -> io_lib:printable_unicode_list(lists:flatten(L));
+string_p(_)                  -> false.
+
+to_string(S) when is_list(S) -> S;
+to_string(S) when is_atom(S) -> atom_to_list(S);
+to_string(S)                 -> lists:flatten(io_lib:format("~tp", [S])).
 
 reformat(Format,unlimited,false) ->
     Format;
@@ -492,7 +564,8 @@ add_default_config(Config0) ->
           legacy_header=>false,
           single_line=>true,
           time_designator=>$T,
-          report_prefix=>""},
+          report_prefix=>"",
+          report_term_depth=>50},
     MaxSize = get_max_size(maps:get(max_size,Config0,undefined)),
     Depth = get_depth(maps:get(depth,Config0,undefined)),
     Offset = get_offset(maps:get(time_offset,Config0,undefined)),
@@ -606,6 +679,8 @@ do_check_config([{report_prefix,Pfx}|Config]) when is_list(Pfx) ->
         false ->
             {error,{invalid_formatter_config,?MODULE,{report_prefix, Pfx}}}
     end;
+do_check_config([{report_term_depth,I}|Config]) when is_integer(I), I > 0; I == infinity ->
+    do_check_config(Config);
 do_check_config([{time_designator,Char}|Config]) when Char>=0, Char=<255 ->
     case io_lib:printable_latin1_list([Char]) of
         true ->
