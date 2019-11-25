@@ -123,7 +123,8 @@ direct_stream_local(Pid, SocketPath) when is_pid(Pid), is_list(SocketPath) ->
 open_channel(Pid, Type, Msg, WindowSize, MaxPktSz, Timeout) ->
   case ssh_connection_handler:open_channel(Pid,Type,Msg,WindowSize,MaxPktSz,Timeout) of
     {open, Ch}                  -> {ok, Ch};
-    {open_error, _, Reason, _}  -> {error, to_string(Reason)}
+    {open_error, _, Reason, _}  -> {error, to_string(Reason)};
+    {error, Reason}             -> {error, inet:format_error(Reason)}
   end.
 
 defaults(Opts) ->
