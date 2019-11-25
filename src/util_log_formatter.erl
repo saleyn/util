@@ -34,6 +34,8 @@
 %%       max depth of terms included in the reports. Use `infinity' for
 %%       unlimited (default: 50)
 %%
+%%   Report printing is modified to align keys in a report to the right.
+%%
 %%   Additional template formatting atoms:
 %%   * lev - prints "[X]" to the log to indicate the log level, where
 %%           `X` is the first capitalized letter of the log level.
