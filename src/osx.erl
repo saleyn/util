@@ -31,6 +31,7 @@
 -author('saleyn@gmail.com').
 
 -export([command/1, command/2, command/3, status/1]).
+-export([realpath/1, normalpath/1]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -110,6 +111,90 @@ get_data(P, Fun, D) ->
             end
 	end.
 
+%% @doc
+%% Return a canonicalized pathname, having resolved symlinks to their
+%% destination. Modelled on realpath(3).
+%% @end
+%% Derived from https://github.com/mk270/realpath
+%% Copyright 2020 Martin Keegan
+-spec realpath(string()) -> string().
+realpath(Path) when is_list(Path) ->
+    check_canonical(Path, 20);
+realpath(Path) when is_binary(Path) ->
+    list_to_binary(realpath(binary_to_list(Path))).
+
+check_canonical(S, TTL) ->
+    Fragments = make_fragments(S),
+    check_fragments(Fragments, [], TTL).
+
+check_fragments(_, _, 0) ->
+    throw(loop_detected);
+check_fragments([], AlreadyChecked, _) ->
+    AlreadyChecked;
+check_fragments([Head|Tail], AlreadyChecked, TTL) ->
+    case is_symlink(AlreadyChecked, Head) of
+        false ->
+			check_fragments(Tail, filename:join(AlreadyChecked, Head), TTL);
+        {true, Referent} ->
+            TailJoined = join_non_null(Tail),
+            AllJoined  = filename:join(Referent, TailJoined),
+            check_canonical(AllJoined, TTL - 1)
+    end.
+
+is_symlink(Dirname, Basename) ->
+    Path = filename:join(Dirname, Basename),
+    case file:read_link(Path) of
+        {ok, Name} ->
+            case Name of
+                % absolute link
+                [$/|_] -> {true, Name};
+
+                % relative link
+                _ ->
+                    {true, filename:join(Dirname, Name)}
+            end;
+        _ ->
+ 			false
+    end.
+
+make_fragments(S) ->
+    filename:split(S).
+
+join_non_null([]) -> "";
+join_non_null(SS) -> filename:join(SS).
+
+%% @doc
+%% Return a path where the use of ".." to indicate parent directory has
+%% been resolved. Currently does not accept relative paths.
+%% @end
+%% Derived from https://github.com/mk270/realpath
+%% Copyright 2020 Martin Keegan
+-spec normalpath(list()) -> string().
+normalpath(S=[$/|_]) when is_list(S)->
+    normalpath2(S);
+normalpath(S) when is_list(S) ->
+    normalpath2(filename:absname(S));
+normalpath(B) when is_binary(B) ->
+    list_to_binary(normalpath(binary_to_list(B))).
+
+normalpath2(S) when is_list(S) ->
+    Parts = filename:split(S),
+    filename:join(lists:reverse(normalize(Parts, []))).
+
+normalize([], Path) ->
+    Path;
+normalize([".."|T], Path) ->
+    {_H, Rest} = pop(Path),
+    normalize(T, Rest);
+normalize([H|T], Path) ->
+    Rest = push(H, Path),
+    normalize(T, Rest).
+
+pop([])    -> {"/", []};
+pop(["/"]) -> {"/", ["/"]};
+pop([H|T]) -> {H,T}.
+push(H,T)  -> [H|T].
+
 %%%-----------------------------------------------------------------------------
 %%% Tests
 %%%-----------------------------------------------------------------------------
@@ -125,5 +210,14 @@ command_test() ->
     {signal,15,true}   = status(143),
     {status,0}         = status(0),
     ok.
+
+make_fragments_test_data() ->
+    [{"/usr/local/bin", ["/", "usr", "local", "bin"]},
+     {"usr/local/bin/bash", ["usr", "local", "bin", "bash"]},
+     {"/usr/local/bin/", ["/", "usr", "local", "bin"]}].
+
+make_fragments_test_() ->
+    [ ?_assertEqual(Expected, make_fragments(Observed))
+      || {Observed, Expected} <- make_fragments_test_data() ].
 
 -endif.
