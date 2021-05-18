@@ -34,7 +34,7 @@
 %% </ul>
 %%
 %% @end
--module(logger_colorful_formatter).
+-module(util_log_color_formatter).
 
 -define(RESET, "\e[m").
 -define(CLREOL, "\e[K").
