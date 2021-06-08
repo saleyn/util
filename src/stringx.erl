@@ -26,6 +26,7 @@
 -export([format_integer/1, format_integer/2, format_number/3, format_number/4]).
 -export([format_price/1, format_price/2, format_price/3]).
 -export([round_price/1, round_number/2, binary_join/2]).
+-export([parse_csv/1, parse_csv/2]).
 
 -type formatted_number() :: binary().
 -type precision()        :: integer().
@@ -802,6 +803,66 @@ binary_join([Head|Tail], Sep) ->
 	lists:foldl(fun(Value, Acc) ->
 		<<Acc/binary, Sep/binary, Value/binary>>
 	end, Head, Tail).
+
+%%------------------------------------------------------------------------------
+%% CSV parsing
+%%------------------------------------------------------------------------------
+-spec parse_csv(string()) -> [[string()]].
+parse_csv(File) when is_list(File) ->
+  parse_csv(File, []).
+
+%% @doc Parse a given CSV file.
+%% If the options contain `fix_lengths' then if a record has a column count
+%% greater than what's found in the header row, those extra columns will be
+%% dropped, and if a row has fewer columns, empty columns will be added.
+-spec parse_csv(string(), [fix_lengths]) -> [[string()]].
+parse_csv(File, Opts) when is_list(File), is_list(Opts) ->
+  {ok, F} = file:open(File, [read, raw]),
+  Res     = parse_csv_file(F, 1, file:read_line(F), []),
+  case lists:member(fix_lengths) of
+    true when hd(Res) == hd(Res) ->  %% Not an empty list
+      HLen = length(hd(Res)),
+      [fix_length(HLen, length(R), R) || R <- Res];
+    false ->
+      Res
+  end.
+
+parse_csv_file(F, _, eof, Done) ->
+  file:close(F),
+  lists:reverse(Done);
+
+parse_csv_file(F, LineNo, {ok, Line}, Done) ->
+  parse_csv_file(F, LineNo+1, file:read_line(F), [parse_csv_line(string:trim(Line, trailing, "\r\n"))|Done]);
+
+parse_csv_file(_F, LineNo, {error, Reason}, _) ->
+  throw({error, [{line, LineNo}, {reason, file:format_error(Reason)}]}).
+
+parse_csv_line(Line) -> parse_csv_line(Line, []).
+
+parse_csv_line([],          Fields) -> lists:reverse(Fields);
+parse_csv_line("," ++ Line, Fields) -> parse_csv_field(Line, Fields);
+parse_csv_line(Line,        Fields) -> parse_csv_field(Line, Fields).
+
+parse_csv_field("\"" ++ Line, Fields) -> parse_csv_field_q(Line, Fields);
+parse_csv_field(Line, Fields) -> parse_csv_field(Line, [], Fields).
+
+parse_csv_field(","   ++ _ = Line, Buf, Fields) -> parse_csv_line(Line, [lists:reverse(Buf)|Fields]);
+parse_csv_field([C|Line],          Buf, Fields) -> parse_csv_field(Line, [C|Buf], Fields);
+parse_csv_field([],                Buf, Fields) -> parse_csv_line([], [lists:reverse(Buf)|Fields]).
+
+parse_csv_field_q(Line,                Fields) -> parse_csv_field_q(Line, [], Fields).
+parse_csv_field_q("\"\"" ++ Line, Buf, Fields) -> parse_csv_field_q(Line, [$"|Buf], Fields);
+parse_csv_field_q("\\"   ++ Line, Buf, Fields) -> parse_csv_field_q(Line, [$\\|Buf], Fields);
+parse_csv_field_q("\""   ++ Line, Buf, Fields) -> parse_csv_line(Line, [lists:reverse(Buf)|Fields]);
+parse_csv_field_q([C|Line],       Buf, Fields) -> parse_csv_field_q(Line, [C|Buf], Fields).
+
+fix_length(HLen, HLen, Data) -> Data;
+fix_length(HLen, DLen, Data) when HLen < DLen ->
+  {RR, _} = lists:split(HLen, Data),
+  RR;
+fix_length(HLen, DLen, Data) when HLen > DLen ->
+  RR = lists:duplicate(HLen-DLen, ""),
+  Data ++ RR.
 
 %%--------------------------------------------------------------------
 %% Tests
