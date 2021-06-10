@@ -819,7 +819,7 @@ parse_csv(File) when is_list(File) ->
 parse_csv(File, Opts) when is_list(File), is_list(Opts) ->
   {ok, F} = file:open(File, [read, raw]),
   Res     = parse_csv_file(F, 1, file:read_line(F), []),
-  case lists:member(fix_lengths) of
+  case lists:member(fix_lengths, Opts) of
     true when hd(Res) == hd(Res) ->  %% Not an empty list
       HLen = length(hd(Res)),
       [fix_length(HLen, length(R), R) || R <- Res];
