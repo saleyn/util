@@ -812,13 +812,18 @@ parse_csv(File) when is_list(File) ->
   parse_csv(File, []).
 
 %% @doc Parse a given CSV file.
-%% If the options contain `fix_lengths' then if a record has a column count
+%% Options:
+%% <dl>
+%%   <dt>fix_lengths</dt><dd>if a record has a column count
 %% greater than what's found in the header row, those extra columns will be
-%% dropped, and if a row has fewer columns, empty columns will be added.
--spec parse_csv(string(), [fix_lengths]) -> [[string()]].
+%% dropped, and if a row has fewer columns, empty columns will be added.</dd>
+%%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
+%% </dl>
+-spec parse_csv(string(), [fix_lengths | {open, Opts::list()}]) -> [[string()]].
 parse_csv(File, Opts) when is_list(File), is_list(Opts) ->
-  {ok, F} = file:open(File, [read, raw]),
-  Res     = parse_csv_file(F, 1, file:read_line(F), []),
+  FileOpts = proplists:get_value(open, Opts, []),
+  {ok, F}  = file:open(File, [read, raw]++FileOpts),
+  Res      = parse_csv_file(F, 1, file:read_line(F), []),
   case lists:member(fix_lengths, Opts) of
     true when hd(Res) == hd(Res) ->  %% Not an empty list
       HLen = length(hd(Res)),
