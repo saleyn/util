@@ -76,7 +76,7 @@ hotp(Secret, IntervalsNo, Opts) ->
     IsLower = {lower, proplists:get_bool(casefold, Opts)},
     Key = base32:decode(Secret, [{lower, IsLower}]),
     Msg = <<IntervalsNo:8/big-unsigned-integer-unit:8>>,
-    Digest = crypto:hmac(DigestMethod, Key, Msg),
+    Digest = crypto:mac(hmac, DigestMethod, Key, Msg),
     <<_:19/binary, Ob:8>> = Digest,
     O = Ob band 15,
     <<TokenBase0:4/integer-unit:8>> = binary:part(Digest, O, 4),

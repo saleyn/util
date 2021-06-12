@@ -89,7 +89,7 @@ time(ServerAddress) ->
     try
         ok = gen_udp:send(S, ServerAddress, _Port = 123, encode()),
         case gen_udp:recv(S, 0, 3000) of
-        {ok, {_Addr, _Port, Reply}} ->
+        {ok, {_Addr, _Port2, Reply}} ->
             decode(Reply);
         Other ->
             Other

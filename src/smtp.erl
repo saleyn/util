@@ -368,7 +368,7 @@ do_AUTH_each(Mod, Port, Username, Password, [cram_md5 | Tail], Verbose) ->
     try
         {ok, Seed64} = smtp_expect(Mod, <<"334">>, Port, undefined),
         Seed = base64:decode_to_string(Seed64),
-        Bin  = crypto:hmac(md5, Password, Seed),
+        Bin  = crypto:mac(hmac, md5, Password, Seed),
         Digest = to_hex([Username, " "], Bin),
         smtp_put(Mod, base64:encode(Digest), Port),
         smtp_expect(Mod, <<"235">>, Port, undefined),

@@ -173,7 +173,7 @@ for_module(ModuleName, IncludePaths, Macros) when is_atom(ModuleName) ->
 			_Other ->
 			    {error, {invalid_module, ModuleName}}
 		    end;
-		_Err ->
+		_Err2 ->
 		    {error, {invalid_module, ModuleName}}
 	    end
     end.
