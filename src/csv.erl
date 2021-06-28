@@ -188,7 +188,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   SQL = lists:flatten(
           io_lib:format("DROP TABLE IF EXISTS `~s`;\n"
                         "RENAME TABLE `~s` TO `~s`, `~s` TO `~s`;\n"
-                        "DROP TABLE `~s`;\n",
+                        "DROP TABLE IF EXISTS `~s`;\n",
                         [OldTab, Tab, OldTab, TmpTab, Tab, OldTab])),
   ok = mysql:query(MySqlPid, SQL),
 
