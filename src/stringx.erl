@@ -26,7 +26,7 @@
 -export([format_integer/1, format_integer/2, format_number/3, format_number/4]).
 -export([format_price/1, format_price/2, format_price/3]).
 -export([round_price/1, round_number/2, binary_join/2]).
--export([parse_csv/1, parse_csv/2]).
+-export([parse_csv/1, parse_csv/2, batch_split/2]).
 
 -type formatted_number() :: binary().
 -type precision()        :: integer().
@@ -814,6 +814,17 @@ parse_csv(File) when is_list(File) ->
 parse_csv(File, Opts) when is_list(File), is_list(Opts) ->
   csv:parse(File, Opts).
 
+%% @doc Split a list into batches of N items
+-spec batch_split(integer(), list()) -> [list()].
+batch_split(N, L) when is_integer(N), is_list(L) ->
+  batch_split(N, N, L, [], []).
+  
+batch_split(_, _, [], A, Out) ->
+  lists:reverse([lists:reverse(A) | Out]);
+batch_split(N, 0, L, A, Out) ->
+  batch_split(N, N, L, [], [lists:reverse(A) | Out]);
+batch_split(N, I, [H|T], A, Out) ->
+  batch_split(N, I-1, T, [H|A], Out).
 
 %%--------------------------------------------------------------------
 %% Tests

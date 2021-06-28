@@ -12,7 +12,7 @@
 -author('saleyn@gmail.com').
 
 -export([parse/1, parse/2, parse_line/1]).
--export([max_field_lengths/2]).
+-export([max_field_lengths/2, load_to_mysql/4]).
 
 %%------------------------------------------------------------------------------
 %% CSV parsing
@@ -21,6 +21,7 @@
 parse(File) when is_list(File) ->
   parse(File, []).
 
+%%------------------------------------------------------------------------------
 %% @doc Parse a given CSV file.
 %% Options:
 %% <dl>
@@ -29,6 +30,8 @@ parse(File) when is_list(File) ->
 %% dropped, and if a row has fewer columns, empty columns will be added.</dd>
 %%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
 %% </dl>
+%% @end
+%%------------------------------------------------------------------------------
 -spec parse(string(), [fix_lengths | {open, Opts::list()}]) -> [[string()]].
 parse(File, Opts) when is_list(File), is_list(Opts) ->
   FileOpts = proplists:get_value(open, Opts, []),
@@ -79,7 +82,11 @@ fix_length(HLen, DLen, Data) when HLen > DLen ->
   RR = lists:duplicate(HLen-DLen, ""),
   Data ++ RR.
 
-%% Get max field lengths for a list obtained by parsing a CSV file with `parse_csv_file(File,[fix_lengths])'.
+%%------------------------------------------------------------------------------
+%% @doc Get max field lengths for a list obtained by parsing a CSV file with
+%%      `parse_csv_file(File,[fix_lengths])'.
+%% @end
+%%------------------------------------------------------------------------------
 -spec max_field_lengths(HasHeaderRow::boolean(), Rows::[Fields::list()]) -> [Len::integer()].
 max_field_lengths(true = _HasHeaders, [_Headers | Rows ] = _CSV) ->
   max_field_lengths(false, Rows);
@@ -98,6 +105,94 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
         G(F1Nrows, [MaxLen | Acc])
     end,
   MLens(CsvL, []).
+
+%%------------------------------------------------------------------------------
+%% @doc Load CSV data from File to MySQL database
+%% @end
+%%------------------------------------------------------------------------------
+-spec load_to_mysql(File::string(), Tab::string(),
+                    MySqlPid::pid(), Opts::[{batch_size, integer()}|
+                                            {blob_size,  integer()}|
+                                            {save_create_sql_to_file, string()}]) ->
+        {Columns::list(), RecCount::integer()}.
+load_to_mysql(File, Tab, MySqlPid, Opts)
+    when is_list(File), is_list(Tab), is_pid(MySqlPid), is_list(Opts) ->
+  BatSz  = proplists:get_value(batch_size, Opts, 100), % Insert this many records per call
+  BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
+  CSV    = parse(File, [fix_lengths]),
+  MLens  = max_field_lengths(true, CSV),
+  HLens  = lists:zip(hd(CSV), MLens),
+  TmpTab = Tab ++ "_tmp",
+  OldTab = Tab ++ "_OLD",
+  CrTab  =  lists:flatten([
+              "DROP TABLE IF EXISTS `", TmpTab, "`;\n"
+              "CREATE TABLE `", TmpTab, "` (",
+                string:join([if
+                               I > BlobSz -> io_lib:format("`~s` BLOB", [S]);
+                               true       -> io_lib:format("`~s` VARCHAR(~w)", [S,I])
+                             end || {S,I} <- HLens], ","),
+              ");\n"]),
+
+  case proplists:get_value(save_create_sql_to_file, Opts, false) of
+    false ->
+      ok;
+    true ->
+      SQLF  = filename:join(filename:dirname(File), filename:basename(File, ".csv") ++ ".sql"),
+      ok    = file:write_file(SQLF, CrTab);
+    SQLF when is_list(SQLF) ->
+      ok    = file:write_file(SQLF, CrTab)
+  end,
+
+  case mysql:query(MySqlPid, CrTab) of
+    ok -> ok;
+    {error, {Code, _, Msg}} ->
+      throw({error_creating_table, Code, binary_to_list(Msg), CrTab})
+  end,
+
+  [HD|RRR]  = CSV,
+  [_|QQQ0s] = string:copies(",?", length(HD)),
+  QQQs      = lists:append([",(", QQQ0s, ")"]),
+  Heads     = string:join(["`"++S++"`" || S <- HD], ","),
+  Rows      = [if length(I) > 1000 -> list_to_binary(I); true -> I end || I <- RRR],
+  BatchRows = stringx:batch_split(BatSz, Rows),
+
+  FstBatLen = length(hd(BatchRows)),
+  PfxSQL    = lists:append(["INSERT INTO ", TmpTab, " (", Heads, ") VALUES "]),
+  [_|SfxSQL]= string:copies(QQQs, FstBatLen),
+  {ok,Ref}  = mysql:prepare(MySqlPid, PfxSQL++SfxSQL),
+
+  lists:foldl(fun(Batch, I) ->
+    NRows = length(Batch),
+    {SqlRef, Unprepare} =
+      if NRows == FstBatLen ->
+        {Ref, false};
+      true ->
+        [_|Sfx2] = string:copies(QQQs, NRows),
+        {ok,R}   = mysql:prepare(MySqlPid, PfxSQL++Sfx2),
+        {R, true}
+      end,
+    Row = lists:append(Batch),
+    Res = mysql:execute(MySqlPid, SqlRef, Row),
+    Unprepare andalso mysql:unprepare(MySqlPid, SqlRef),
+    case Res of
+      ok ->
+        I + NRows;
+      {error, {Code1, _, Msg1}} ->
+        mysql:unprepare(MySqlPid, Ref),
+        throw({error_inserting_records, Code1, binary_to_list(Msg1), I})
+    end
+  end, 1, BatchRows),
+
+  mysql:unprepare(MySqlPid, Ref),
+
+  SQL = lists:flatten(
+          io_lib:format("DROP TABLE IF EXISTS `~s`;\n"
+                        "RENAME TABLE `~s` TO `~s`, `~s` TO `~s`;\n"
+                        "DROP TABLE `~s`;\n",
+                        [OldTab, Tab, OldTab, TmpTab, Tab, OldTab])),
+  ok = mysql:query(MySqlPid, SQL),
+
+  {HD, length(CSV)-1}.
 
 %%------------------------------------------------------------------------------
 %% Tests
