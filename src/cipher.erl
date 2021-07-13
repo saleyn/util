@@ -2,7 +2,7 @@
 
 -export([encrypt/2, decrypt/2, make_key/1, make_key_base64/1]).
 -export([encrypt_base64/2, decrypt_base64/2]).
--export([gpg_public_key_decode/1]).
+-export([gpg_key_decode/1]).
 
 -define(AAD, <<"AES256GCM">>).
 
@@ -36,13 +36,15 @@ make_key_base64(PlainKey) when is_list(PlainKey); is_binary(PlainKey) ->
   base64:encode(crypto:hash(sha256, PlainKey)).
 
 %% @doc Decode PGP public key
--spec gpg_public_key_decode(string()|binary()) -> [public_key:pem_entry()].
-gpg_public_key_decode(File) when is_list(File) ->
+-spec gpg_key_decode(string()|binary()) -> [public_key:pem_entry()].
+gpg_key_decode(File) when is_list(File) ->
   {ok, B} = file:read_file(File),
-  gpg_public_key_decode(B);
-gpg_public_key_decode(Bin) when is_binary(Bin) ->
-  B1 = re:replace(Bin, <<"-----BEGIN PGP PUBLIC KEY BLOCK-----">>, <<"-----BEGIN RSA PUBLIC KEY-----">>, [{return, binary}]),
-  B2 = re:replace(B1,  <<"-----END PGP PUBLIC KEY BLOCK-----">>,   <<"-----END RSA PUBLIC KEY-----">>,   [{return, binary}]),
+  gpg_key_decode(B);
+gpg_key_decode(Bin) when is_binary(Bin) ->
+  B1 = re:replace(Bin, <<"-----BEGIN PGP (PUBLIC|PRIVATE) KEY BLOCK-----">>,
+                       <<"-----BEGIN RSA \\1 KEY-----">>, [{return, binary}]),
+  B2 = re:replace(B1,  <<"-----END PGP (PUBLIC|PRIVATE) KEY BLOCK-----">>,
+                       <<"-----END RSA \\1 KEY-----">>,   [{return, binary}]),
   B3 = re:replace(B2,  <<"\n.+(\n-----END)">>,    <<"\\1">>, [{return, binary}]), % Remove checksum
   B4 = re:replace(B3,  <<"\nVersion:.+\n\r?\n">>, <<"\n">>,  [{return, binary}]), % Remove version
   public_key:pem_decode(B4).
@@ -112,6 +114,6 @@ decode_gpg_key_test() ->
             "5NsttvIOclBY5A==\r\n"
             "=Zqph\r\n"
             "-----END PGP PUBLIC KEY BLOCK-----\r\n">>,
-  [{'RSAPublicKey', _, not_encrypted}] = gpg_public_key_decode(Key).
+  [{'RSAPublicKey', _, not_encrypted}] = gpg_key_decode(Key).
 
 -endif.
