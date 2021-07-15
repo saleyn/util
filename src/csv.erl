@@ -200,7 +200,6 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
               ok ->
                 J+1;
               {error, {Code1, _, Msg1}} ->
-                io:format(standard_error, "Data:\n  ~p\n", [Row]),
                 throw({error_inserting_records, Code1, binary_to_list(Msg1), {row, J, R}})
             end
           end, I, Batch)
