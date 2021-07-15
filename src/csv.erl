@@ -72,7 +72,8 @@ parse_csv_field_q(Line,                Fields) -> parse_csv_field_q(Line, [], Fi
 parse_csv_field_q("\"\"" ++ Line, Buf, Fields) -> parse_csv_field_q(Line, [$"|Buf], Fields);
 parse_csv_field_q("\\"   ++ Line, Buf, Fields) -> parse_csv_field_q(Line, [$\\|Buf], Fields);
 parse_csv_field_q("\""   ++ Line, Buf, Fields) -> parse_line(Line, [lists:reverse(Buf)|Fields]);
-parse_csv_field_q([C|Line],       Buf, Fields) -> parse_csv_field_q(Line, [C|Buf], Fields).
+parse_csv_field_q([C|Line],       Buf, Fields) -> parse_csv_field_q(Line, [C|Buf], Fields);
+parse_csv_field_q([],             Buf, Fields) -> parse_line([], [lists:reverse(Buf)|Fields]).
 
 fix_length(HLen, HLen, Data) -> Data;
 fix_length(HLen, DLen, Data) when HLen < DLen ->
