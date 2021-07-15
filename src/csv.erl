@@ -124,7 +124,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   Verbose= proplists:get_value(verbose,    Opts, false),
-  CSV    = parse(File, [fix_lengths]),
+  CSV0   = parse(File, [fix_lengths]),
+  CSV    = [[cleanup_header(S) || S <- hd(CSV0)] | tl(CSV0)],
   MLens  = max_field_lengths(true, CSV),
   HLens  = lists:zip(hd(CSV), MLens),
   TmpTab = Tab ++ "_tmp",
@@ -158,8 +159,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   [HD|RRR]  = CSV,
   [_|QQQ0s] = string:copies(",?", length(HD)),
+  Heads     = string:join(["`"++S++"`" || S <- HD], ","),
   QQQs      = lists:append([",(", QQQ0s, ")"]),
-  Heads     = string:join(["`"++cleanup_header(S)++"`" || S <- HD], ","),
   Rows      = [if length(I) > 1000 -> list_to_binary(I); true -> I end || I <- RRR],
   BatchRows = stringx:batch_split(BatSz, Rows),
 
