@@ -192,10 +192,22 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
     case Res of
       ok ->
         I + NRows;
-      {error, {Code1, _, Msg1}} ->
-        mysql:unprepare(MySqlPid, Ref),
-        io:format(standard_error, "Data:\n  ~p\n", [Row]),
-        throw({error_inserting_records, Code1, binary_to_list(Msg1), I})
+      {error, {_Code, _, _Msg}} ->
+        SQL2 = PfxSQL++tl(QQQs),
+        try
+          lists:foldl(fun(R, J) ->
+            case mysql:query(MySqlPid, SQL2, R) of
+              ok ->
+                J+1;
+              {error, {Code1, _, Msg1}} ->
+                io:format(standard_error, "Data:\n  ~p\n", [Row]),
+                throw({error_inserting_records, Code1, binary_to_list(Msg1), {row, J}})
+            end
+          end, I, Batch)
+        catch _:E ->
+          mysql:unprepare(MySqlPid, Ref),
+          throw(E)
+        end
     end
   end, 1, BatchRows),
 
