@@ -166,6 +166,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                lists:duplicate(ColCnt, string)
            end,
   HTLens = lists:zip3(hd(CSV), Types, MLens),
+  Verbose andalso
+    io:format(standard_error, "Columns:\n~p\n", [HTLens]),
   TmpTab = Tab ++ "_tmp",
   OldTab = Tab ++ "_OLD",
   CrTab  =  lists:flatten([
