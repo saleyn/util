@@ -166,12 +166,14 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   FstBatLen = length(hd(BatchRows)),
   if Enc   /= [] ->
+    Verbose andalso io:format(standard_error, "SQL: ~s\n", [Enc]),
     ok      = mysql:query(MySqlPid, Enc);
   true ->
     ok
   end,
   PfxSQL    = lists:append(["INSERT INTO ", TmpTab, " (", Heads, ") VALUES "]),
   [_|SfxSQL]= string:copies(QQQs, FstBatLen),
+  Verbose andalso io:format(standard_error, "SQL:\n====\n~s~s\n", [PfxSQL, tl(QQQs)]),
   {ok,Ref}  = mysql:prepare(MySqlPid, PfxSQL++SfxSQL),
 
   lists:foldl(fun(Batch, I) ->
@@ -192,6 +194,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
         I + NRows;
       {error, {Code1, _, Msg1}} ->
         mysql:unprepare(MySqlPid, Ref),
+        io:format(standard_error, "Data:\n  ~p\n", [Row]),
         throw({error_inserting_records, Code1, binary_to_list(Msg1), I})
     end
   end, 1, BatchRows),
