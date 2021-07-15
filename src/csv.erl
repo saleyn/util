@@ -160,7 +160,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   [HD|RRR]  = CSV,
   [_|QQQ0s] = string:copies(",?", length(HD)),
   QQQs      = lists:append([",(", QQQ0s, ")"]),
-  Heads     = string:join(["`"++S++"`" || S <- HD], ","),
+  Heads     = string:join(["`"++cleanup_header(S)++"`" || S <- HD], ","),
   Rows      = [if length(I) > 1000 -> list_to_binary(I); true -> I end || I <- RRR],
   BatchRows = stringx:batch_split(BatSz, Rows),
 
@@ -208,6 +208,15 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 encoding(undefined) -> [];
 encoding(A) when is_atom(A) -> ["SET NAMES ", atom_to_list(A), ";\n"];
 encoding(L) when is_list(L) -> ["SET NAMES ", L, ";\n"].
+
+cleanup_header([$ |T]) -> [$_|cleanup_header(T)];
+cleanup_header([C|T]) when (C >= $a andalso C =< $z);
+                           (C >= $A andalso C =< $Z);
+                           (C >= $0 andalso C =< $9);
+                           (C == $_)
+                       -> [C|cleanup_header(T)];
+cleanup_header([_|T])  -> cleanup_header(T);
+cleanup_header([])     -> [].
 
 %%------------------------------------------------------------------------------
 %% Tests
