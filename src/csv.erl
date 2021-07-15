@@ -120,7 +120,7 @@ guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV) ->
   {ColTypes, MaxLens, [Headers | DataRows]} = guess_data_types(false, Rows);
 guess_data_types(false = _HasHeaders, CsvRows) ->
   %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
-  DtRE  = re:compile(date_re()),
+  {ok,DtRE} = re:compile(date_re()),
   F     = fun(Row) -> [guess_data_type2(I,DtRE) || I <- Row] end,
   CsvL  = [F(Row) || Row <- CsvRows],
   SortF = fun(A,A) -> true; (null,_) -> true; (_,null) -> false; (A,B) -> A =< B end,
