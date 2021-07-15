@@ -120,18 +120,23 @@ guess_data_types(false = _HasHeaders, CsvRows) ->
   %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
   F     = fun(Row) -> [guess_data_type(I) || I <- Row] end,
   CsvL  = [F(Row) || Row <- CsvRows],
+  SortF = fun(A,A) -> true; (null,_) -> true; (_,null) -> false; (A,B) -> A =< B end,
   MLens =
     fun
       G([[] | _], Acc) ->
         lists:reverse(Acc);
       G(RRows, Acc) ->
         {ColTypes, F1Nrows} = lists:foldl(fun([H|T], {A,L}) -> {sets:add_element(H,A),[T|L]} end, {sets:new(),[]}, RRows),
+
         Type =
-          case lists:sort(sets:to_list(ColTypes)) of
-            [T]             -> T;
-            [date,datetime] -> datetime;
-            [float,integer] -> number;
-            _               -> string
+          case lists:sort(SortF, sets:to_list(ColTypes)) of
+            [T]                  -> T;
+            [null,T]             -> T;
+            [null,date,datetime] -> datetime;
+            [date,datetime]      -> datetime;
+            [null,float,integer] -> number;
+            [float,integer]      -> number;
+            _                    -> string
           end,
         G(F1Nrows, [Type | Acc])
     end,
@@ -304,7 +309,9 @@ cleanup_header([C|T]) when (C >= $a andalso C =< $z);
 cleanup_header([_|T])  -> cleanup_header(T);
 cleanup_header([])     -> [].
 
--spec guess_data_type(string()) -> date | datetime | integer | float | string.
+-spec guess_data_type(string()) -> null | date | datetime | integer | float | string.
+guess_data_type([]) ->
+  null;
 guess_data_type(S) ->
   case re:run(S, "^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}:\\d{2}(?:[-+]\\d\\d:\\d\\d)?)?$") of
     {match, [_]}   -> date;
