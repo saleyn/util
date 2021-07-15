@@ -166,7 +166,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   FstBatLen = length(hd(BatchRows)),
   if Enc   /= [] ->
-    Verbose andalso io:format(standard_error, "SQL: ~s\n", [Enc]),
+    Verbose andalso io:format(standard_error, "SQL:\n====\n~s\n", [Enc]),
     ok      = mysql:query(MySqlPid, Enc);
   true ->
     ok
