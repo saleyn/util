@@ -115,13 +115,15 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
                     MySqlPid::pid(), Opts::[{batch_size, integer()}|
                                             {blob_size,  integer()}|
                                             {save_create_sql_to_file, string()}|
-                                            {encoding,   string()|atom()}]) ->
+                                            {encoding,   string()|atom()}|
+                                            {verbose,    boolean()}]) ->
         {Columns::list(), RecCount::integer()}.
 load_to_mysql(File, Tab, MySqlPid, Opts)
     when is_list(File), is_list(Tab), is_pid(MySqlPid), is_list(Opts) ->
   BatSz  = proplists:get_value(batch_size, Opts, 100), % Insert this many records per call
   BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
+  Verbose= proplists:get_value(verbose,    Opts, false),
   CSV    = parse(File, [fix_lengths]),
   MLens  = max_field_lengths(true, CSV),
   HLens  = lists:zip(hd(CSV), MLens),
@@ -146,6 +148,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
     SQLF when is_list(SQLF) ->
       ok    = file:write_file(SQLF, CrTab)
   end,
+ 
+  Verbose andalso io:format(standard_error, "SQL:\n====\n~s\n", [CrTab]),
 
   case mysql:query(MySqlPid, CrTab) of
     ok -> ok;
@@ -161,7 +165,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   BatchRows = stringx:batch_split(BatSz, Rows),
 
   FstBatLen = length(hd(BatchRows)),
-  PfxSQL    = lists:append(["INSERT INTO ", TmpTab, " (", Heads, ") VALUES "]),
+  PfxSQL    = lists:append([Enc, "INSERT INTO ", TmpTab, " (", Heads, ") VALUES "]),
   [_|SfxSQL]= string:copies(QQQs, FstBatLen),
   {ok,Ref}  = mysql:prepare(MySqlPid, PfxSQL++SfxSQL),
 
@@ -194,6 +198,9 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                         "RENAME TABLE `~s` TO `~s`, `~s` TO `~s`;\n"
                         "DROP TABLE IF EXISTS `~s`;\n",
                         [OldTab, Tab, OldTab, TmpTab, Tab, OldTab])),
+
+  Verbose andalso io:format(standard_error, "SQL:\n====\n~s\n", [SQL]),
+
   ok = mysql:query(MySqlPid, SQL),
 
   {HD, length(CSV)-1}.
