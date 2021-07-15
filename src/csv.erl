@@ -12,7 +12,7 @@
 -author('saleyn@gmail.com').
 
 -export([parse/1, parse/2, parse_line/1]).
--export([max_field_lengths/2, load_to_mysql/4]).
+-export([max_field_lengths/2, guess_data_types/2, guess_data_type/1, load_to_mysql/4]).
 
 %%------------------------------------------------------------------------------
 %% CSV parsing
@@ -108,6 +108,36 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
   MLens(CsvL, []).
 
 %%------------------------------------------------------------------------------
+%% @doc Get max field lengths for a list obtained by parsing a CSV file with
+%%      `parse_csv_file(File,[fix_lengths])'.
+%% @end
+%%------------------------------------------------------------------------------
+-spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()]) ->
+        [string|date|datetime|integer|float|number].
+guess_data_types(true = _HasHeaders, [_Headers | Rows ] = _CSV) ->
+  guess_data_types(false, Rows);
+guess_data_types(false = _HasHeaders, CsvRows) ->
+  %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
+  F     = fun(Row) -> [guess_data_type(I) || I <- Row] end,
+  CsvL  = [F(Row) || Row <- CsvRows],
+  MLens =
+    fun
+      G([[] | _], Acc) ->
+        lists:reverse(Acc);
+      G(RRows, Acc) ->
+        {ColTypes, F1Nrows} = lists:foldl(fun([H|T], {A,L}) -> {sets:add_element(H,A),[T|L]} end, {sets:new(),[]}, RRows),
+        Type =
+          case lists:sort(sets:to_list(ColTypes)) of
+            [T]             -> T;
+            [date,datetime] -> datetime;
+            [float,integer] -> number;
+            _               -> string
+          end,
+        G(F1Nrows, [Type | Acc])
+    end,
+  MLens(CsvL, []).
+
+%%------------------------------------------------------------------------------
 %% @doc Load CSV data from File to MySQL database
 %% @end
 %%------------------------------------------------------------------------------
@@ -115,6 +145,7 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
                     MySqlPid::pid(), Opts::[{batch_size, integer()}|
                                             {blob_size,  integer()}|
                                             {save_create_sql_to_file, string()}|
+                                            {guess_types,boolean()}|
                                             {encoding,   string()|atom()}|
                                             {verbose,    boolean()}]) ->
         {Columns::list(), RecCount::integer()}.
@@ -125,18 +156,30 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   Verbose= proplists:get_value(verbose,    Opts, false),
   CSV0   = parse(File, [fix_lengths]),
+  ColCnt = length(hd(CSV0)),
   CSV    = [[cleanup_header(S) || S <- hd(CSV0)] | tl(CSV0)],
   MLens  = max_field_lengths(true, CSV),
-  HLens  = lists:zip(hd(CSV), MLens),
+  Types  = case proplists:get_value(guess_types, Opts, false) of
+             true ->
+               guess_data_types(true, CSV);
+             false ->
+               lists:duplicate(ColCnt, string)
+           end,
+  HTLens = lists:zip3(hd(CSV), Types, MLens),
   TmpTab = Tab ++ "_tmp",
   OldTab = Tab ++ "_OLD",
   CrTab  =  lists:flatten([
               "DROP TABLE IF EXISTS `", TmpTab, "`;\n",
               "CREATE TABLE `", TmpTab, "` (",
-                string:join([if
-                               I > BlobSz -> io_lib:format("`~s` BLOB", [S]);
-                               true       -> io_lib:format("`~s` VARCHAR(~w)", [S,I])
-                             end || {S,I} <- HLens], ","),
+                string:join([case T of
+                               _ when I > BlobSz -> io_lib:format("`~s` BLOB",     [S]);
+                               date              -> io_lib:format("`~s` DATE",     [S]);
+                               datetime          -> io_lib:format("`~s` DATETIME", [S]);
+                               integer           -> io_lib:format("`~s` INTEGER",  [S]);
+                               float             -> io_lib:format("`~s` DOUBLE",   [S]);
+                               number            -> io_lib:format("`~s` DOUBLE",   [S]);
+                               _                 -> io_lib:format("`~s` VARCHAR(~w)", [S,I])
+                             end || {S,T,I} <- HTLens], ","),
               ");\n"]),
 
   case proplists:get_value(save_create_sql_to_file, Opts, false) of
@@ -158,7 +201,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   end,
 
   [HD|RRR]  = CSV,
-  [_|QQQ0s] = string:copies(",?", length(HD)),
+  [_|QQQ0s] = string:copies(",?", ColCnt),
   Heads     = string:join(["`"++S++"`" || S <- HD], ","),
   QQQs      = lists:append([",(", QQQ0s, ")"]),
   Rows      = [if length(I) > 1000 -> list_to_binary(I); true -> I end || I <- RRR],
@@ -259,6 +302,19 @@ cleanup_header([C|T]) when (C >= $a andalso C =< $z);
 cleanup_header([_|T])  -> cleanup_header(T);
 cleanup_header([])     -> [].
 
+-spec guess_data_type(string()) -> date | datetime | integer | float | string.
+guess_data_type(S) ->
+  case re:run(S, "^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}:\\d{2}(?:[-+]\\d\\d:\\d\\d)?)?$") of
+    {match, [_]}   -> date;
+    {match, [_,_]} -> datetime;
+    nomatch ->
+      try _ = list_to_integer(S), integer catch _:_ ->
+        try _ = list_to_float(S), float   catch _:_ ->
+          string
+        end
+      end
+  end.
+
 %%------------------------------------------------------------------------------
 %% Tests
 %%------------------------------------------------------------------------------
@@ -281,5 +337,21 @@ max_lens_test() ->
            ["xxx", "yyyy", "zzzzz"]],
   Res   = max_field_lengths(true, Lines),
   ?assertEqual([3,4,5], Res).
+
+guess_type_test() ->
+  ?assertEqual(integer, guess_data_type("1")),
+  ?assertEqual(float,   guess_data_type("1.0")),
+  ?assertEqual(date,    guess_data_type("2021-01-01")),
+  ?assertEqual(datetime,guess_data_type("2021-01-01 00:00:00")),
+  ?assertEqual(datetime,guess_data_type("2021-01-01 00:00:00+01:00")),
+  ?assertEqual(datetime,guess_data_type("2021-01-01 00:00:00-01:00")),
+  ?assertEqual(string,  guess_data_type("abc")).
+
+col_types_test() ->
+  Lines = [["a", "b",   "c",   "d",          "e",                  "f"],
+           ["1", "1.0", "1.0", "2021-01-01", "2021-01-01",         "abc"],
+           ["2", "2",   "2.0", "2021-02-02", "2021-01-01 00:01:02","efg"]],
+  Res   = guess_data_types(true, Lines),
+  ?assertEqual([integer,number,float,date,datetime,string], Res).
 
 -endif.
