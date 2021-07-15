@@ -214,9 +214,25 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   SQL = lists:flatten(
           io_lib:format("DROP TABLE IF EXISTS `~s`;\n"
-                        "RENAME TABLE `~s` TO `~s`, `~s` TO `~s`;\n"
+                        "-- Check if the real prod table exists\n"
+                        "SELECT count(*) INTO @exists\n"
+                        "  FROM information_schema.tables\n"
+                        " WHERE table_schema=database() AND\n"
+                        "       table_name='~s';\n"
+                        "-- If so, atomically rename it to another table,\n"
+                        "-- rename temp table to prod table, and drop the old table\n"
+                        "-- Otherwise, just atomically rename the temp table into prod\n"
+                        "SET @query = IF(@exists>0,\n"
+                        "  'RENAME TABLE `~s` TO `~s`, `~s` TO `~s`',\n"
+                        "  'RENAME TABLE `~s` TO `~s`');\n"
+                        "PREPARE stmt FROM @query;\n"
+                        "EXECUTE stmt;\n"
+                        "DEALLOCATE PREPARE stmt;\n"
                         "DROP TABLE IF EXISTS `~s`;\n",
-                        [OldTab, Tab, OldTab, TmpTab, Tab, OldTab])),
+                        [OldTab, Tab,
+                         Tab, OldTab, TmpTab, Tab,
+                         TmpTab, Tab,
+                         OldTab])),
 
   Verbose andalso io:format(standard_error, "SQL:\n====\n~s\n", [SQL]),
 
