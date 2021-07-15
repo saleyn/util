@@ -115,11 +115,13 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
 -spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()]) ->
         {FieldType::[string|date|datetime|integer|float|number],
          MaxFieldLengths::[integer()], [Row::[term()]]}.
-guess_data_types(true = _HasHeaders, [_Headers | Rows ] = _CSV) ->
-  guess_data_types(false, Rows);
+guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV) ->
+  {ColTypes, MaxLens, DataRows} = guess_data_types(false, Rows),
+  {ColTypes, MaxLens, [Headers | DataRows]} = guess_data_types(false, Rows);
 guess_data_types(false = _HasHeaders, CsvRows) ->
   %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
-  F     = fun(Row) -> [guess_data_type(I) || I <- Row] end,
+  DtRE  = re:compile(date_re()),
+  F     = fun(Row) -> [guess_data_type2(I,DtRE) || I <- Row] end,
   CsvL  = [F(Row) || Row <- CsvRows],
   SortF = fun(A,A) -> true; (null,_) -> true; (_,null) -> false; (A,B) -> A =< B end,
   ScanF =
@@ -321,20 +323,26 @@ cleanup_header([])     -> [].
 guess_data_type([]) ->
   {null, [], []};
 guess_data_type(S) ->
-  case re:run(S, "^(\\d{4})-(\\d{2})-(\\d{2})(?: (\\d{2}):(\\d{2}):(\\d{2})(?:[-+]\\d\\d:\\d\\d)?)?$", [{capture, all_but_first, list}]) of
-    {match, [_,_,_]=V}       ->
-      [Y,M,D] = [list_to_integer(I) || I <- V],
-      {date, {Y,M,D}, S};
-    {match, [_,_,_,_,_,_]=V} ->
-      [Y,M,D,H,Mi,SS] = [list_to_integer(I) || I <- V],
-      {datetime, {{Y,M,D},{H,Mi,SS}}, S};
-    nomatch ->
-      try V = list_to_integer(S), {integer, V, S} catch _:_ ->
-        try F = list_to_float(S), {float,   F, S} catch _:_ ->
+  guess_data_type2(S, date_re()).
+
+guess_data_type2(S, DateRE) ->
+  try V = list_to_integer(S), {integer, V, S} catch _:_ ->
+    try F = list_to_float(S), {float,   F, S} catch _:_ ->
+      case re:run(S, DateRE, [{capture, all_but_first, list}]) of
+        {match, [_,_,_]=V1}       ->
+          [Y,M,D] = [list_to_integer(I) || I <- V1],
+          {date, {Y,M,D}, S};
+        {match, [_,_,_,_,_,_]=V1} ->
+          [Y,M,D,H,Mi,SS] = [list_to_integer(I) || I <- V1],
+          {datetime, {{Y,M,D},{H,Mi,SS}}, S};
+        nomatch ->
           {string, S, S}
-        end
       end
+    end
   end.
+
+date_re() ->
+  "^(\\d{4})-(\\d{2})-(\\d{2})(?: (\\d{2}):(\\d{2}):(\\d{2})(?:[-+]\\d\\d:\\d\\d)?)?$".
 
 %%------------------------------------------------------------------------------
 %% Tests
