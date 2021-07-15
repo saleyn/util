@@ -131,7 +131,6 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   OldTab = Tab ++ "_OLD",
   CrTab  =  lists:flatten([
               "DROP TABLE IF EXISTS `", TmpTab, "`;\n",
-              Enc,
               "CREATE TABLE `", TmpTab, "` (",
                 string:join([if
                                I > BlobSz -> io_lib:format("`~s` BLOB", [S]);
@@ -165,7 +164,12 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   BatchRows = stringx:batch_split(BatSz, Rows),
 
   FstBatLen = length(hd(BatchRows)),
-  PfxSQL    = lists:append([Enc, "INSERT INTO ", TmpTab, " (", Heads, ") VALUES "]),
+  if Enc   /= [] ->
+    ok      = mysql:query(MySqlPid, Enc);
+  true ->
+    ok
+  end,
+  PfxSQL    = lists:append(["INSERT INTO ", TmpTab, " (", Heads, ") VALUES "]),
   [_|SfxSQL]= string:copies(QQQs, FstBatLen),
   {ok,Ref}  = mysql:prepare(MySqlPid, PfxSQL++SfxSQL),
 
