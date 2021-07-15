@@ -225,8 +225,14 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   {HD, length(CSV)-1}.
 
 encoding(undefined) -> [];
-encoding(A) when is_atom(A) -> ["SET NAMES ", atom_to_list(A), ";\n"];
-encoding(L) when is_list(L) -> ["SET NAMES ", L, ";\n"].
+encoding(A) when is_atom(A) -> encoding2(atom_to_list(A));
+encoding(L) when is_list(L) -> encoding2(L).
+encoding2(L) ->
+  ["SET NAMES ", L, ";\n", encoding3(L)].
+encoding3("utf8"++_) ->
+  "SET CHARACTER SET utf8;\n";
+encoding3(Other) ->
+  ["SET CHARACTER SET ", Other].
 
 cleanup_header([$ |T]) -> [$_|cleanup_header(T)];
 cleanup_header([C|T]) when (C >= $a andalso C =< $z);
