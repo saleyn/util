@@ -114,19 +114,22 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
 -spec load_to_mysql(File::string(), Tab::string(),
                     MySqlPid::pid(), Opts::[{batch_size, integer()}|
                                             {blob_size,  integer()}|
-                                            {save_create_sql_to_file, string()}]) ->
+                                            {save_create_sql_to_file, string()}|
+                                            {encoding,   string()|atom()}]) ->
         {Columns::list(), RecCount::integer()}.
 load_to_mysql(File, Tab, MySqlPid, Opts)
     when is_list(File), is_list(Tab), is_pid(MySqlPid), is_list(Opts) ->
   BatSz  = proplists:get_value(batch_size, Opts, 100), % Insert this many records per call
   BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
+  Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   CSV    = parse(File, [fix_lengths]),
   MLens  = max_field_lengths(true, CSV),
   HLens  = lists:zip(hd(CSV), MLens),
   TmpTab = Tab ++ "_tmp",
   OldTab = Tab ++ "_OLD",
   CrTab  =  lists:flatten([
-              "DROP TABLE IF EXISTS `", TmpTab, "`;\n"
+              "DROP TABLE IF EXISTS `", TmpTab, "`;\n",
+              Enc,
               "CREATE TABLE `", TmpTab, "` (",
                 string:join([if
                                I > BlobSz -> io_lib:format("`~s` BLOB", [S]);
@@ -194,6 +197,10 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   ok = mysql:query(MySqlPid, SQL),
 
   {HD, length(CSV)-1}.
+
+encoding(undefined) -> [];
+encoding(A) when is_atom(A) -> ["SET NAMES ", atom_to_list(A), ";\n"];
+encoding(L) when is_list(L) -> ["SET NAMES ", L, ";\n"].
 
 %%------------------------------------------------------------------------------
 %% Tests
