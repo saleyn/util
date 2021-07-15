@@ -108,12 +108,13 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
   MLens(CsvL, []).
 
 %%------------------------------------------------------------------------------
-%% @doc Get max field lengths for a list obtained by parsing a CSV file with
-%%      `parse_csv_file(File,[fix_lengths])'.
+%% @doc Guess data types of fields in the given CSV list of rows obtained by
+%%      parsing a CSV file with `parse_csv_file(File,[fix_lengths])'.
 %% @end
 %%------------------------------------------------------------------------------
 -spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()]) ->
-        [string|date|datetime|integer|float|number].
+        {FieldType::[string|date|datetime|integer|float|number],
+         MaxFieldLengths::[integer()], [Row::[term()]]}.
 guess_data_types(true = _HasHeaders, [_Headers | Rows ] = _CSV) ->
   guess_data_types(false, Rows);
 guess_data_types(false = _HasHeaders, CsvRows) ->
@@ -121,13 +122,15 @@ guess_data_types(false = _HasHeaders, CsvRows) ->
   F     = fun(Row) -> [guess_data_type(I) || I <- Row] end,
   CsvL  = [F(Row) || Row <- CsvRows],
   SortF = fun(A,A) -> true; (null,_) -> true; (_,null) -> false; (A,B) -> A =< B end,
-  MLens =
+  ScanF =
     fun
-      G([[] | _], Acc) ->
-        lists:reverse(Acc);
-      G(RRows, Acc) ->
-        {ColTypes, F1Nrows} = lists:foldl(fun([H|T], {A,L}) -> {sets:add_element(H,A),[T|L]} end, {sets:new(),[]}, RRows),
-
+      G([[] | _], {MLAcc, TpAcc}) ->
+        {lists:reverse(MLAcc), lists:reverse(TpAcc)};
+      G(RRows, {MLAcc, TpAcc}) ->
+        {ColTypes, MaxLen, F1Nrows} =
+          lists:foldl(fun([{Type,_,V}|T], {A,N,L}) ->
+                        {sets:add_element(Type,A),max(length(V),N),[T|L]}
+                      end, {sets:new(),0,[]}, RRows),
         Type =
           case lists:sort(SortF, sets:to_list(ColTypes)) of
             [T]                  -> T;
@@ -138,9 +141,11 @@ guess_data_types(false = _HasHeaders, CsvRows) ->
             [float,integer]      -> number;
             _                    -> string
           end,
-        G(F1Nrows, [Type | Acc])
+        G(F1Nrows, {[MaxLen|MLAcc], [Type|TpAcc]})
     end,
-  MLens(CsvL, []).
+  {MaxLens, ColTps} = ScanF(CsvL, {[],[]}),
+  Data   = [ [V || {_,V,_} <- R] || R <- CsvL],
+  {ColTps, MaxLens, Data}.
 
 %%------------------------------------------------------------------------------
 %% @doc Load CSV data from File to MySQL database
@@ -162,14 +167,16 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   Verbose= proplists:get_value(verbose,    Opts, false),
   CSV0   = parse(File, [fix_lengths]),
   ColCnt = length(hd(CSV0)),
-  CSV    = [[cleanup_header(S) || S <- hd(CSV0)] | tl(CSV0)],
-  MLens  = max_field_lengths(true, CSV),
-  Types  = case proplists:get_value(guess_types, Opts, false) of
-             true ->
-               guess_data_types(true, CSV);
-             false ->
-               lists:duplicate(ColCnt, string)
-           end,
+  CSV1   = [[cleanup_header(S) || S <- hd(CSV0)] | tl(CSV0)],
+  {Types,MLens,CSV} =
+    case proplists:get_value(guess_types, Opts, false) of
+      true ->
+        guess_data_types(true, CSV1);
+      false ->
+        MLens0 = max_field_lengths(true, CSV1),
+        Types0 = lists:duplicate(ColCnt, string),
+        {Types0, MLens0, CSV1}
+    end,
   HTLens = lists:zip3(hd(CSV), Types, MLens),
   Verbose andalso
     io:format(standard_error, "Columns:\n~p\n", [HTLens]),
@@ -309,17 +316,22 @@ cleanup_header([C|T]) when (C >= $a andalso C =< $z);
 cleanup_header([_|T])  -> cleanup_header(T);
 cleanup_header([])     -> [].
 
--spec guess_data_type(string()) -> null | date | datetime | integer | float | string.
+-spec guess_data_type(string()) ->
+  {null | date | datetime | integer | float | string, term(), string()}.
 guess_data_type([]) ->
-  null;
+  {null, [], []};
 guess_data_type(S) ->
-  case re:run(S, "^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}:\\d{2}(?:[-+]\\d\\d:\\d\\d)?)?$") of
-    {match, [_]}   -> date;
-    {match, [_,_]} -> datetime;
+  case re:run(S, "^(\\d{4})-(\\d{2})-(\\d{2})(?: (\\d{2}):(\\d{2}):(\\d{2})(?:[-+]\\d\\d:\\d\\d)?)?$", [{capture, all_but_first, list}]) of
+    {match, [_,_,_]=V}       ->
+      [Y,M,D] = [list_to_integer(I) || I <- V],
+      {date, {Y,M,D}, S};
+    {match, [_,_,_,_,_,_]=V} ->
+      [Y,M,D,H,Mi,SS] = [list_to_integer(I) || I <- V],
+      {datetime, {{Y,M,D},{H,Mi,SS}}, S};
     nomatch ->
-      try _ = list_to_integer(S), integer catch _:_ ->
-        try _ = list_to_float(S), float   catch _:_ ->
-          string
+      try V = list_to_integer(S), {integer, V, S} catch _:_ ->
+        try F = list_to_float(S), {float,   F, S} catch _:_ ->
+          {string, S, S}
         end
       end
   end.
@@ -348,19 +360,26 @@ max_lens_test() ->
   ?assertEqual([3,4,5], Res).
 
 guess_type_test() ->
-  ?assertEqual(integer, guess_data_type("1")),
-  ?assertEqual(float,   guess_data_type("1.0")),
-  ?assertEqual(date,    guess_data_type("2021-01-01")),
-  ?assertEqual(datetime,guess_data_type("2021-01-01 00:00:00")),
-  ?assertEqual(datetime,guess_data_type("2021-01-01 00:00:00+01:00")),
-  ?assertEqual(datetime,guess_data_type("2021-01-01 00:00:00-01:00")),
-  ?assertEqual(string,  guess_data_type("abc")).
+  ?assertEqual({integer, 1,   "1"},   guess_data_type("1")),
+  ?assertEqual({float,   1.0, "1.0"}, guess_data_type("1.0")),
+  ?assertEqual({date,    {2021,1,1}, "2021-01-01"},                          guess_data_type("2021-01-01")),
+  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00"},       guess_data_type("2021-01-01 00:00:00")),
+  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00+01:00"}, guess_data_type("2021-01-01 00:00:00+01:00")),
+  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00-01:00"}, guess_data_type("2021-01-01 00:00:00-01:00")),
+  ?assertEqual({string,  "abc", "abc"}, guess_data_type("abc")),
+  ?assertEqual({null,    "", ""},       guess_data_type("")).
 
 col_types_test() ->
-  Lines = [["a", "b",   "c",   "d",          "e",                  "f"],
-           ["1", "1.0", "1.0", "2021-01-01", "2021-01-01",         "abc"],
-           ["2", "2",   "2.0", "2021-02-02", "2021-01-01 00:01:02","efg"]],
+  Lines = [["a", "b",   "c",   "d",          "e",                  "f",   "g", "h",  "i"],
+           ["1", "1.0", "1.0", "2021-01-02", "2021-01-02",         "abc", "1", "1.0","2021-01-02"],
+           ["2", "2",   "2.0", "2021-02-03", "2021-01-02 00:01:02","efg", "",  "",   ""]],
   Res   = guess_data_types(true, Lines),
-  ?assertEqual([integer,number,float,date,datetime,string], Res).
+  ?assertEqual({[integer,number,float,date,datetime,string,integer,float,date],
+                [1,      3,     3,    10,  19,      3,     1,      3,    10],
+                [
+                  [1,1.0,1.0,{2021,01,02},{2021,01,02},           "abc", 1, 1.0, {2021,01,02}],
+                  [2,2,  2.0,{2021,02,03},{{2021,01,02},{0,1,2}}, "efg", "", "", ""]
+                ]},
+               Res).
 
 -endif.
