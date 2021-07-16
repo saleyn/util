@@ -55,7 +55,8 @@ parse_csv_file(F, LineNo, {ok, Line}, Done) ->
 parse_csv_file(_F, LineNo, {error, Reason}, _) ->
   throw({error, [{line, LineNo}, {reason, file:format_error(Reason)}]}).
 
-parse_line(Line) -> parse_line(Line, []).
+parse_line(","++Line) -> [[] | parse_line(Line, [])];
+parse_line(Line)      -> parse_line(Line, []).
 
 parse_line([],          Fields) -> lists:reverse(Fields);
 parse_line("," ++ Line, Fields) -> parse_csv_field(Line, Fields);
@@ -124,7 +125,7 @@ guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV, NullsMaxPcnt) ->
   {TpLenNulls, DataRows} = guess_data_types(false, Rows, NullsMaxPcnt),
   {TpLenNulls, [Headers | DataRows]};
 guess_data_types(false = _HasHeaders, CsvRows, NullsMaxPcnt)
-    when is_float(NullsMaxPcnt), NullsMaxPcnt >= 0.0, NullsMaxPcnt =< 100.0 ->
+    when is_number(NullsMaxPcnt), NullsMaxPcnt >= 0.0, NullsMaxPcnt =< 100.0 ->
   %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
   {ok,DtRE} = re:compile(date_re()),
   F     = fun(Row) -> [guess_data_type2(I,DtRE) || I <- Row] end,
@@ -140,7 +141,7 @@ sort_fun(A,B)    -> A =< B.
 
 scan_column([], _NullsMaxPcnt) ->
   [];
-scan_column(L, NullsMaxPcnt) when is_float(NullsMaxPcnt) ->
+scan_column(L, NullsMaxPcnt) when is_number(NullsMaxPcnt) ->
   NRows = length(L),
   scan_column(L, NRows, NullsMaxPcnt, []).
 
@@ -156,7 +157,7 @@ scan_column(L, NRows, NullsMaxPcnt, Acc) ->
       scan_column([[]], NRows, NullsMaxPcnt, Acc1)
   end.
 
-scan_mlt(L, NRows, NullsMaxPcnt) when is_float(NullsMaxPcnt) ->
+scan_mlt(L, NRows, NullsMaxPcnt) when is_number(NullsMaxPcnt) ->
   {CTypes, MLen, Nulls} = scan_mlt2(L, {#{}, 0, 0}),
   PcntNulls = if NRows == 0 -> 100; true -> Nulls / NRows * 100 end,
   Fun = fun
@@ -391,10 +392,14 @@ date_re() ->
 
 parse_test() ->
   Lines = ["a,bb,ccc",
+           ",b,c",
+           ",b,\"c,d\"",
            "xx,yyy,zzzz",
            "xxx,yyyy,zzzzz"],
   CSV   = [parse_line(L) || L <- Lines],
   Res   = [["a",   "bb",   "ccc"],
+           ["",    "b",    "c"],
+           ["",    "b",    "c,d"],
            ["xx",  "yyy",  "zzzz"],
            ["xxx", "yyyy", "zzzzz"]],
   ?assertEqual(Res, CSV).
