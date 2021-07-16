@@ -107,25 +107,29 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
     end,
   MLens(CsvL, []).
 
+guess_data_types(HasHeaders, CSV) ->
+  guess_data_types(HasHeaders, CSV, 20.0).
+
 %%------------------------------------------------------------------------------
 %% @doc Guess data types of fields in the given CSV list of rows obtained by
 %%      parsing a CSV file with `parse_csv_file(File,[fix_lengths])'.
 %% @end
 %%------------------------------------------------------------------------------
--spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()]) ->
+-spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()], float()) ->
         {[{FieldType::string|date|datetime|integer|float|number,
            MaxFieldLength::integer(),
            NullsCount::integer()}],
          [Row::[term()]]}.
-guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV) ->
-  {TpLenNulls, DataRows} = guess_data_types(false, Rows),
+guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV, NullsMaxPcnt) ->
+  {TpLenNulls, DataRows} = guess_data_types(false, Rows, NullsMaxPcnt),
   {TpLenNulls, [Headers | DataRows]};
-guess_data_types(false = _HasHeaders, CsvRows) ->
+guess_data_types(false = _HasHeaders, CsvRows, NullsMaxPcnt)
+    when is_float(NullsMaxPcnt), NullsMaxPcnt >= 0.0, NullsMaxPcnt =< 100.0 ->
   %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
   {ok,DtRE} = re:compile(date_re()),
   F     = fun(Row) -> [guess_data_type2(I,DtRE) || I <- Row] end,
   CsvL  = [F(Row) || Row <- CsvRows],
-  Res   = scan_column(CsvL),
+  Res   = scan_column(CsvL, NullsMaxPcnt),
   Data  = [ [V || {_,V,_} <- R] || R <- CsvL],
   {Res, Data}.
 
@@ -134,25 +138,25 @@ sort_fun(null,_) -> true;
 sort_fun(_,null) -> false;
 sort_fun(A,B)    -> A =< B.
 
-scan_column([]) ->
+scan_column([], _NullsMaxPcnt) ->
   [];
-scan_column(L) ->
+scan_column(L, NullsMaxPcnt) when is_float(NullsMaxPcnt) ->
   NRows = length(L),
-  scan_column(L, NRows, []).
+  scan_column(L, NRows, NullsMaxPcnt, []).
 
-scan_column([[]|_], _NRows, Acc) ->
+scan_column([[]|_], _NRows, _NullsMaxPcnt, Acc) ->
   lists:reverse(Acc);
-scan_column(L, NRows, Acc) ->
-  {_Type, _MLen, __Nulls} = Res = scan_mlt(L, NRows),
+scan_column(L, NRows, NullsMaxPcnt, Acc) ->
+  {_Type, _MLen, __Nulls} = Res = scan_mlt(L, NRows, NullsMaxPcnt),
   Acc1 = [Res | Acc],
   case L of
     [[_|_]|_] ->
-      scan_column([tl(I) || I <- L], NRows, Acc1);
+      scan_column([tl(I) || I <- L], NRows, NullsMaxPcnt, Acc1);
     _ ->
-      scan_column([[]], NRows, Acc1)
+      scan_column([[]], NRows, NullsMaxPcnt, Acc1)
   end.
 
-scan_mlt(L, NRows) ->
+scan_mlt(L, NRows, NullsMaxPcnt) when is_float(NullsMaxPcnt) ->
   {CTypes, MLen, Nulls} = scan_mlt2(L, {#{}, 0, 0}),
   PcntNulls = if NRows == 0 -> 100; true -> Nulls / NRows * 100 end,
   Fun = fun
@@ -163,7 +167,7 @@ scan_mlt(L, NRows) ->
         end,
   Type =
     case lists:sort(fun sort_fun/2, maps:keys(CTypes)) of
-      [null|T] when PcntNulls =< 20.0 ->
+      [null|T] when PcntNulls =< NullsMaxPcnt ->
         Fun(T);
       T ->
         Fun(T)
@@ -187,6 +191,7 @@ scan_mlt2([], Acc) ->
                                             {blob_size,  integer()}|
                                             {save_create_sql_to_file, string()}|
                                             {guess_types,boolean()}|
+                                            {max_nulls_pcnt, float()}|
                                             {encoding,   string()|atom()}|
                                             {verbose,    boolean()}]) ->
         {Columns::list(), RecCount::integer()}.
@@ -199,15 +204,15 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   CSV0   = parse(File, [fix_lengths]),
   ColCnt = length(hd(CSV0)),
   CSV1   = [[cleanup_header(S) || S <- hd(CSV0)] | tl(CSV0)],
-  Merge  = fun M([], [])                            -> [];
-               M([H|T1], [{T,I}|T2])                -> [{H,T,I}|M(T1,T2)];
-               M([H|T1], [{T,I,_}|T2])              -> [{H,T,I}|M(T1,T2)];
-               M([H|T1], [I|T2]) when is_integer(I) -> [{H,string,I}|M(T1,T2)]
+  Merge  = fun M([],     [])                        -> [];
+               M([H|T1], [{T,I,J}|T2])              -> [{H,T,I,J}|M(T1,T2)];
+               M([H|T1], [I|T2]) when is_integer(I) -> [{H,string,I,0}|M(T1,T2)]
            end,
   {ColNmTpMxLens, CSV} =
     case proplists:get_value(guess_types, Opts, false) of
       true ->
-        {TLN, CSV2} = guess_data_types(true, CSV1),
+        MaxNullsPcnt = proplists:get_value(max_nulls_pcnt, Opts, 40.0),
+        {TLN, CSV2}  = guess_data_types(true, CSV1, MaxNullsPcnt),
         {Merge(hd(CSV1), TLN), CSV2};
       false ->
         {Merge(hd(CSV1), max_field_lengths(true, CSV1)), CSV1}
@@ -227,7 +232,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                                float             -> io_lib:format("`~s` DOUBLE",   [S]);
                                number            -> io_lib:format("`~s` DOUBLE",   [S]);
                                _                 -> io_lib:format("`~s` VARCHAR(~w)", [S,I])
-                             end || {S,T,I} <- ColNmTpMxLens], ","),
+                             end || {S,T,I,_} <- ColNmTpMxLens], ","),
               ");\n"]),
 
   case proplists:get_value(save_create_sql_to_file, Opts, false) of
