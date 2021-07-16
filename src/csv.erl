@@ -199,18 +199,21 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   CSV0   = parse(File, [fix_lengths]),
   ColCnt = length(hd(CSV0)),
   CSV1   = [[cleanup_header(S) || S <- hd(CSV0)] | tl(CSV0)],
-  {Types,MLens,CSV} =
+  Merge  = fun M([], [])                            -> [];
+               M([H|T1], [{T,I}|T2])                -> [{H,T,I}|M(T1,T2)];
+               M([H|T1], [{T,I,_}|T2])              -> [{H,T,I}|M(T1,T2)];
+               M([H|T1], [I|T2]) when is_integer(I) -> [{H,string,I}|M(T1,T2)]
+           end,
+  {ColNmTpMxLens, CSV} =
     case proplists:get_value(guess_types, Opts, false) of
       true ->
-        guess_data_types(true, CSV1);
+        {TLN, CSV2} = guess_data_types(true, CSV1),
+        {Merge(hd(CSV1), TLN), CSV2};
       false ->
-        MLens0 = max_field_lengths(true, CSV1),
-        Types0 = lists:duplicate(ColCnt, string),
-        {Types0, MLens0, CSV1}
+        {Merge(hd(CSV1), max_field_lengths(true, CSV1)), CSV1}
     end,
-  HTLens = lists:zip3(hd(CSV), Types, MLens),
   Verbose andalso
-    io:format(standard_error, "Columns:\n~p\n", [HTLens]),
+    io:format(standard_error, "Columns:\n  ~p\n", [ColNmTpMxLens]),
   TmpTab = Tab ++ "_tmp",
   OldTab = Tab ++ "_OLD",
   CrTab  =  lists:flatten([
@@ -224,7 +227,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                                float             -> io_lib:format("`~s` DOUBLE",   [S]);
                                number            -> io_lib:format("`~s` DOUBLE",   [S]);
                                _                 -> io_lib:format("`~s` VARCHAR(~w)", [S,I])
-                             end || {S,T,I} <- HTLens], ","),
+                             end || {S,T,I} <- ColNmTpMxLens], ","),
               ");\n"]),
 
   case proplists:get_value(save_create_sql_to_file, Opts, false) of
