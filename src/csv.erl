@@ -113,41 +113,70 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()]) ->
-        {FieldType::[string|date|datetime|integer|float|number],
-         MaxFieldLengths::[integer()], [Row::[term()]]}.
+        {[{FieldType::string|date|datetime|integer|float|number,
+           MaxFieldLength::integer(),
+           NullsCount::integer()}],
+         [Row::[term()]]}.
 guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV) ->
-  {ColTypes, MaxLens, DataRows} = guess_data_types(false, Rows),
-  {ColTypes, MaxLens, [Headers | DataRows]} = guess_data_types(false, Rows);
+  {TpLenNulls, DataRows} = guess_data_types(false, Rows),
+  {TpLenNulls, [Headers | DataRows]};
 guess_data_types(false = _HasHeaders, CsvRows) ->
   %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
   {ok,DtRE} = re:compile(date_re()),
   F     = fun(Row) -> [guess_data_type2(I,DtRE) || I <- Row] end,
   CsvL  = [F(Row) || Row <- CsvRows],
-  SortF = fun(A,A) -> true; (null,_) -> true; (_,null) -> false; (A,B) -> A =< B end,
-  ScanF =
-    fun
-      G([[] | _], {MLAcc, TpAcc}) ->
-        {lists:reverse(MLAcc), lists:reverse(TpAcc)};
-      G(RRows, {MLAcc, TpAcc}) ->
-        {ColTypes, MaxLen, F1Nrows} =
-          lists:foldl(fun([{Type,_,V}|T], {A,N,L}) ->
-                        {sets:add_element(Type,A),max(length(V),N),[T|L]}
-                      end, {sets:new(),0,[]}, RRows),
-        Type =
-          case lists:sort(SortF, sets:to_list(ColTypes)) of
-            [T]                  -> T;
-            [null,T]             -> T;
-            [null,date,datetime] -> datetime;
-            [date,datetime]      -> datetime;
-            [null,float,integer] -> number;
-            [float,integer]      -> number;
-            _                    -> string
-          end,
-        G(F1Nrows, {[MaxLen|MLAcc], [Type|TpAcc]})
+  Res   = scan_column(CsvL),
+  Data  = [ [V || {_,V,_} <- R] || R <- CsvL],
+  {Res, Data}.
+
+sort_fun(A,A)    -> true;
+sort_fun(null,_) -> true;
+sort_fun(_,null) -> false;
+sort_fun(A,B)    -> A =< B.
+
+scan_column([]) ->
+  [];
+scan_column(L) ->
+  NRows = length(L),
+  scan_column(L, NRows, []).
+
+scan_column([[]|_], _NRows, Acc) ->
+  lists:reverse(Acc);
+scan_column(L, NRows, Acc) ->
+  {_Type, _MLen, __Nulls} = Res = scan_mlt(L, NRows),
+  Acc1 = [Res | Acc],
+  case L of
+    [[_|_]|_] ->
+      scan_column([tl(I) || I <- L], NRows, Acc1);
+    _ ->
+      scan_column([[]], NRows, Acc1)
+  end.
+
+scan_mlt(L, NRows) ->
+  {CTypes, MLen, Nulls} = scan_mlt2(L, {#{}, 0, 0}),
+  PcntNulls = if NRows == 0 -> 100; true -> Nulls / NRows * 100 end,
+  Fun = fun
+          ([T]) when T /= null -> T;
+          ([date,datetime])    -> datetime; 
+          ([float,integer])    -> number;
+          (_)                  -> string
+        end,
+  Type =
+    case lists:sort(fun sort_fun/2, maps:keys(CTypes)) of
+      [null|T] when PcntNulls =< 20.0 ->
+        Fun(T);
+      T ->
+        Fun(T)
     end,
-  {MaxLens, ColTps} = ScanF(CsvL, {[],[]}),
-  Data   = [ [V || {_,V,_} <- R] || R <- CsvL],
-  {ColTps, MaxLens, Data}.
+  {Type, MLen, Nulls}.
+
+scan_mlt2([[{Type,_,V} | _] | T], {ATypes, MLen, Nulls0}) ->
+  Nulls = if Type == null -> Nulls0+1; true -> Nulls0 end,
+  scan_mlt2(T, {ATypes#{Type => 1}, max(length(V),MLen), Nulls});
+scan_mlt2([[]|_], Acc) ->
+  Acc;
+scan_mlt2([], Acc) ->
+  Acc.
 
 %%------------------------------------------------------------------------------
 %% @doc Load CSV data from File to MySQL database
@@ -321,10 +350,12 @@ cleanup_header([])     -> [].
 -spec guess_data_type(string()) ->
   {null | date | datetime | integer | float | string, term(), string()}.
 guess_data_type([]) ->
-  {null, [], []};
+  {null, null, []};
 guess_data_type(S) ->
   guess_data_type2(S, date_re()).
 
+guess_data_type2([], _) ->
+  {null, null, []};
 guess_data_type2(S, DateRE) ->
   try V = list_to_integer(S), {integer, V, S} catch _:_ ->
     try F = list_to_float(S), {float,   F, S} catch _:_ ->
@@ -342,7 +373,7 @@ guess_data_type2(S, DateRE) ->
   end.
 
 date_re() ->
-  "^(\\d{4})-(\\d{2})-(\\d{2})(?: (\\d{2}):(\\d{2}):(\\d{2})(?:[-+]\\d\\d:\\d\\d)?)?$".
+  "^(\\d{4})-(\\d{2})-(\\d{2})(?:[T ](\\d{2}):(\\d{2}):(\\d{2})(?:[-+]\\d\\d:\\d\\d)?)?$".
 
 %%------------------------------------------------------------------------------
 %% Tests
@@ -375,18 +406,32 @@ guess_type_test() ->
   ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00+01:00"}, guess_data_type("2021-01-01 00:00:00+01:00")),
   ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00-01:00"}, guess_data_type("2021-01-01 00:00:00-01:00")),
   ?assertEqual({string,  "abc", "abc"}, guess_data_type("abc")),
-  ?assertEqual({null,    "", ""},       guess_data_type("")).
+  ?assertEqual({null,    null,  ""},    guess_data_type("")).
 
 col_types_test() ->
   Lines = [["a", "b",   "c",   "d",          "e",                  "f",   "g", "h",  "i"],
            ["1", "1.0", "1.0", "2021-01-02", "2021-01-02",         "abc", "1", "1.0","2021-01-02"],
+           ["1", "2.0", "3.0", "2021-03-02", "2021-03-02",         "abc", "1", "3.0","2023-01-02"],
+           ["1", "2.0", "3.0", "2021-03-02", "2021-03-02",         "abc", "1", "3.0","2023-01-02"],
+           ["1", "2.0", "3.0", "2021-03-02", "2021-03-02",         "abc", "1", "3.0","2023-01-02"],
            ["2", "2",   "2.0", "2021-02-03", "2021-01-02 00:01:02","efg", "",  "",   ""]],
   Res   = guess_data_types(true, Lines),
-  ?assertEqual({[integer,number,float,date,datetime,string,integer,float,date],
-                [1,      3,     3,    10,  19,      3,     1,      3,    10],
+  ?assertEqual({[{integer,  1,0},
+                 {number,   3,0},
+                 {float,    3,0},
+                 {date,    10,0},
+                 {datetime,19,0},
+                 {string,   3,0},
+                 {integer,  1,1},
+                 {float,    3,1},
+                 {date,    10,1}],
                 [
+                  ["a","b","c","d","e","f","g","h","i"],
                   [1,1.0,1.0,{2021,01,02},{2021,01,02},           "abc", 1, 1.0, {2021,01,02}],
-                  [2,2,  2.0,{2021,02,03},{{2021,01,02},{0,1,2}}, "efg", "", "", ""]
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           "abc", 1, 3.0, {2023,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           "abc", 1, 3.0, {2023,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           "abc", 1, 3.0, {2023,01,02}],
+                  [2,2,  2.0,{2021,02,03},{{2021,01,02},{0,1,2}}, "efg", null, null, null]
                 ]},
                Res).
 
