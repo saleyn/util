@@ -236,6 +236,7 @@ scan_mlt2([], Acc) ->
                                             {guess_types,boolean()}|
                                             {guess_limit_rows, integer()}|
                                             {max_nulls_pcnt, float()}|
+                                            {primary_key,PKColumns::binary()|[binary()|list()]}|
                                             {encoding,   string()|atom()}|
                                             {verbose,    boolean()}]) ->
         {Columns::list(), RecCount::integer()}.
@@ -245,9 +246,24 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   Verbose= proplists:get_value(verbose,    Opts, false),
+  PKey   = case proplists:get_value(primary_key,  Opts, undefined) of
+             K when is_binary(K) ->
+               [K];
+             [H|_] = K when is_binary(H); is_list(H) ->
+               [to_binary(I) || I <- K];
+             undefined ->
+               [];
+             Other ->
+               throw({badarg, {primary_key, Other}})
+           end,
   CSV0   = parse(File, [fix_lengths, binary]),
   ColCnt = length(hd(CSV0)),
   CSV1   = [[list_to_binary(cleanup_header(to_string(S))) || S <- hd(CSV0)] | tl(CSV0)],
+  Heads  = hd(CSV1),
+  PKey  /= [] andalso
+     lists:foreach(fun(K) ->
+                     lists:member(K, Heads) orelse throw({primary_key_not_found, K, Heads})
+                   end, PKey),
   Merge  = fun M([],     [])                        -> [];
                M([H|T1], [{T,I,J}|T2])              -> [{H,T,I,J}|M(T1,T2)];
                M([H|T1], [I|T2]) when is_integer(I) -> [{H,string,I,0}|M(T1,T2)]
@@ -258,9 +274,9 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
         SniffRows    = proplists:get_value(guess_limit_rows, Opts, 1_000_000),
         MaxNullsPcnt = proplists:get_value(max_nulls_pcnt,   Opts, 40.0),
         {TLN, CSV2}  = guess_data_types(true, CSV1, MaxNullsPcnt, SniffRows),
-        {Merge(hd(CSV1), TLN), CSV2};
+        {Merge(Heads, TLN), CSV2};
       false ->
-        {Merge(hd(CSV1), max_field_lengths(true, CSV1)), CSV1}
+        {Merge(Heads, max_field_lengths(true, CSV1)), CSV1}
     end,
   Verbose andalso
     io:format(standard_error, "Columns:\n  ~p\n", [ColNmTpMxLens]),
@@ -300,7 +316,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   [HD|Rows] = CSV,
   [_|QQQ0s] = string:copies(",?", ColCnt),
-  Heads     = string:join(["`"++binary_to_list(S)++"`" || S <- HD], ","),
+  HHHs      = string:join(["`"++binary_to_list(S)++"`" || S <- HD], ","),
   QQQs      = lists:append([",(", QQQ0s, ")"]),
   BatchRows = stringx:batch_split(BatSz, Rows),
 
@@ -311,7 +327,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   true ->
     ok
   end,
-  PfxSQL    = lists:append(["INSERT INTO ", TmpTab, " (", Heads, ") VALUES "]),
+  PfxSQL    = lists:append(["INSERT INTO ", TmpTab, " (", HHHs, ") VALUES "]),
   [_|SfxSQL]= string:copies(QQQs, FstBatLen),
   Verbose andalso io:format(standard_error, "SQL:\n====\n~s~s\n", [PfxSQL, tl(QQQs)]),
   {ok,Ref}  = mysql:prepare(MySqlPid, PfxSQL++SfxSQL),
@@ -352,8 +368,14 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   mysql:unprepare(MySqlPid, Ref),
 
+  PKSql = case PKey of
+            [] -> "";
+            _  -> SS = string:join(["`"++binary_to_list(S)++"`" || S <- PKey], ","),
+                  io_lib:format("ALTER TABLE `~s` ADD PRIMARY_KEY (~s);\n", [TmpTab, SS])
+          end,
   SQL = lists:flatten(
           io_lib:format("DROP TABLE IF EXISTS `~s`;\n"
+                        "~s"
                         "-- Check if the real prod table exists\n"
                         "SELECT count(*) INTO @exists\n"
                         "  FROM information_schema.tables\n"
@@ -369,7 +391,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                         "EXECUTE stmt;\n"
                         "DEALLOCATE PREPARE stmt;\n"
                         "DROP TABLE IF EXISTS `~s`;\n",
-                        [OldTab, Tab,
+                        [OldTab, PKSql,  Tab,
                          Tab, OldTab, TmpTab, Tab,
                          TmpTab, Tab,
                          OldTab])),
@@ -392,6 +414,9 @@ encoding3(Other) ->
 
 to_string(L) when is_binary(L) -> binary_to_list(L);
 to_string(L) when is_list(L)   -> L.
+
+to_binary(I) when is_binary(I) -> I;
+to_binary(L) when is_list(L)   -> list_to_binary(L).
 
 cleanup_header([$ |T]) -> [$_|cleanup_header(T)];
 cleanup_header([C|T]) when (C >= $a andalso C =< $z);
