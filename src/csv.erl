@@ -371,7 +371,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   PKSql = case PKey of
             [] -> "";
             _  -> SS = string:join(["`"++binary_to_list(S)++"`" || S <- PKey], ","),
-                  io_lib:format("ALTER TABLE `~s` ADD PRIMARY_KEY (~s);\n", [TmpTab, SS])
+                  io_lib:format("ALTER TABLE `~s` ADD PRIMARY KEY (~s);\n", [TmpTab, SS])
           end,
   SQL = lists:flatten(
           io_lib:format("DROP TABLE IF EXISTS `~s`;\n"
