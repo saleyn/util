@@ -36,7 +36,7 @@ parse(File) when is_list(File) ->
 -spec parse(string(), [fix_lengths | {open, Opts::list()}]) -> [[string()]].
 parse(File, Opts) when is_list(File), is_list(Opts) ->
   FileOpts = proplists:get_value(open,   Opts, []),
-  Mode     = case proplists:get_value(binary, Opts, false) andalso
+  Mode     = case proplists:get_value(binary, Opts,  true) andalso
               not proplists:get_value(list,   Opts, false)
              of
                true  -> binary;
@@ -226,6 +226,7 @@ scan_mlt2([], Acc) ->
 
 %%------------------------------------------------------------------------------
 %% @doc Load CSV data from File to MySQL database
+%% NOTE: this function requires https://github.com/mysql-otp/mysql-otp.git
 %% @end
 %%------------------------------------------------------------------------------
 -spec load_to_mysql(File::string(), Tab::string(),
@@ -244,7 +245,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   Verbose= proplists:get_value(verbose,    Opts, false),
-  CSV0   = parse(File, [fix_lengths,binary]),
+  CSV0   = parse(File, [fix_lengths, binary]),
   ColCnt = length(hd(CSV0)),
   CSV1   = [[list_to_binary(cleanup_header(to_string(S))) || S <- hd(CSV0)] | tl(CSV0)],
   Merge  = fun M([],     [])                        -> [];
@@ -269,13 +270,13 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
               "DROP TABLE IF EXISTS `", TmpTab, "`;\n",
               "CREATE TABLE `", TmpTab, "` (",
                 string:join([case T of
-                               _ when I > BlobSz -> io_lib:format("`~s` BLOB",     [S]);
-                               date              -> io_lib:format("`~s` DATE",     [S]);
-                               datetime          -> io_lib:format("`~s` DATETIME", [S]);
-                               integer           -> io_lib:format("`~s` BIGINT",   [S]);
-                               float             -> io_lib:format("`~s` DOUBLE",   [S]);
-                               number            -> io_lib:format("`~s` DOUBLE",   [S]);
-                               _                 -> io_lib:format("`~s` VARCHAR(~w)", [S,I])
+                               _ when I > BlobSz -> io_lib:format("`~s` BLOB",     [to_string(S)]);
+                               date              -> io_lib:format("`~s` DATE",     [to_string(S)]);
+                               datetime          -> io_lib:format("`~s` DATETIME", [to_string(S)]);
+                               integer           -> io_lib:format("`~s` BIGINT",   [to_string(S)]);
+                               float             -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
+                               number            -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
+                               _                 -> io_lib:format("`~s` VARCHAR(~w)", [to_string(S),I])
                              end || {S,T,I,_} <- ColNmTpMxLens], ","),
               ");\n"]),
 
