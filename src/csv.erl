@@ -253,6 +253,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                [to_binary(I) || I <- K];
              undefined ->
                [];
+             [] ->
+               [];
              Other ->
                throw({badarg, {primary_key, Other}})
            end,
