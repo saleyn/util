@@ -300,7 +300,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   [HD|Rows] = CSV,
   [_|QQQ0s] = string:copies(",?", ColCnt),
-  Heads     = string:join(["`"++S++"`" || S <- HD], ","),
+  Heads     = string:join(["`"++binary_to_list(S)++"`" || S <- HD], ","),
   QQQs      = lists:append([",(", QQQ0s, ")"]),
   BatchRows = stringx:batch_split(BatSz, Rows),
 
