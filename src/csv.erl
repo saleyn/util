@@ -29,14 +29,26 @@ parse(File) when is_list(File) ->
 %% greater than what's found in the header row, those extra columns will be
 %% dropped, and if a row has fewer columns, empty columns will be added.</dd>
 %%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
+%%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
 %% </dl>
 %% @end
 %%------------------------------------------------------------------------------
 -spec parse(string(), [fix_lengths | {open, Opts::list()}]) -> [[string()]].
 parse(File, Opts) when is_list(File), is_list(Opts) ->
-  FileOpts = proplists:get_value(open, Opts, []),
-  {ok, F}  = file:open(File, [read, raw]++FileOpts),
-  Res      = parse_csv_file(F, 1, file:read_line(F), []),
+  FileOpts = proplists:get_value(open,   Opts, []),
+  Mode     = case proplists:get_value(binary, Opts, false) andalso
+              not proplists:get_value(list,   Opts, false)
+             of
+               true  -> binary;
+               false -> list
+             end,
+  {ok, F}  = file:open(File, [read, raw, binary]++FileOpts),
+  Res      = case parse_csv_file(F, 1, file:read_line(F), []) of
+               L when Mode == binary ->
+                 L;
+               L ->
+                 [[binary_to_list(B) || B <- Row] || Row <- L]
+             end,
   case lists:member(fix_lengths, Opts) of
     true when hd(Res) == hd(Res) ->  %% Not an empty list
       HLen = length(hd(Res)),
@@ -50,38 +62,57 @@ parse_csv_file(F, _, eof, Done) ->
   lists:reverse(Done);
 
 parse_csv_file(F, LineNo, {ok, Line}, Done) ->
-  parse_csv_file(F, LineNo+1, file:read_line(F), [parse_line(string:trim(Line, trailing, "\r\n"))|Done]);
+  parse_csv_file(F, LineNo+1, file:read_line(F), [parse_line(Line)|Done]);
 
 parse_csv_file(_F, LineNo, {error, Reason}, _) ->
   throw({error, [{line, LineNo}, {reason, file:format_error(Reason)}]}).
 
-parse_line(","++Line) -> [[] | parse_line(Line, [])];
-parse_line(Line)      -> parse_line(Line, []).
+trim_eol(Line) when byte_size(Line) == 0 ->
+  0;
+trim_eol(Line) ->
+  trim_eol(binary:at(Line, byte_size(Line)-1), 0, Line).
+trim_eol(C, N, Line) when C == $\r; C == $\n ->
+  M = N+1,
+  trim_eol(binary:at(Line, byte_size(Line)-M-1), M, Line);
+trim_eol(_, N, Line) ->
+  byte_size(Line) - N.
 
-parse_line([],          Fields) -> lists:reverse(Fields);
-parse_line("," ++ Line, Fields) -> parse_csv_field(Line, Fields);
-parse_line(Line,        Fields) -> parse_csv_field(Line, Fields).
+parse_line(Line) ->
+  parse_csv_field(0, trim_eol(Line), Line, 0,0, []).
 
-parse_csv_field("\"" ++ Line, Fields) -> parse_csv_field_q(Line, Fields);
-parse_csv_field(Line, Fields) -> parse_csv_field(Line, [], Fields).
+parse_csv_field(From, To, Line, Pos,Len, Fields) when From >= To ->
+  lists:reverse([binary:part(Line,Pos,Len)|Fields]);
+parse_csv_field(From, To, Line, Pos,Len, Fields) ->
+  case Line of
+    <<_:From/binary, "\"", _/binary>> ->
+      parse_csv_field_q(From+1, To, Line, From+1, 0, Fields);
+    <<_:From/binary, ",", _/binary>> ->
+      parse_csv_field(From+1,To,Line, From+1, 0, [binary:part(Line,Pos,Len)|Fields]);
+    _ ->
+      parse_csv_field(From+1,To,Line, Pos,Len+1, Fields)
+  end.
 
-parse_csv_field(","   ++ _ = Line, Buf, Fields) -> parse_line(Line, [lists:reverse(Buf)|Fields]);
-parse_csv_field([C|Line],          Buf, Fields) -> parse_csv_field(Line, [C|Buf], Fields);
-parse_csv_field([],                Buf, Fields) -> parse_line([], [lists:reverse(Buf)|Fields]).
-
-parse_csv_field_q(Line,                Fields) -> parse_csv_field_q(Line, [], Fields).
-parse_csv_field_q("\"\"" ++ Line, Buf, Fields) -> parse_csv_field_q(Line, [$"|Buf], Fields);
-parse_csv_field_q("\\"   ++ Line, Buf, Fields) -> parse_csv_field_q(Line, [$\\|Buf], Fields);
-parse_csv_field_q("\""   ++ Line, Buf, Fields) -> parse_line(Line, [lists:reverse(Buf)|Fields]);
-parse_csv_field_q([C|Line],       Buf, Fields) -> parse_csv_field_q(Line, [C|Buf], Fields);
-parse_csv_field_q([],             Buf, Fields) -> parse_line([], [lists:reverse(Buf)|Fields]).
+parse_csv_field_q(From, To, Line, Pos,Len, Fields) when From >= To ->
+  lists:reverse([binary:part(Line,Pos,Len)|Fields]);
+parse_csv_field_q(From, To, Line, Pos,Len, Fields) ->
+  case Line of
+    <<_:From/binary, "\"\"", _/binary>> ->
+      parse_csv_field_q(From+2, To, Line, Pos, Len+2, Fields);
+    <<_:From/binary, "\\",   _/binary>> ->
+      parse_csv_field_q(From+1, To, Line, Pos, Len+1, Fields);
+    <<_:From/binary, "\"",   _/binary>> ->
+      parse_csv_field  (From+1, To, Line, Pos, Len,   Fields);
+    _ ->
+      parse_csv_field_q(From+1, To, Line, Pos, Len+1, Fields)
+  end.
 
 fix_length(HLen, HLen, Data) -> Data;
 fix_length(HLen, DLen, Data) when HLen < DLen ->
   {RR, _} = lists:split(HLen, Data),
   RR;
 fix_length(HLen, DLen, Data) when HLen > DLen ->
-  RR = lists:duplicate(HLen-DLen, ""),
+  Value = if is_binary(hd(Data)) -> <<"">>; true -> "" end,
+  RR    = lists:duplicate(HLen-DLen, Value),
   Data ++ RR.
 
 %%------------------------------------------------------------------------------
@@ -96,7 +127,7 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
   % Calculate length of a field in a row:
   %   CSV -> [[R1FieldLen0, ..., R1FieldLenN], ...,
   %           [RnFieldLen0, RnFieldLenN]]
-  F     = fun(Row) -> [length(I) || I <- Row] end,
+  F     = fun(Row) -> [if is_binary(I) -> byte_size(I); true -> length(I) end || I <- Row] end,
   CsvL  = [F(Row) || Row <- CsvRows],
   MLens =
     fun
@@ -109,28 +140,31 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
   MLens(CsvL, []).
 
 guess_data_types(HasHeaders, CSV) ->
-  guess_data_types(HasHeaders, CSV, 20.0).
+  guess_data_types(HasHeaders, CSV, 20.0, 1_000_000).
 
 %%------------------------------------------------------------------------------
 %% @doc Guess data types of fields in the given CSV list of rows obtained by
 %%      parsing a CSV file with `parse_csv_file(File,[fix_lengths])'.
 %% @end
 %%------------------------------------------------------------------------------
--spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()], float()) ->
+-spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()], number(), integer()) ->
         {[{FieldType::string|date|datetime|integer|float|number,
            MaxFieldLength::integer(),
            NullsCount::integer()}],
          [Row::[term()]]}.
-guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV, NullsMaxPcnt) ->
-  {TpLenNulls, DataRows} = guess_data_types(false, Rows, NullsMaxPcnt),
+guess_data_types(true = _HasHeaders, [Headers | Rows ] = _CSV, NullsMaxPcnt, SniffRows) ->
+  {TpLenNulls, DataRows} = guess_data_types(false, Rows, NullsMaxPcnt, SniffRows),
   {TpLenNulls, [Headers | DataRows]};
-guess_data_types(false = _HasHeaders, CsvRows, NullsMaxPcnt)
-    when is_number(NullsMaxPcnt), NullsMaxPcnt >= 0.0, NullsMaxPcnt =< 100.0 ->
+guess_data_types(false = _HasHeaders, CsvRows, NullsMaxPcnt, SniffRows)
+    when is_number(NullsMaxPcnt), NullsMaxPcnt >= 0.0, NullsMaxPcnt =< 100.0
+       , is_integer(SniffRows) ->
   %   CSV -> [[R1Field0, ..., R1FieldN], ..., [RnField0, RnFieldN]]
-  {ok,DtRE} = re:compile(date_re()),
-  F     = fun(Row) -> [guess_data_type2(I,DtRE) || I <- Row] end,
-  CsvL  = [F(Row) || Row <- CsvRows],
-  Res   = scan_column(CsvL, NullsMaxPcnt),
+  NRows = length(CsvRows),
+  F     = fun(UseString, Row) ->
+            [guess_data_type2(I,UseString) || I <- Row]
+          end,
+  CsvL  = [F(I > SniffRows, Row) || {I, Row} <- lists:zip(lists:seq(1,NRows), CsvRows)],
+  Res   = scan_column(CsvL, NullsMaxPcnt, NRows),
   Data  = [ [V || {_,V,_} <- R] || R <- CsvL],
   {Res, Data}.
 
@@ -139,16 +173,15 @@ sort_fun(null,_) -> true;
 sort_fun(_,null) -> false;
 sort_fun(A,B)    -> A =< B.
 
-scan_column([], _NullsMaxPcnt) ->
+scan_column([], _NullsMaxPcnt, _NRows) ->
   [];
-scan_column(L, NullsMaxPcnt) when is_number(NullsMaxPcnt) ->
-  NRows = length(L),
+scan_column(L, NullsMaxPcnt, NRows) when is_number(NullsMaxPcnt) ->
   scan_column(L, NRows, NullsMaxPcnt, []).
 
 scan_column([[]|_], _NRows, _NullsMaxPcnt, Acc) ->
   lists:reverse(Acc);
 scan_column(L, NRows, NullsMaxPcnt, Acc) ->
-  {_Type, _MLen, __Nulls} = Res = scan_mlt(L, NRows, NullsMaxPcnt),
+  {_Type, _MLen, _Nulls} = Res = scan_mlt(L, NRows, NullsMaxPcnt),
   Acc1 = [Res | Acc],
   case L of
     [[_|_]|_] ->
@@ -158,7 +191,7 @@ scan_column(L, NRows, NullsMaxPcnt, Acc) ->
   end.
 
 scan_mlt(L, NRows, NullsMaxPcnt) when is_number(NullsMaxPcnt) ->
-  {CTypes, MLen, Nulls} = scan_mlt2(L, {#{}, 0, 0}),
+  {CTypes, MLen, Nulls, _} = scan_mlt2(L, {#{}, 0, 0, false}),
   PcntNulls = if NRows == 0 -> 100; true -> Nulls / NRows * 100 end,
   Fun = fun
           ([T]) when T /= null -> T;
@@ -175,9 +208,17 @@ scan_mlt(L, NRows, NullsMaxPcnt) when is_number(NullsMaxPcnt) ->
     end,
   {Type, MLen, Nulls}.
 
-scan_mlt2([[{Type,_,V} | _] | T], {ATypes, MLen, Nulls0}) ->
-  Nulls = if Type == null -> Nulls0+1; true -> Nulls0 end,
-  scan_mlt2(T, {ATypes#{Type => 1}, max(length(V),MLen), Nulls});
+scan_mlt2([[{I,_,V} | _] | T], {ATypes, MLen, Nulls, HasStrings}) ->
+  case I of
+    null ->
+      scan_mlt2(T, {ATypes#{null => 1}, MLen, Nulls+1, HasStrings});
+    string when HasStrings ->
+      scan_mlt2(T, {ATypes, max(byte_size(V),MLen), Nulls, true});
+    string ->
+      scan_mlt2(T, {ATypes#{string => 1}, max(byte_size(V),MLen), Nulls, true});
+    Type ->
+      scan_mlt2(T, {ATypes#{Type => 1}, max(byte_size(V),MLen), Nulls, HasStrings})
+  end;
 scan_mlt2([[]|_], Acc) ->
   Acc;
 scan_mlt2([], Acc) ->
@@ -192,6 +233,7 @@ scan_mlt2([], Acc) ->
                                             {blob_size,  integer()}|
                                             {save_create_sql_to_file, string()}|
                                             {guess_types,boolean()}|
+                                            {guess_limit_rows, integer()}|
                                             {max_nulls_pcnt, float()}|
                                             {encoding,   string()|atom()}|
                                             {verbose,    boolean()}]) ->
@@ -202,9 +244,9 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   Verbose= proplists:get_value(verbose,    Opts, false),
-  CSV0   = parse(File, [fix_lengths]),
+  CSV0   = parse(File, [fix_lengths,binary]),
   ColCnt = length(hd(CSV0)),
-  CSV1   = [[cleanup_header(S) || S <- hd(CSV0)] | tl(CSV0)],
+  CSV1   = [[list_to_binary(cleanup_header(to_string(S))) || S <- hd(CSV0)] | tl(CSV0)],
   Merge  = fun M([],     [])                        -> [];
                M([H|T1], [{T,I,J}|T2])              -> [{H,T,I,J}|M(T1,T2)];
                M([H|T1], [I|T2]) when is_integer(I) -> [{H,string,I,0}|M(T1,T2)]
@@ -212,8 +254,9 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   {ColNmTpMxLens, CSV} =
     case proplists:get_value(guess_types, Opts, false) of
       true ->
-        MaxNullsPcnt = proplists:get_value(max_nulls_pcnt, Opts, 40.0),
-        {TLN, CSV2}  = guess_data_types(true, CSV1, MaxNullsPcnt),
+        SniffRows    = proplists:get_value(guess_limit_rows, Opts, 1_000_000),
+        MaxNullsPcnt = proplists:get_value(max_nulls_pcnt,   Opts, 40.0),
+        {TLN, CSV2}  = guess_data_types(true, CSV1, MaxNullsPcnt, SniffRows),
         {Merge(hd(CSV1), TLN), CSV2};
       false ->
         {Merge(hd(CSV1), max_field_lengths(true, CSV1)), CSV1}
@@ -229,7 +272,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                                _ when I > BlobSz -> io_lib:format("`~s` BLOB",     [S]);
                                date              -> io_lib:format("`~s` DATE",     [S]);
                                datetime          -> io_lib:format("`~s` DATETIME", [S]);
-                               integer           -> io_lib:format("`~s` INTEGER",  [S]);
+                               integer           -> io_lib:format("`~s` BIGINT",   [S]);
                                float             -> io_lib:format("`~s` DOUBLE",   [S]);
                                number            -> io_lib:format("`~s` DOUBLE",   [S]);
                                _                 -> io_lib:format("`~s` VARCHAR(~w)", [S,I])
@@ -254,11 +297,10 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
       throw({error_creating_table, Code, binary_to_list(Msg), CrTab})
   end,
 
-  [HD|RRR]  = CSV,
+  [HD|Rows] = CSV,
   [_|QQQ0s] = string:copies(",?", ColCnt),
   Heads     = string:join(["`"++S++"`" || S <- HD], ","),
   QQQs      = lists:append([",(", QQQ0s, ")"]),
-  Rows      = [if length(I) > 1000 -> list_to_binary(I); true -> I end || I <- RRR],
   BatchRows = stringx:batch_split(BatSz, Rows),
 
   FstBatLen = length(hd(BatchRows)),
@@ -347,6 +389,9 @@ encoding3("utf8"++_) ->
 encoding3(Other) ->
   ["SET CHARACTER SET ", Other].
 
+to_string(L) when is_binary(L) -> binary_to_list(L);
+to_string(L) when is_list(L)   -> L.
+
 cleanup_header([$ |T]) -> [$_|cleanup_header(T)];
 cleanup_header([C|T]) when (C >= $a andalso C =< $z);
                            (C >= $A andalso C =< $Z);
@@ -356,33 +401,75 @@ cleanup_header([C|T]) when (C >= $a andalso C =< $z);
 cleanup_header([_|T])  -> cleanup_header(T);
 cleanup_header([])     -> [].
 
--spec guess_data_type(string()) ->
+-spec guess_data_type(binary()) ->
   {null | date | datetime | integer | float | string, term(), string()}.
-guess_data_type([]) ->
-  {null, null, []};
 guess_data_type(S) ->
-  guess_data_type2(S, date_re()).
+  guess_data_type2(S, false).
 
-guess_data_type2([], _) ->
-  {null, null, []};
-guess_data_type2(S, DateRE) ->
-  try V = list_to_integer(S), {integer, V, S} catch _:_ ->
-    try F = list_to_float(S), {float,   F, S} catch _:_ ->
-      case re:run(S, DateRE, [{capture, all_but_first, list}]) of
-        {match, [_,_,_]=V1}       ->
-          [Y,M,D] = [list_to_integer(I) || I <- V1],
-          {date, {Y,M,D}, S};
-        {match, [_,_,_,_,_,_]=V1} ->
-          [Y,M,D,H,Mi,SS] = [list_to_integer(I) || I <- V1],
-          {datetime, {{Y,M,D},{H,Mi,SS}}, S};
-        nomatch ->
-          {string, S, S}
-      end
+guess_data_type2(<<"">>, _) ->
+  {null, null, <<"">>};
+guess_data_type2(S, true) ->
+  {string, S, S};
+guess_data_type2(S, _) ->
+  guess_data_type3(S).
+
+guess_data_type3(<<C, _/binary>> = S) when C >= $0, C =< $9
+                                         ; C == $-; C == $+ ->
+  try
+    I = binary_to_integer(S),
+    %case binary_to_integer(S) of
+    %  I when I < -2147483648; I > 2147483647 ->
+    %    {integer, I, S};
+    %  I ->
+    %    {integer, I, S}
+    %end;
+    {integer, I, S}
+  catch _:_ ->
+    try F = binary_to_float(S), {float, F, S} catch _:_ ->
+      guess_data_type4(S)
     end
-  end.
+  end;
+guess_data_type3(S) ->
+  guess_data_type4(S).
 
-date_re() ->
-  "^(\\d{4})-(\\d{2})-(\\d{2})(?:[T ](\\d{2}):(\\d{2}):(\\d{2})(?:[-+]\\d\\d:\\d\\d)?)?$".
+guess_data_type4(<<Y1,Y2,Y3,Y4,$-,M1,M2,$-,D1,D2, _/binary>> = V)
+  when Y1 >= $0, Y1 =< $9, Y2 >= $0, Y2 =< $9, Y3 >= $0, Y3 =< $9, Y4 >= $0, Y4 =< $9
+     , M1 >= $0, M1 =< $9, M2 >= $0, M2 =< $9
+     , D1 >= $0, D1 =< $9, D2 >= $0, D2 =< $9
+     ->
+  Y = i(Y1)*1000 + i(Y2)*100 + i(Y3)*10 + i(Y4),
+  M = i(M1)*10   + i(M2),
+  D = i(D1)*10   + i(D2),
+  if Y < 1000; Y > 2500; M < 1; M > 12; D < 1; D > 31 ->
+    def_type(V);
+  true ->
+    case V of
+      <<_:10/binary, C,H1,H2,$:,N1,N2,$:,S1,S2, _/binary>>
+        when (C == $  orelse C == $T)
+           , H1 >= $0, H1 =< $9, H2 >= $0, H2 =< $9
+           , N1 >= $0, N1 =< $9, N2 >= $0, N2 =< $9
+           , S1 >= $0, S1 =< $9, S2 >= $0, S2 =< $9 ->
+        H = i(H1)*10 + i(H2),
+        N = i(N1)*10 + i(N2),
+        S = i(S1)*10 + i(S2),
+        if H < 0; H > 23; N < 0; N > 59; S < 0; S > 59 ->
+          def_type(V);
+        true ->
+          {datetime, {{Y,M,D},{H,N,S}}, V}
+        end;
+      _ when byte_size(V) == 10 ->
+        {date, {Y,M,D}, V};
+      _ ->
+        def_type(V)
+    end
+  end;
+guess_data_type4(S) ->
+  def_type(S).
+
+def_type(V) ->
+  {string, V, V}.
+
+i(C) -> C - $0.
 
 %%------------------------------------------------------------------------------
 %% Tests
@@ -391,43 +478,53 @@ date_re() ->
 -include_lib("eunit/include/eunit.hrl").
 
 parse_test() ->
-  Lines = ["a,bb,ccc",
-           ",b,c",
-           ",b,\"c,d\"",
-           "xx,yyy,zzzz",
-           "xxx,yyyy,zzzzz"],
+  Lines = [<<"a,bb,ccc">>,
+           <<",b,c">>,
+           <<",b,\"c,d\"">>,
+           <<"\"c,d\"\r">>,
+           <<"xx,yyy,zzzz">>,
+           <<"xxx,yyyy,zzzzz">>,
+           <<"a,b\n">>,
+           <<"x,y\r">>,
+           <<"z\r\n">>],
   CSV   = [parse_line(L) || L <- Lines],
-  Res   = [["a",   "bb",   "ccc"],
-           ["",    "b",    "c"],
-           ["",    "b",    "c,d"],
-           ["xx",  "yyy",  "zzzz"],
-           ["xxx", "yyyy", "zzzzz"]],
+  Res   = [[<<"a">>,   <<"bb">>,   <<"ccc">>],
+           [<<"">>,    <<"b">>,    <<"c">>],
+           [<<"">>,    <<"b">>,    <<"c,d">>],
+           [<<"c,d">>],
+           [<<"xx">>,  <<"yyy">>,  <<"zzzz">>],
+           [<<"xxx">>, <<"yyyy">>, <<"zzzzz">>],
+           [<<"a">>,<<"b">>],
+           [<<"x">>,<<"y">>],
+           [<<"z">>]
+          ],
   ?assertEqual(Res, CSV).
 
 max_lens_test() ->
-  Lines = [["a",   "bb",   "ccc"],
-           ["xx",  "yyy",  "zzzz"],
-           ["xxx", "yyyy", "zzzzz"]],
+  Lines = [[<<"a">>,   <<"bb">>,   <<"ccc">>],
+           [<<"xx">>,  <<"yyy">>,  <<"zzzz">>],
+           [<<"xxx">>, <<"yyyy">>, <<"zzzzz">>]],
   Res   = max_field_lengths(true, Lines),
   ?assertEqual([3,4,5], Res).
 
 guess_type_test() ->
-  ?assertEqual({integer, 1,   "1"},   guess_data_type("1")),
-  ?assertEqual({float,   1.0, "1.0"}, guess_data_type("1.0")),
-  ?assertEqual({date,    {2021,1,1}, "2021-01-01"},                          guess_data_type("2021-01-01")),
-  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00"},       guess_data_type("2021-01-01 00:00:00")),
-  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00+01:00"}, guess_data_type("2021-01-01 00:00:00+01:00")),
-  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, "2021-01-01 00:00:00-01:00"}, guess_data_type("2021-01-01 00:00:00-01:00")),
-  ?assertEqual({string,  "abc", "abc"}, guess_data_type("abc")),
-  ?assertEqual({null,    null,  ""},    guess_data_type("")).
+  ?assertEqual({integer, 1,   <<"1">>},   guess_data_type(<<"1">>)),
+  ?assertEqual({float,   1.0, <<"1.0">>}, guess_data_type(<<"1.0">>)),
+  ?assertEqual({date,    {2021,1,1}, <<"2021-01-01">>},                          guess_data_type(<<"2021-01-01">>)),
+  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, <<"2021-01-01 00:00:00">>},       guess_data_type(<<"2021-01-01 00:00:00">>)),
+  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, <<"2021-01-01 00:00:00+01:00">>}, guess_data_type(<<"2021-01-01 00:00:00+01:00">>)),
+  ?assertEqual({datetime,{{2021,1,1},{0,0,0}}, <<"2021-01-01 00:00:00-01:00">>}, guess_data_type(<<"2021-01-01 00:00:00-01:00">>)),
+  ?assertEqual({string,  <<"abc">>, <<"abc">>}, guess_data_type(<<"abc">>)),
+  ?assertEqual({null,    null,  <<"">>},        guess_data_type(<<"">>)).
 
 col_types_test() ->
-  Lines = [["a", "b",   "c",   "d",          "e",                  "f",   "g", "h",  "i"],
+  LineS = [["a", "b",   "c",   "d",          "e",                  "f",   "g", "h",  "i"],
            ["1", "1.0", "1.0", "2021-01-02", "2021-01-02",         "abc", "1", "1.0","2021-01-02"],
            ["1", "2.0", "3.0", "2021-03-02", "2021-03-02",         "abc", "1", "3.0","2023-01-02"],
            ["1", "2.0", "3.0", "2021-03-02", "2021-03-02",         "abc", "1", "3.0","2023-01-02"],
            ["1", "2.0", "3.0", "2021-03-02", "2021-03-02",         "abc", "1", "3.0","2023-01-02"],
            ["2", "2",   "2.0", "2021-02-03", "2021-01-02 00:01:02","efg", "",  "",   ""]],
+  Lines = [[list_to_binary(I) || I <- Row] || Row <- LineS],
   Res   = guess_data_types(true, Lines),
   ?assertEqual({[{integer,  1,0},
                  {number,   3,0},
@@ -439,13 +536,32 @@ col_types_test() ->
                  {float,    3,1},
                  {date,    10,1}],
                 [
-                  ["a","b","c","d","e","f","g","h","i"],
-                  [1,1.0,1.0,{2021,01,02},{2021,01,02},           "abc", 1, 1.0, {2021,01,02}],
-                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           "abc", 1, 3.0, {2023,01,02}],
-                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           "abc", 1, 3.0, {2023,01,02}],
-                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           "abc", 1, 3.0, {2023,01,02}],
-                  [2,2,  2.0,{2021,02,03},{{2021,01,02},{0,1,2}}, "efg", null, null, null]
+                  [<<"a">>,<<"b">>,<<"c">>,<<"d">>,<<"e">>,<<"f">>,<<"g">>,<<"h">>,<<"i">>],
+                  [1,1.0,1.0,{2021,01,02},{2021,01,02},           <<"abc">>, 1, 1.0, {2021,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           <<"abc">>, 1, 3.0, {2023,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           <<"abc">>, 1, 3.0, {2023,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           <<"abc">>, 1, 3.0, {2023,01,02}],
+                  [2,2,  2.0,{2021,02,03},{{2021,01,02},{0,1,2}}, <<"efg">>, null, null, null]
                 ]},
-               Res).
+               Res),
+  Res2 = guess_data_types(true, Lines, 10.0, 5),
+  ?assertEqual({[{integer,  1,0},
+                 {number,   3,0},
+                 {float,    3,0},
+                 {date,    10,0},
+                 {datetime,19,0},
+                 {string,   3,0},
+                 {string,   1,1},
+                 {string,   3,1},
+                 {string,  10,1}],
+                [
+                  [<<"a">>,<<"b">>,<<"c">>,<<"d">>,<<"e">>,<<"f">>,<<"g">>,<<"h">>,<<"i">>],
+                  [1,1.0,1.0,{2021,01,02},{2021,01,02},           <<"abc">>, 1, 1.0, {2021,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           <<"abc">>, 1, 3.0, {2023,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           <<"abc">>, 1, 3.0, {2023,01,02}],
+                  [1,2.0,3.0,{2021,03,02},{2021,03,02},           <<"abc">>, 1, 3.0, {2023,01,02}],
+                  [2,2,  2.0,{2021,02,03},{{2021,01,02},{0,1,2}}, <<"efg">>, null, null, null]
+                ]},
+               Res2).
 
 -endif.
