@@ -62,48 +62,55 @@ parse_csv_file(F, _, eof, Done) ->
   lists:reverse(Done);
 
 parse_csv_file(F, LineNo, {ok, Line}, Done) ->
-  parse_csv_file(F, LineNo+1, file:read_line(F), [parse_line(Line)|Done]);
+  parse_csv_file(F, LineNo+1, file:read_line(F), [parse_line(LineNo, Line)|Done]);
 
 parse_csv_file(_F, LineNo, {error, Reason}, _) ->
   throw({error, [{line, LineNo}, {reason, file:format_error(Reason)}]}).
 
-trim_eol(Line) when byte_size(Line) == 0 ->
-  0;
 trim_eol(Line) ->
-  trim_eol(binary:at(Line, byte_size(Line)-1), 0, Line).
-trim_eol(C, N, Line) when C == $\r; C == $\n ->
+  trim_eol(0, Line).
+
+trim_eol(N, Line) when byte_size(Line) == 0 ->
+  byte_size(Line)-N;
+trim_eol(N, Line) ->
   M = N+1,
-  trim_eol(binary:at(Line, byte_size(Line)-M-1), M, Line);
-trim_eol(_, N, Line) ->
-  byte_size(Line) - N.
-
-parse_line(Line) ->
-  parse_csv_field(0, trim_eol(Line), Line, 0,0, []).
-
-parse_csv_field(From, To, Line, Pos,Len, Fields) when From >= To ->
-  lists:reverse([binary:part(Line,Pos,Len)|Fields]);
-parse_csv_field(From, To, Line, Pos,Len, Fields) ->
-  case Line of
-    <<_:From/binary, "\"", _/binary>> ->
-      parse_csv_field_q(From+1, To, Line, From+1, 0, Fields);
-    <<_:From/binary, ",", _/binary>> ->
-      parse_csv_field(From+1,To,Line, From+1, 0, [binary:part(Line,Pos,Len)|Fields]);
+  case binary:at(Line, byte_size(Line)-M) of
+    C when C == $\r; C == $\n ->
+      trim_eol(M, Line);
     _ ->
-      parse_csv_field(From+1,To,Line, Pos,Len+1, Fields)
+      byte_size(Line)-N
   end.
 
-parse_csv_field_q(From, To, Line, Pos,Len, Fields) when From >= To ->
+parse_line(Line) ->
+  parse_line(1, Line).
+
+parse_line(LineNo, Line) ->
+  parse_csv_field(LineNo, 0, trim_eol(Line), Line, 0,0, []).
+
+parse_csv_field(_LineNo, From, To, Line, Pos,Len, Fields) when From >= To ->
   lists:reverse([binary:part(Line,Pos,Len)|Fields]);
-parse_csv_field_q(From, To, Line, Pos,Len, Fields) ->
+parse_csv_field(LineNo, From, To, Line, Pos,Len, Fields) ->
+  case Line of
+    <<_:From/binary, "\"", _/binary>> ->
+      parse_csv_field_q(LineNo, From+1, To, Line, From+1, 0, Fields);
+    <<_:From/binary, ",", _/binary>> ->
+      parse_csv_field(LineNo, From+1,To,Line, From+1, 0, [binary:part(Line,Pos,Len)|Fields]);
+    _ ->
+      parse_csv_field(LineNo, From+1,To,Line, Pos,Len+1, Fields)
+  end.
+
+parse_csv_field_q(_LineNo, From, To, Line, Pos,Len, Fields) when From >= To ->
+  lists:reverse([binary:part(Line,Pos,Len)|Fields]);
+parse_csv_field_q(LineNo, From, To, Line, Pos,Len, Fields) ->
   case Line of
     <<_:From/binary, "\"\"", _/binary>> ->
-      parse_csv_field_q(From+2, To, Line, Pos, Len+2, Fields);
+      parse_csv_field_q(LineNo, From+2, To, Line, Pos, Len+2, Fields);
     <<_:From/binary, "\\",   _/binary>> ->
-      parse_csv_field_q(From+1, To, Line, Pos, Len+1, Fields);
+      parse_csv_field_q(LineNo, From+1, To, Line, Pos, Len+1, Fields);
     <<_:From/binary, "\"",   _/binary>> ->
-      parse_csv_field  (From+1, To, Line, Pos, Len,   Fields);
+      parse_csv_field  (LineNo, From+1, To, Line, Pos, Len,   Fields);
     _ ->
-      parse_csv_field_q(From+1, To, Line, Pos, Len+1, Fields)
+      parse_csv_field_q(LineNo, From+1, To, Line, Pos, Len+1, Fields)
   end.
 
 fix_length(HLen, HLen, Data) -> Data;
