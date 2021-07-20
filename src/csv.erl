@@ -44,10 +44,10 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
              end,
   {ok, F}  = file:open(File, [read, raw, binary]++FileOpts),
   FstLine  = case file:read_line(F) of
-               <<"EFBBBF", Line/binary>> -> %% Utf-8  239,187,191
-                 Line;
-               Line ->
-                 Line
+               {ok, <<I/utf8, Line/binary>>} when I == 65279 -> %% Utf-8  <<239,187,191,...>>
+                 {ok, Line};
+               Other ->
+                 Other
              end,
   Res      = case parse_csv_file(F, 1, FstLine, []) of
                L when Mode == binary ->
