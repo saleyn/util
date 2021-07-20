@@ -252,11 +252,12 @@ normalize_path(Path) ->
 run_test_() -> 
     [
         ?_assertEqual("/abc/$/efg", subst_env_path("/abc/$$/efg")),
-        ?_assertEqual("/" ++ os:getenv("USER") ++ "/dir", subst_env_path("/$USER/dir")),
-        ?_assertEqual(os:getenv("USER") ++ "/dir", subst_env_path("${USER}/dir")),
+        ?_assertEqual(true, os:putenv("X", "x")),
+        ?_assertEqual("/" ++ os:getenv("X") ++ "/dir", subst_env_path("/$X/dir")),
+        ?_assertEqual(os:getenv("X") ++ "/dir", subst_env_path("${X}/dir")),
         ?_assertEqual(os:getenv("HOME") ++ "/dir", subst_env_path("~/dir")),
-        ?_assertEqual("/aaa/dir", subst_env_path("/$USER/dir", [{"USER", "aaa"}])),
-        ?_assertEqual("/aaa/dir", subst_env_path("/$USER/dir", [{user, "aaa"}])),
+        ?_assertEqual("/aaa/dir", subst_env_path("/$X/dir", [{"X", "aaa"}])),
+        ?_assertEqual("/aaa/dir", subst_env_path("/$X/dir", [{x, "aaa"}])),
         ?_assertEqual("/xxx/dir", subst_env_path("$HOME/dir",  [{"HOME", "/xxx"}])),
         ?_assertEqual("/xxx/dir", subst_env_path("~/dir", [{"HOME", "/xxx"}])),
         ?_assertEqual("/xxx/dir", subst_env_path("~/dir", [{home, "/xxx"}]))

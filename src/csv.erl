@@ -86,33 +86,42 @@ parse_line(Line) ->
   parse_line(1, Line).
 
 parse_line(LineNo, Line) ->
-  parse_csv_field(LineNo, 0, trim_eol(Line), Line, 0,0, []).
+  try
+    parse_csv_field(0, trim_eol(Line), Line, 0,0, [], false)
+  catch E:R:S ->
+    erlang:raise(E, {line_parse_error, LineNo, Line, R}, S)
+  end.
 
-parse_csv_field(_LineNo, From, To, Line, Pos,Len, Fields) when From >= To ->
-  lists:reverse([binary:part(Line,Pos,Len)|Fields]);
-parse_csv_field(LineNo, From, To, Line, Pos,Len, Fields) ->
+field(Line, Pos, Len, true = _HasEscDblQuote) ->
+  binary:replace(binary:part(Line, Pos, Len), <<"\"\"">>, <<"\"">>, [global]);
+field(Line, Pos, Len, _) ->
+  binary:part(Line, Pos, Len).
+
+parse_csv_field(From, To, Line, Pos,Len, Fields, HasEscDblQuote) when From >= To ->
+  lists:reverse([field(Line, Pos, Len, HasEscDblQuote) | Fields]);
+parse_csv_field(From, To, Line, Pos,Len, Fields, HasEscDblQuote) ->
   case Line of
     <<_:From/binary, "\"", _/binary>> ->
-      parse_csv_field_q(LineNo, From+1, To, Line, From+1, 0, Fields);
+      parse_csv_field_q(From+1, To, Line, From+1, 0, Fields, HasEscDblQuote);
     <<_:From/binary, ",", _/binary>> ->
-      parse_csv_field(LineNo, From+1,To,Line, From+1, 0, [binary:part(Line,Pos,Len)|Fields]);
+      parse_csv_field(From+1,To,Line, From+1, 0, [field(Line,Pos,Len,HasEscDblQuote)|Fields], false);
     _ ->
-      parse_csv_field(LineNo, From+1,To,Line, Pos,Len+1, Fields)
+      parse_csv_field(From+1,To,Line, Pos,Len+1, Fields, HasEscDblQuote)
   end.
 
-parse_csv_field_q(_LineNo, From, To, Line, Pos,Len, Fields) when From >= To ->
-  lists:reverse([binary:part(Line,Pos,Len)|Fields]);
-parse_csv_field_q(LineNo, From, To, Line, Pos,Len, Fields) ->
+parse_csv_field_q(From, To, Line, Pos,Len, Fields, HasEscDblQuote) when From < To ->
   case Line of
     <<_:From/binary, "\"\"", _/binary>> ->
-      parse_csv_field_q(LineNo, From+2, To, Line, Pos, Len+2, Fields);
+      parse_csv_field_q(From+2, To, Line, Pos, Len+2, Fields, true);
     <<_:From/binary, "\\",   _/binary>> ->
-      parse_csv_field_q(LineNo, From+1, To, Line, Pos, Len+1, Fields);
+      parse_csv_field_q(From+1, To, Line, Pos, Len+1, Fields, HasEscDblQuote);
     <<_:From/binary, "\"",   _/binary>> ->
-      parse_csv_field  (LineNo, From+1, To, Line, Pos, Len,   Fields);
+      parse_csv_field  (From+1, To, Line, Pos, Len,   Fields, HasEscDblQuote);
     _ ->
-      parse_csv_field_q(LineNo, From+1, To, Line, Pos, Len+1, Fields)
-  end.
+      parse_csv_field_q(From+1, To, Line, Pos, Len+1, Fields, HasEscDblQuote)
+  end;
+parse_csv_field_q(From, To, Line, Pos,Len, Fields, HasEscDblQuote) ->
+  parse_csv_field(From, To, Line, Pos,Len, Fields, HasEscDblQuote).
 
 fix_length(HLen, HLen, Data) -> Data;
 fix_length(HLen, DLen, Data) when HLen < DLen ->
@@ -522,6 +531,9 @@ parse_test() ->
   ?assertEqual([<<>>,<<>>],   parse_line(<<",\r\n">>)),
   ?assertEqual([<<>>,<<>>],   parse_line(<<",">>)),
   ?assertEqual([<<>>,<<"a">>],parse_line(<<",a">>)),
+  ?assertEqual([<<"a">>,<<"b \r\nbb">>,<<"c">>],parse_line(<<"\"a\",\"b \r\nbb\",\"c\"\r\n">>)),
+  ?assertEqual([<<"a\"b">>,<<"c\"">>],          parse_line(<<"\"a\"\"b\",\"c\"\"\"">>)),
+  ?assertEqual([<<"a,b">>],                     parse_line(<<"\"a\,b\"">>)),
   Lines = [<<"a,bb,ccc">>,
            <<",b,c">>,
            <<",b,\"c,d\"">>,
