@@ -1,9 +1,13 @@
 %%%-----------------------------------------------------------------------------
 %%% @doc Conditional expression functions
 %%% When using as a parse transform, include `{parse_transform, iif}' option.
-%%% In that case all calls to `iif(A, B, C)' will get translated to:
-%%% `case A of true -> B; _ -> C end' and all calls to `iif(A,B,C,D)' will get
-%%% translated to `case A of B -> C; _ -> D end'.
+%%% In that case the following code transforms will be done:
+%%% ```
+%%% iif(A, B, C)   -> case A of true -> B; _ -> C end
+%%% iif(A,B,C,D)   -> case A of B -> C; _ -> D end
+%%% ife(A,B)       -> case A of false -> B; undefined -> B; [] -> B; _ -> A end
+%%% ife(A,B,C)     -> case A of false -> B; undefined -> B; [] -> B; _ -> C end
+%%% '''
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -46,7 +50,6 @@
 parse_transform(Ast, Opt) ->
   Debug = proplists:get_value(debug, Opt, false),
 	Debug andalso io:format("AST Before:\n~1024p~n",[Ast]),
-	%After = [parse(X) || X <- Ast],
   Tree = erl_syntax:form_list(Ast),
 	ModifiedTree = recurse(Tree),
 	After = erl_syntax:revert_forms(ModifiedTree),
@@ -119,23 +122,66 @@ recurse(Tree) ->
            List -> erl_syntax:update_tree(Tree, [[recurse(Subtree) || Subtree <- Group] || Group <- List])
          end).
 
+clause3(A,B,C, Line) ->
+  erl_syntax:set_pos(erl_syntax:clause(A,B,C), Line).
+
+syn_atom(A, Line)          -> erl_syntax:set_pos(erl_syntax:atom(A), Line).
+syn_var(V, Line)           -> erl_syntax:set_pos(erl_syntax:variable(V), Line).
+syn_case(A, Clauses, Line) -> erl_syntax:set_pos(erl_syntax:case_expr(A, Clauses), Line).
+syn_block(Clauses,   Line) -> erl_syntax:set_pos(erl_syntax:block_expr(Clauses), Line).
+syn_match(A, B,      Line) -> erl_syntax:set_pos(erl_syntax:match_expr(A, B), Line).
+
 update(Node) ->
  	case erl_syntax:type(Node) of
 		application ->
       case erl_syntax:application_operator(Node) of
-        {atom, _, iif} ->
+        {atom, {I,J} = Line, iif} ->
+          Var = syn_var(list_to_atom(lists:append(["__I",integer_to_list(I),"_",integer_to_list(J)])), Line),
           %io:format("Application: Op=~p ~1024p\n", [erl_syntax:application_operator(Node), erl_syntax:application_arguments(Node)]),
           case erl_syntax:application_arguments(Node) of
             [A,B,C] ->
               %% This is a call to iif(A, B, C).
               %% Replace it with a case expression: case A of true -> B; _ -> C end
-              erl_syntax:case_expr(A, [erl_syntax:clause([erl_syntax:atom(true)],    [], [B]),
-                                       erl_syntax:clause([erl_syntax:variable('_')], [], [C])]);
+              syn_block([
+                syn_match(Var, A, Line),
+                syn_case(Var,
+                  [clause3([syn_atom(true,Line)], [], [B], Line),
+                   clause3([syn_var('_',  Line)], [], [C], Line)],
+                  Line)],
+                Line);
             [A,B,C,D] ->
               %% This is a call to iif(A, B, C, D).
               %% Replace it with a case expression: case A of B -> C; _ -> D end
-              erl_syntax:case_expr(A, [erl_syntax:clause([B],                        [], [C]),
-                                       erl_syntax:clause([erl_syntax:variable('_')], [], [D])]);
+              syn_block([
+                syn_match(Var, A, Line),
+                syn_case(Var,
+                  [clause3([B], [], [C], Line),
+                   clause3([erl_syntax:set_pos(erl_syntax:variable('_'), Line)], [], [D], Line)],
+                  Line)],
+                Line);
+            _ ->
+              Node
+          end;
+        {atom, Line, ife} ->
+          case erl_syntax:application_arguments(Node) of
+            [A,B] ->
+              %% This is a call to ife(A, B).
+              %% Replace it with a case expression:
+              %%  case A of false -> B; undefined -> B; [] -> B; _ -> A end
+              syn_case(A, [clause3([syn_atom(false,     Line)],[],[B], Line),
+                           clause3([syn_atom(undefined, Line)],[],[B], Line),
+                           clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
+                           clause3([syn_var('_',        Line)],[],[A], Line)],
+                       Line);
+            [A,B,C] ->
+              %% This is a call to ife(A, B, C).
+              %% Replace it with a case expression:
+              %%  case A of false -> B; undefined -> B; [] -> B; _ -> C end
+              syn_case(A, [clause3([syn_atom(false,     Line)],[],[B], Line),
+                           clause3([syn_atom(undefined, Line)],[],[B], Line),
+                           clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
+                           clause3([syn_var('_',        Line)],[],[C], Line)],
+                       Line);
             _ ->
               Node
           end;
