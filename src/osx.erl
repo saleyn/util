@@ -43,7 +43,7 @@
 
 -spec command(string()) -> {integer(), list()}.
 command(Cmd) ->
-	command(Cmd, [], undefined).
+    command(Cmd, [], undefined).
 
 -spec command(string(), list()|undefined|fun((list(),any()) -> any())) ->
     {integer(), any()}.
@@ -54,10 +54,20 @@ command(Cmd, Opt) when is_list(Opt) ->
 
 -spec command(string(), list(), undefined|fun((list(),any()) -> any())) ->
     {integer(), any()}.
-command(Cmd, Opt, Fun) when is_list(Opt), Fun=:=undefined orelse is_function(Fun, 2) ->
+command(Cmd, Opt, Fun) when is_list(Opt) ->
+    command(Cmd, Opt, Fun, 600000).
+
+-spec command(string(), list(), undefined|fun((list(),any()) -> any()), integer()) ->
+    {integer(), any()}.
+command(Cmd, Opt, Fun, Timeout) when is_list(Opt)
+                                   , (Fun=:=undefined orelse is_function(Fun, 2))
+                                   , (is_integer(Timeout) orelse Timeout==infinity) ->
     Opts = Opt ++ [stream, exit_status, use_stdio, in, hide, eof],
     P    = open_port({spawn, Cmd}, Opts),
-    get_data(P, Fun, []).
+    Ref  = erlang:monitor(port, P),
+    Res  = get_data(P, Fun, [], Ref, Timeout),
+    _ = demonitor(Ref, [flush]),
+    Res.
 
 -spec status(integer()) ->
         {status, ExitStatus :: integer()} |
@@ -77,22 +87,23 @@ status(Status) when is_integer(Status) ->
 %%%-----------------------------------------------------------------------------
 %%% Internal functions
 %%%-----------------------------------------------------------------------------
-get_data(P, Fun, D) ->
-	receive
-		{P, {data, {eol, Line}}} when Fun =:= undefined ->
-            get_data(P, Fun, [Line|D]);
-		{P, {data, {eol, Line}}} when is_function(Fun, 2) ->
-            get_data(P, Fun, Fun(eol, {Line, D}));
-		{P, {data, {noeol, Line}}} when Fun =:= undefined ->
-            get_data(P, Fun, [Line|D]);
-		{P, {data, {noeol, Line}}} when is_function(Fun, 2) ->
-            get_data(P, Fun, Fun(noeol, {Line, D}));
-		{P, {data, D1}} when Fun =:= undefined ->
-            get_data(P, Fun, [D1|D]);
-		{P, {data, D1}} when is_function(Fun, 2) ->
-			get_data(P, Fun, Fun(data, {D1, D}));
-		{P, eof} ->
-			port_close(P),
+get_data(P, Fun, D, Ref, Timeout) ->
+    receive
+        {P, {data, {eol, Line}}} when Fun =:= undefined ->
+            get_data(P, Fun, [Line|D], Ref, Timeout);
+        {P, {data, {eol, Line}}} when is_function(Fun, 2) ->
+            get_data(P, Fun, Fun(eol, {Line, D}), Ref, Timeout);
+        {P, {data, {noeol, Line}}} when Fun =:= undefined ->
+            get_data(P, Fun, [Line|D], Ref, Timeout);
+        {P, {data, {noeol, Line}}} when is_function(Fun, 2) ->
+            get_data(P, Fun, Fun(noeol, {Line, D}), Ref, Timeout);
+        {P, {data, D1}} when Fun =:= undefined ->
+            get_data(P, Fun, [D1|D], Ref, Timeout);
+        {P, {data, D1}} when is_function(Fun, 2) ->
+            get_data(P, Fun, Fun(data, {D1, D}), Ref, Timeout);
+        {P, eof} ->
+            catch port_close(P),
+			flush_until_down(P, Ref),
             receive
                 {P, {exit_status, 0}} when is_function(Fun, 2) ->
                     {ok, Fun(eof, D)};
@@ -108,8 +119,13 @@ get_data(P, Fun, D) ->
                 true ->
                     throw({no_exit_status, timeout_waiting_for_output})
                 end
-            end
-	end.
+            end;
+		{'DOWN', Ref, _, _, Reason} ->
+      		flush_exit(P),
+		    exit({error, Reason, lists:flatten(lists:reverse(D))})
+	after Timeout ->
+		exit(timeout)
+    end.
 
 %% @doc
 %% Return a canonicalized pathname, having resolved symlinks to their
@@ -134,7 +150,7 @@ check_fragments([], AlreadyChecked, _) ->
 check_fragments([Head|Tail], AlreadyChecked, TTL) ->
     case is_symlink(AlreadyChecked, Head) of
         false ->
-			check_fragments(Tail, filename:join(AlreadyChecked, Head), TTL);
+            check_fragments(Tail, filename:join(AlreadyChecked, Head), TTL);
         {true, Referent} ->
             TailJoined = join_non_null(Tail),
             AllJoined  = filename:join(Referent, TailJoined),
@@ -154,7 +170,7 @@ is_symlink(Dirname, Basename) ->
                     {true, filename:join(Dirname, Name)}
             end;
         _ ->
- 			false
+            false
     end.
 
 make_fragments(S) ->
@@ -195,6 +211,21 @@ pop(["/"]) -> {"/", ["/"]};
 pop([H|T]) -> {H,T}.
 push(H,T)  -> [H|T].
 
+flush_until_down(Port, MonRef) ->
+    receive
+        {Port, {data, _Bytes}} ->
+			flush_until_down(Port, MonRef);
+        {'DOWN', MonRef, _, _, _} ->
+            flush_exit(Port)
+    end.
+
+%% The exit signal is always delivered before
+%% the down signal, so try to clean up the mailbox.
+flush_exit(Port) ->
+    receive {'EXIT', Port, _} -> ok
+    after   0                 -> ok
+    end.
+
 %%%-----------------------------------------------------------------------------
 %%% Tests
 %%%-----------------------------------------------------------------------------
@@ -202,8 +233,8 @@ push(H,T)  -> [H|T].
 -ifdef(EUNIT).
 
 command_test() ->
-	{ok,    ["ok\n"]}  = osx:command("echo ok"),
-	{error, {1, ""}}   = osx:command("false"),
+    {ok,    ["ok\n"]}  = osx:command("echo ok"),
+    {error, {1, ""}}   = osx:command("false"),
     {ok, ok}           = osx:command("echo ok", fun(data, {"ok\n", []}) -> []; (eof, []) -> ok end),
     {ok,["a","b","c"]} = osx:command("echo -en 'a\nb\nc\n'", [{line, 80}]),
     %{error, {143,[]}}  = osx:command("kill $$"),
