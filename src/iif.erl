@@ -1,5 +1,9 @@
 %%%-----------------------------------------------------------------------------
 %%% @doc Conditional expression functions
+%%% When using as a parse transform, include `{parse_transform, iif}' option.
+%%% In that case all calls to `iif(A, B, C)' will get translated to:
+%%% `case A of true -> B; _ -> C end' and all calls to `iif(A,B,C,D)' will get
+%%% translated to `case A of B -> C; _ -> D end'.
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -26,6 +30,9 @@
 %%%-----------------------------------------------------------------------------
 -module(iif).
 
+% If using this module as a parse transform, we need to export the following:
+-export([parse_transform/2]).
+% Otherwise use as a regular module
 -export([ife/2, ife/3, ifne/2, ifne/3, iif/3, iif/4, nvl/2, format_ne/3]).
 
 -ifdef(TEST).
@@ -35,6 +42,17 @@
 %%%-----------------------------------------------------------------------------
 %%% External API
 %%%-----------------------------------------------------------------------------
+
+parse_transform(Ast, Opt) ->
+  Debug = proplists:get_value(debug, Opt, false),
+	Debug andalso io:format("AST Before:\n~1024p~n",[Ast]),
+	%After = [parse(X) || X <- Ast],
+  Tree = erl_syntax:form_list(Ast),
+	ModifiedTree = recurse(Tree),
+	After = erl_syntax:revert_forms(ModifiedTree),
+	Debug andalso io:format("AST After:\n~1024p~n",[After]),
+	After.
+
 
 %% @doc Return `Value' if first argument is one of: `[]', `false', `undefined'.
 %%      Otherwise return the value of the first argument.
@@ -93,6 +111,40 @@ format_ne(_True,  Fmt,  Args) -> io_lib:format(Fmt, Args).
 execute(_, F) when is_function(F,0) -> F();
 execute(V, F) when is_function(F,1) -> F(V);
 execute(_, V)                       -> V.
+
+%% Parse transform support
+recurse(Tree) ->
+  update(case erl_syntax:subtrees(Tree) of
+           []   -> Tree;
+           List -> erl_syntax:update_tree(Tree, [[recurse(Subtree) || Subtree <- Group] || Group <- List])
+         end).
+
+update(Node) ->
+ 	case erl_syntax:type(Node) of
+		application ->
+      case erl_syntax:application_operator(Node) of
+        {atom, _, iif} ->
+          %io:format("Application: Op=~p ~1024p\n", [erl_syntax:application_operator(Node), erl_syntax:application_arguments(Node)]),
+          case erl_syntax:application_arguments(Node) of
+            [A,B,C] ->
+              %% This is a call to iif(A, B, C).
+              %% Replace it with a case expression: case A of true -> B; _ -> C end
+              erl_syntax:case_expr(A, [erl_syntax:clause([erl_syntax:atom(true)],    [], [B]),
+                                       erl_syntax:clause([erl_syntax:variable('_')], [], [C])]);
+            [A,B,C,D] ->
+              %% This is a call to iif(A, B, C, D).
+              %% Replace it with a case expression: case A of B -> C; _ -> D end
+              erl_syntax:case_expr(A, [erl_syntax:clause([B],                        [], [C]),
+                                       erl_syntax:clause([erl_syntax:variable('_')], [], [D])]);
+            _ ->
+              Node
+          end;
+        _ ->
+          Node
+      end;
+		_ ->
+			Node
+	end.
 
 %%%-----------------------------------------------------------------------------
 %%% Unit Tests
