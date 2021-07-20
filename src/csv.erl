@@ -59,7 +59,7 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
     true when hd(Res) == hd(Res) ->  %% Not an empty list
       HLen = length(hd(Res)),
       [fix_length(HLen, length(R), R) || R <- Res];
-    false ->
+    _ ->
       Res
   end.
 
