@@ -10,16 +10,30 @@
 -author('saleyn@gmail.com').
 
 %% API
--export([subst_env_path/1, subst_env_path/2, get_env/3, home_dir/0,
+-export([subst_env_path/1,   subst_env_path/2, 
+         replace_env_vars/1, replace_env_vars/2,
+         get_env/3, home_dir/0,
          normalize_path/1]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
+-deprecated([{subst_env_path,1,"use replace_env_vars/1 instead"}]).
+-deprecated([{subst_env_path,2,"use replace_env_vars/2 instead"}]).
+
 %%%----------------------------------------------------------------------------
 %%% External API
 %%%----------------------------------------------------------------------------
+
+-spec subst_env_path(list() | binary()) -> list() | binary().
+subst_env_path(OsPath) ->
+    replace_env_vars(OsPath, []).
+
+-spec subst_env_path(list() | binary(), [{atom() | string(), string()}]) ->
+    list() | binary().
+subst_env_path(OsPath, Bindings) when is_list(Bindings) ->
+    replace_env_vars(OsPath, Bindings).
 
 %%------------------------------------------------------------------------
 %% @spec (OsPath) -> Path::string()
@@ -27,16 +41,17 @@
 %% @doc Perform replacement of environment variable values in the OsPath.
 %% ```
 %% Example:
-%%   env:subst_env_path("~/app")       -> "/home/cuser/app"
-%%   env:subst_env_path("${HOME}/app") -> "/home/cuser/app"
-%%   env:subst_env_path("$USER/app")   -> "cuser/app"
+%%   env:replace_env_vars("~/app")       -> "/home/cuser/app"
+%%   env:replace_env_vars("${HOME}/app") -> "/home/cuser/app"
+%%   env:replace_env_vars("$USER/app")   -> "cuser/app"
 %% '''
 %% @see os:getenv/1
 %% @end
 %%------------------------------------------------------------------------
--spec subst_env_path(list() | binary()) -> list() | binary().
-subst_env_path(OsPath) ->
-    subst_env_path(OsPath, []).
+-spec replace_env_vars(list() | binary()) -> list() | binary().
+replace_env_vars(OsPath) ->
+    replace_env_vars(OsPath, []).
+
 
 %%------------------------------------------------------------------------
 %% @spec (OsPath, Bindings) -> Path::string()
@@ -49,17 +64,17 @@ subst_env_path(OsPath) ->
 %%      variables are looked up).
 %% ```
 %% Example:
-%%   env:subst_env_path("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
-%%   env:subst_env_path("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
-%%   env:subst_env_path("$A/",  [{a, "/aaa"}]) -> "/aaa/"
-%%   env:subst_env_path("${A}/",[{a, "/aaa"}]) -> "/aaa/"
+%%   env:replace_env_vars("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
+%%   env:replace_env_vars("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
+%%   env:replace_env_vars("$A/",  [{a, "/aaa"}]) -> "/aaa/"
+%%   env:replace_env_vars("${A}/",[{a, "/aaa"}]) -> "/aaa/"
 %% '''
 %% @see os:getenv/1
 %% @end
 %%------------------------------------------------------------------------
--spec subst_env_path(list() | binary(), [{atom() | string(), string()}]) ->
+-spec replace_env_vars(list() | binary(), [{atom() | string(), string()}]) ->
     list() | binary().
-subst_env_path(OsPath, Bindings) when is_list(Bindings) ->
+replace_env_vars(OsPath, Bindings) when is_list(Bindings) ->
     element(2, env_subst(OsPath, Bindings)).
 
 %%-----------------------------------------------------------------------------
@@ -251,16 +266,16 @@ normalize_path(Path) ->
 
 run_test_() -> 
     [
-        ?_assertEqual("/abc/$/efg", subst_env_path("/abc/$$/efg")),
+        ?_assertEqual("/abc/$/efg", replace_env_vars("/abc/$$/efg")),
         ?_assertEqual(true, os:putenv("X", "x")),
-        ?_assertEqual("/" ++ os:getenv("X") ++ "/dir", subst_env_path("/$X/dir")),
-        ?_assertEqual(os:getenv("X") ++ "/dir", subst_env_path("${X}/dir")),
-        ?_assertEqual(os:getenv("HOME") ++ "/dir", subst_env_path("~/dir")),
-        ?_assertEqual("/aaa/dir", subst_env_path("/$X/dir", [{"X", "aaa"}])),
-        ?_assertEqual("/aaa/dir", subst_env_path("/$X/dir", [{x, "aaa"}])),
-        ?_assertEqual("/xxx/dir", subst_env_path("$HOME/dir",  [{"HOME", "/xxx"}])),
-        ?_assertEqual("/xxx/dir", subst_env_path("~/dir", [{"HOME", "/xxx"}])),
-        ?_assertEqual("/xxx/dir", subst_env_path("~/dir", [{home, "/xxx"}]))
+        ?_assertEqual("/" ++ os:getenv("X") ++ "/dir", replace_env_vars("/$X/dir")),
+        ?_assertEqual(os:getenv("X") ++ "/dir", replace_env_vars("${X}/dir")),
+        ?_assertEqual(os:getenv("HOME") ++ "/dir", replace_env_vars("~/dir")),
+        ?_assertEqual("/aaa/dir", replace_env_vars("/$X/dir", [{"X", "aaa"}])),
+        ?_assertEqual("/aaa/dir", replace_env_vars("/$X/dir", [{x, "aaa"}])),
+        ?_assertEqual("/xxx/dir", replace_env_vars("$HOME/dir",  [{"HOME", "/xxx"}])),
+        ?_assertEqual("/xxx/dir", replace_env_vars("~/dir", [{"HOME", "/xxx"}])),
+        ?_assertEqual("/xxx/dir", replace_env_vars("~/dir", [{home, "/xxx"}]))
     ].
 
 -endif.
