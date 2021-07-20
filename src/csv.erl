@@ -70,16 +70,17 @@ parse_csv_file(_F, LineNo, {error, Reason}, _) ->
 trim_eol(Line) ->
   trim_eol(0, Line).
 
-trim_eol(N, Line) when byte_size(Line) == 0 ->
-  byte_size(Line)-N;
-trim_eol(N, Line) ->
+trim_eol(N, Line) when N < byte_size(Line) ->
+  Z = byte_size(Line),
   M = N+1,
-  case binary:at(Line, byte_size(Line)-M) of
+  case binary:at(Line, Z-M) of
     C when C == $\r; C == $\n ->
       trim_eol(M, Line);
     _ ->
-      byte_size(Line)-N
-  end.
+      Z-N
+  end;
+trim_eol(N, Line) ->
+  byte_size(Line) - N.
 
 parse_line(Line) ->
   parse_line(1, Line).
@@ -513,6 +514,14 @@ i(C) -> C - $0.
 -include_lib("eunit/include/eunit.hrl").
 
 parse_test() ->
+  ?assertEqual([<<>>],        parse_line(<<"\n">>)),
+  ?assertEqual([<<>>],        parse_line(<<"\r\n">>)),
+  ?assertEqual([<<>>],        parse_line(<<"\n\r">>)),
+  ?assertEqual([<<>>],        parse_line(<<"\n\r\n">>)),
+  ?assertEqual([<<"a">>],     parse_line(<<"a\r\n">>)),
+  ?assertEqual([<<>>,<<>>],   parse_line(<<",\r\n">>)),
+  ?assertEqual([<<>>,<<>>],   parse_line(<<",">>)),
+  ?assertEqual([<<>>,<<"a">>],parse_line(<<",a">>)),
   Lines = [<<"a,bb,ccc">>,
            <<",b,c">>,
            <<",b,\"c,d\"">>,
