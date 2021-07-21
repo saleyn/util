@@ -47,13 +47,21 @@
 %%% External API
 %%%-----------------------------------------------------------------------------
 
+%% `Opt' are compiler options passed from command line. E.g.:
+%% ```
+%% erlc -Ddebug=1 ...     ->  Opt = [{d,debug,1}|_]
+%% erlc -Ddebug   ...     ->  Opt = [{d,debug}|_]
 parse_transform(Ast, Opt) ->
-  Debug = proplists:get_value(debug, Opt, false),
-	Debug andalso io:format("AST Before:\n~1024p~n",[Ast]),
+  Debug = case lists:keyfind(iif_debug, 1, Opt) of
+            {d,iif_debug}              -> 1;
+            {d,iif_debug,N} when N > 0 -> N;
+            _                          -> 0
+          end,
+	Debug > 1 andalso io:format("AST Before:\n~1024p~n",[Ast]),
   Tree = erl_syntax:form_list(Ast),
 	ModifiedTree = recurse(Tree),
 	After = erl_syntax:revert_forms(ModifiedTree),
-	Debug andalso io:format("AST After:\n~1024p~n",[After]),
+	Debug > 0 andalso io:format("AST After:\n~1024p~n",[After]),
 	After.
 
 
