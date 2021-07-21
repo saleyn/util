@@ -5,7 +5,8 @@
 -export([t/0]).
 
 t() ->
-  ok    = iif(1 == 1, ok, error),
+  A     = is_tuple(erlang:timestamp()),
+  ok    = iif(A, ok, error),
   ok    = ife(false, ok),
   error = ife(true, ok, error).
 
@@ -20,8 +21,9 @@ t() ->
 -ifdef(EUNIT).
 
 iif_test() ->
-  ?assertEqual(ok,    iif(3 == 3, ok, error)),
-  ?assertEqual(error, iif(1 == 2, ok, error)),
+  A = is_tuple(erlang:timestamp()), B = not A,
+  ?assertEqual(ok,    iif(A, ok, error)),
+  ?assertEqual(error, iif(B, ok, error)),
   ?assertEqual(ok,    iif(is_tuple(erlang:timestamp()), ok, error)),
   ?assertEqual(ok,    iif(1, 1, ok, error)),
   ?assertEqual(error, iif(1, 2, ok, error)).
