@@ -151,7 +151,11 @@ update(Node) ->
                 Line);
             [A,B,C,D] ->
               %% This is a call to iif(A, B, C, D).
-              %% Replace it with a case expression: case A of B -> C; _ -> D end
+              %% Replace it with a case expression:
+              %%   begin
+              %%     _V = A,
+              %%     case _V of B -> C; _ -> D end
+              %%   end
               syn_block([
                 syn_match(Var, A, Line),
                 syn_case(Var,
@@ -162,26 +166,35 @@ update(Node) ->
             _ ->
               Node
           end;
-        {atom, Line, ife} ->
+        {atom, {I,J} = Line, ife} ->
+          Var = syn_var(list_to_atom(lists:append(["__I",integer_to_list(I),"_",integer_to_list(J)])), Line),
           case erl_syntax:application_arguments(Node) of
             [A,B] ->
               %% This is a call to ife(A, B).
               %% Replace it with a case expression:
               %%  case A of false -> B; undefined -> B; [] -> B; _ -> A end
-              syn_case(A, [clause3([syn_atom(false,     Line)],[],[B], Line),
-                           clause3([syn_atom(undefined, Line)],[],[B], Line),
-                           clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
-                           clause3([syn_var('_',        Line)],[],[A], Line)],
-                       Line);
+              syn_block([
+                syn_match(Var, A, Line),
+                syn_case(Var,
+                  [clause3([syn_atom(false,     Line)],[],[B], Line),
+                   clause3([syn_atom(undefined, Line)],[],[B], Line),
+                   clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
+                   clause3([syn_var('_',        Line)],[],[A], Line)],
+                  Line)],
+                Line);
             [A,B,C] ->
               %% This is a call to ife(A, B, C).
               %% Replace it with a case expression:
               %%  case A of false -> B; undefined -> B; [] -> B; _ -> C end
-              syn_case(A, [clause3([syn_atom(false,     Line)],[],[B], Line),
-                           clause3([syn_atom(undefined, Line)],[],[B], Line),
-                           clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
-                           clause3([syn_var('_',        Line)],[],[C], Line)],
-                       Line);
+              syn_block([
+                syn_match(Var, A, Line),
+                syn_case(Var,
+                  [clause3([syn_atom(false,     Line)],[],[B], Line),
+                   clause3([syn_atom(undefined, Line)],[],[B], Line),
+                   clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
+                   clause3([syn_var('_',        Line)],[],[C], Line)],
+                  Line)],
+                Line);
             _ ->
               Node
           end;

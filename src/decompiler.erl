@@ -47,7 +47,7 @@ run(BeamFName, Options) when is_list(BeamFName) ->
                   lists:member(ast, Options),
             erl, Options, Basename,
             fun(Fd) ->
-                case [I || I = {attribute,1,module,_} <- Forms] of
+                case [I || I = {attribute,_,module,_} <- Forms] of
                 [] -> io:fwrite(Fd, "-module(~w).\n", [Module]);
                 _  -> ok
                 end,
