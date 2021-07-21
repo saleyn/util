@@ -63,14 +63,20 @@ parse_transform(Ast, Opts) ->
             {d,iif_debug,N} when N > 0 -> N;
             _                          -> 0
           end,
+	(Debug band 1) > 0 andalso io:format("AST:\n  ~p~n",[Ast]),
   Tree = erl_syntax:form_list(Ast),
-	(Debug band 1) > 0 andalso io:format("AST Before:\n  ~p~n",[Tree]),
+	(Debug band 4) > 0 andalso io:format("AST Tree:\n  ~p~n",[Tree]),
   put(count, 1),
-	ModifiedTree = recurse(Tree),
-  erase(count),
-	(Debug band 2) > 0 andalso io:format("AST After:\n  ~p~n",[ModifiedTree]),
-	After = erl_syntax:revert_forms(ModifiedTree),
-	After.
+  try
+    ModifiedTree = recurse(Tree),
+    erase(count),
+    Res = erl_syntax:revert_forms(ModifiedTree),
+    (Debug band 2) > 0 andalso io:format("AST After:\n  ~p~n",[Res]),
+    Res
+  catch E:R:S ->
+    io:format(standard_error, "Error transforming AST: ~p\n  ~p\n", [R, S]),
+    erlang:raise(E,R,S)
+  end.
 
 
 %% @doc Return `Value' if first argument is one of: `[]', `false', `undefined'.
@@ -135,17 +141,29 @@ execute(_, V)                       -> V.
 recurse(Tree) ->
   update(case erl_syntax:subtrees(Tree) of
            []   -> Tree;
-           List -> erl_syntax:update_tree(Tree, [[recurse(Subtree) || Subtree <- Group] || Group <- List])
+           List -> erl_syntax:update_tree(Tree, [[recurse(Subtree) || Subtree <- Group]
+                                                 || Group <- List])
          end).
 
+%set_pos([H|T], Line) ->
+%  [set_pos(H, Line) | set_pos(T, Line)];
+%set_pos([], _Line) ->
+%  [];
+%set_pos(T, Line) when is_tuple(T), tuple_size(T) > 1 ->
+%  setelement(2, T, Line).
+  
 clause3(A,B,C, Line) ->
   erl_syntax:set_pos(erl_syntax:clause(A,B,C), Line).
 
-syn_atom(A, Line)          -> erl_syntax:set_pos(erl_syntax:atom(A), Line).
-syn_var(V, Line)           -> erl_syntax:set_pos(erl_syntax:variable(V), Line).
-syn_case(A, Clauses, Line) -> erl_syntax:set_pos(erl_syntax:case_expr(A, Clauses), Line).
-syn_block(Clauses,   Line) -> erl_syntax:set_pos(erl_syntax:block_expr(Clauses), Line).
-syn_match(A, B,      Line) -> erl_syntax:set_pos(erl_syntax:match_expr(A, B), Line).
+syn_atom (A, Line)          -> erl_syntax:set_pos(erl_syntax:atom(A), Line).
+syn_var  (V, Line)          -> erl_syntax:set_pos(erl_syntax:variable(V), Line).
+syn_if   (V,Then,Else,Line) -> erl_syntax:set_pos(erl_syntax:if_expr(
+                                                    [clause3([],[[V]],[Then],Line),
+                                                     clause3([],[[syn_atom('true',Line)]],[Else], Line)]),
+                                                  Line).
+syn_case (A, Clauses, Line) -> erl_syntax:set_pos(erl_syntax:case_expr(A, Clauses), Line).
+syn_block(Clauses,    Line) -> erl_syntax:set_pos(erl_syntax:block_expr(Clauses), Line).
+syn_match(A, B,       Line) -> erl_syntax:set_pos(erl_syntax:match_expr(A, B), Line).
 
 make_var_name({I,_} = Line) ->
   K = get(count),
@@ -161,34 +179,31 @@ update(Node) ->
           case erl_syntax:application_arguments(Node) of
             [A,B,C] ->
               %% This is a call to iif(A, B, C).
-              %% Replace it with a case expression:
+              %% Replace it with:
               %%   begin
               %%     _V = A,
-              %%     case _V of true -> B; _ -> C end
+              %%     if _V -> B; _ -> C end
               %%   end
               Var = make_var_name(Line),
               syn_block([
-                syn_match(Var, A, Line),
-                syn_case(Var,
-                  [clause3([syn_atom(true,Line)], [], [B], Line),
-                   clause3([syn_var('_',  Line)], [], [C], Line)],
-                  Line)],
-                Line);
+                  syn_match(Var, A, Line),
+                  syn_if(Var, B, C, Line)
+                ], Line);
             [A,B,C,D] ->
               %% This is a call to iif(A, B, C, D).
-              %% Replace it with a case expression:
+              %% Replace it with:
               %%   begin
               %%     _V = A,
               %%     case _V of B -> C; _ -> D end
               %%   end
               Var = make_var_name(Line),
               syn_block([
-                syn_match(Var, A, Line),
-                syn_case(Var,
-                  [clause3([B], [], [C], Line),
-                   clause3([erl_syntax:set_pos(erl_syntax:variable('_'), Line)], [], [D], Line)],
-                  Line)],
-                Line);
+                  syn_match(Var, A, Line), 
+                  syn_case(Var,
+                    [clause3([B],                  [], [C], Line),
+                     clause3([syn_var('_', Line)], [], [D], Line)],
+                    Line)
+                ], Line);
             _ ->
               Node
           end;
