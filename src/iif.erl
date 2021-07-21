@@ -1,6 +1,6 @@
 %%%-----------------------------------------------------------------------------
 %%% @doc Conditional expression functions
-%%% When using as a parse transform, include `{parse_transform, iif}' option.
+%%% When using this as a parse transform, include `{parse_transform,iif}' option.
 %%% In that case the following code transforms will be done:
 %%% ```
 %%% iif(A, B, C)   -> case A of true -> B; _ -> C end
@@ -8,6 +8,12 @@
 %%% ife(A,B)       -> case A of false -> B; undefined -> B; [] -> B; _ -> A end
 %%% ife(A,B,C)     -> case A of false -> B; undefined -> B; [] -> B; _ -> C end
 %%% '''
+%%% For debugging the AST of the resulting transform, use `iif_debug'
+%%% command-line option:
+%%% ```
+%%% erlc -Diif_debug=1 ...    % Prints AST before the transform
+%%% erlc -Diif_debug=2 ...    % Prints AST after the transform
+%%% erlc -Diif_debug[=3] ...  % Prints AST before/after the transform
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @end
 %%%-----------------------------------------------------------------------------
@@ -49,19 +55,21 @@
 
 %% `Opt' are compiler options passed from command line. E.g.:
 %% ```
-%% erlc -Ddebug=1 ...     ->  Opt = [{d,debug,1}|_]
-%% erlc -Ddebug   ...     ->  Opt = [{d,debug}|_]
-parse_transform(Ast, Opt) ->
-  Debug = case lists:keyfind(iif_debug, 1, Opt) of
-            {d,iif_debug}              -> 1;
+%% erlc -Diif_debug=N ...  ->  Opts = [{d,debug,N}|_]
+%% erlc -Diif_debug ...    ->  Opts = [{d,debug}|_]
+parse_transform(Ast, Opts) ->
+  Debug = case lists:keyfind(iif_debug, 2, Opts) of
+            {d,iif_debug}              -> 3;
             {d,iif_debug,N} when N > 0 -> N;
             _                          -> 0
           end,
-	Debug > 1 andalso io:format("AST Before:\n~1024p~n",[Ast]),
   Tree = erl_syntax:form_list(Ast),
+	(Debug band 1) > 0 andalso io:format("AST Before:\n  ~p~n",[Tree]),
+  put(count, 1),
 	ModifiedTree = recurse(Tree),
+  erase(count),
+	(Debug band 2) > 0 andalso io:format("AST After:\n  ~p~n",[ModifiedTree]),
 	After = erl_syntax:revert_forms(ModifiedTree),
-	Debug > 0 andalso io:format("AST After:\n~1024p~n",[After]),
 	After.
 
 
@@ -139,17 +147,26 @@ syn_case(A, Clauses, Line) -> erl_syntax:set_pos(erl_syntax:case_expr(A, Clauses
 syn_block(Clauses,   Line) -> erl_syntax:set_pos(erl_syntax:block_expr(Clauses), Line).
 syn_match(A, B,      Line) -> erl_syntax:set_pos(erl_syntax:match_expr(A, B), Line).
 
+make_var_name({I,_} = Line) ->
+  K = get(count),
+  put(count, K+1),
+  syn_var(list_to_atom(lists:append(["__I",integer_to_list(I),"_",integer_to_list(K)])), Line).
+
 update(Node) ->
  	case erl_syntax:type(Node) of
 		application ->
       case erl_syntax:application_operator(Node) of
-        {atom, {I,J} = Line, iif} ->
-          Var = syn_var(list_to_atom(lists:append(["__I",integer_to_list(I),"_",integer_to_list(J)])), Line),
+        {atom, Line, iif} ->
           %io:format("Application: Op=~p ~1024p\n", [erl_syntax:application_operator(Node), erl_syntax:application_arguments(Node)]),
           case erl_syntax:application_arguments(Node) of
             [A,B,C] ->
               %% This is a call to iif(A, B, C).
-              %% Replace it with a case expression: case A of true -> B; _ -> C end
+              %% Replace it with a case expression:
+              %%   begin
+              %%     _V = A,
+              %%     case _V of true -> B; _ -> C end
+              %%   end
+              Var = make_var_name(Line),
               syn_block([
                 syn_match(Var, A, Line),
                 syn_case(Var,
@@ -164,6 +181,7 @@ update(Node) ->
               %%     _V = A,
               %%     case _V of B -> C; _ -> D end
               %%   end
+              Var = make_var_name(Line),
               syn_block([
                 syn_match(Var, A, Line),
                 syn_case(Var,
@@ -174,13 +192,16 @@ update(Node) ->
             _ ->
               Node
           end;
-        {atom, {I,J} = Line, ife} ->
-          Var = syn_var(list_to_atom(lists:append(["__I",integer_to_list(I),"_",integer_to_list(J)])), Line),
+        {atom, Line, ife} ->
           case erl_syntax:application_arguments(Node) of
             [A,B] ->
               %% This is a call to ife(A, B).
               %% Replace it with a case expression:
-              %%  case A of false -> B; undefined -> B; [] -> B; _ -> A end
+              %%   begin
+              %%     _V = A,
+              %%     case _V of false -> B; undefined -> B; [] -> B; _ -> A end
+              %%   end
+              Var = make_var_name(Line),
               syn_block([
                 syn_match(Var, A, Line),
                 syn_case(Var,
@@ -193,7 +214,11 @@ update(Node) ->
             [A,B,C] ->
               %% This is a call to ife(A, B, C).
               %% Replace it with a case expression:
-              %%  case A of false -> B; undefined -> B; [] -> B; _ -> C end
+              %%   begin
+              %%     _V = A,
+              %%     case _V of false -> B; undefined -> B; [] -> B; _ -> C end
+              %%   end
+              Var = make_var_name(Line),
               syn_block([
                 syn_match(Var, A, Line),
                 syn_case(Var,
