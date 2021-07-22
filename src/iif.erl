@@ -1,10 +1,12 @@
 %%%-----------------------------------------------------------------------------
 %%% @doc Conditional expression functions
+%%%
 %%% This module exports a parse transform and implements several
 %%% condition-checking functions.
 %%%
-%%% When using this as a parse transform, include `{parse_transform,iif}' option.
-%%% In that case the following code transforms will be done:
+%%% When using this as a parse transform, include the `{parse_transform,iif}'
+%%% compiler option.  In this case for given expressions `A',`B',`C', and `D'
+%%% the following code transforms will be done:
 %%% ```
 %%% iif(A, B, C)   -> begin V = A, if V -> B; true -> C end end
 %%% iif(A,B,C,D)   -> case A of B -> C; _ -> D end
@@ -18,7 +20,7 @@
 %%% erlc -Diif_debug=2 ...    % Prints AST after the transform
 %%% erlc -Diif_debug[=3] ...  % Prints AST before/after the transform
 %%% '''
-%%% @author Serge Aleynikov <saleyn@gmail.com>
+%%% @author Serge Aleynikov <saleyn(at)gmail(dot)com>
 %%% @end
 %%%-----------------------------------------------------------------------------
 %%% Copyright (c) 2015 Serge Aleynikov
