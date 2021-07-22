@@ -56,10 +56,12 @@
 %%% External API
 %%%-----------------------------------------------------------------------------
 
-%% `Opt' are compiler options passed from command line. E.g.:
+%% @doc Parse transform to be used by providing `{parse_transform, iif}' option.
+%% `Opts' are compiler options passed from command line. E.g.:
 %% ```
 %% erlc -Diif_debug=N ...  ->  Opts = [{d,debug,N}|_]
 %% erlc -Diif_debug ...    ->  Opts = [{d,debug}|_]
+%% '''
 parse_transform(Ast, Opts) ->
   Debug = case lists:keyfind(iif_debug, 2, Opts) of
             {d,iif_debug}              -> 3;
