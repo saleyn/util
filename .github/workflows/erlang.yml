@@ -1,4 +1,4 @@
-name: Erlang CI
+name: build
 
 on:
   push:
