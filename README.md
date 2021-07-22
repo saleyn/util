@@ -1,8 +1,7 @@
 util
 ====
 
-[![build Actions Status]
-(https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg)](https://github.com/saleyn/util/actions/workflows/erlang.yml)
+[![build Actions Status](https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg)](https://github.com/saleyn/util/actions/workflows/erlang.yml)
 
 Erlang utility modules:
 
