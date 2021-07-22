@@ -17,7 +17,6 @@
 %%
 %% %CopyrightEnd%
 %%
--module(util_log_formatter).
 
 %% @doc Log formatter
 %% Derived from //kernel/logger/logger_formatter
@@ -36,25 +35,30 @@
 %%       unlimited (default: 50)</dd>
 %% </dl>
 %%
-%%   Report printing is modified to align keys in a report to the right.
+%% Report printing is modified to align keys in a report to the right.
 %%
-%%   Additional template formatting atoms:
-%%   <dl>
-%%     <dt>lev</dt>
-%%        <dd>prints "[X]" to the log to indicate the log level, where
-%%           `X` is the first capitalized letter of the log level.</dd>
-%%     <dt>'LEVEL'</dt><dd>same as 'level' but is printed in upper case.</dd>
-%%     <dt>modline</dt><dd>prints 'Module:Line' to the log.</dd>
-%%     <dt>regpid</dt><dd>prints:</dd>
-%%              <dd>`*' - if the registered name of the caller's pid
-%%                       matches caller's module name.</dd>
-%%              <dd>`RegisteredName' - of the calling process</dd>
-%%              <dd>`X.Y.Z' - pid of the caller with leading `0.' stripped.</dd>
+%% Additional template formatting atoms:
+%% <dl>
+%%   <dt>lev</dt>
+%%     <dd>prints "[X]" to the log to indicate the log level, where
+%%         `X` is the first capitalized letter of the log level.</dd>
+%%   <dt>LEVEL</dt><dd>same as 'level' but is printed in upper case.</dd>
+%%   <dt>modline</dt><dd>prints 'Module:Line' to the log.</dd>
+%%   <dt>regpid</dt><dd>prints:</dd>
+%%      <dl>
+%%            <dt>`*'</dt><dd>if the registered name of the caller's pid
+%%                     matches caller's module name.</dd>
+%%            <dt>`RegisteredName'</dt><dd>of the calling process</dd>
+%%            <dt>`X.Y.Z'</dt><dd>pid of the caller with leading `0.' stripped.</dd>
+%%      </dl>
 %%   <dt>regname</dt>
-%%              <dd>prints `<RegisteredName>' of the process or its pid
-%%                  if the process is not registered</dd>
-%%   </dl>
+%%      <dl>
+%%            <dd>prints `<RegisteredName>' of the process or its pid
+%%                if the process is not registered</dd>
+%%      </dl>
+%% </dl>
 %% @end
+-module(util_log_formatter).
 
 -export([format/2]).
 -export([check_config/1]).
