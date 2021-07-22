@@ -46,6 +46,9 @@ doc ebin:
 clean-docs:
 	rm -f doc/*.{css,html,png} doc/edoc-info
 
+publish:
+	$(REBAR) hex publish --replace
+
 github-docs:
 	@if git branch | grep -q gh-pages ; then \
 		git checkout gh-pages; \
