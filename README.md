@@ -27,4 +27,4 @@ Erlang utility modules:
 Documentation
 -------------
 
-See project documentation: http://saleyn.github.com/util
+See project documentation: http://saleyn.github.io/util
