@@ -24,30 +24,36 @@
 %%
 %% This implementation is copied from logger_fomatter.erl and adds the
 %% following features:
-%%   * config option: time_offset = none
-%%       when provided, no time zone offset will be written to the log.
-%%   * time_unit = second | millisecond | microsecond
-%%       controls time stamp granularity in the log.
-%%   * report_prefix = string()
-%%       inserts given prefix before `msg' for logging a report (default: "\n").
-%%   * report_term_depth = integer()
-%%       max depth of terms included in the reports. Use `infinity' for
-%%       unlimited (default: 50)
+%% <dl>
+%% <dt>time_offset = none</dt>
+%%   <dd>when provided, no time zone offset will be written to the log.</dd>
+%% <dt>time_unit = second | millisecond | microsecond</dt>
+%%   <dd>controls time stamp granularity in the log.</dd>
+%% <dt>report_prefix = string()</dt>
+%%   <dd>inserts given prefix before `msg' for logging a report (default: "\n").</dd>
+%% <dt>report_term_depth = integer()</dt>
+%%   <dd>max depth of terms included in the reports. Use `infinity' for
+%%       unlimited (default: 50)</dd>
+%% </dl>
 %%
 %%   Report printing is modified to align keys in a report to the right.
 %%
 %%   Additional template formatting atoms:
-%%   * lev - prints "[X]" to the log to indicate the log level, where
-%%           `X` is the first capitalized letter of the log level.
-%%   * 'LEVEL' - same as 'level' but is printed in upper case.
-%%   * modline - prints 'Module:Line' to the log.
-%%   * regpid  - prints:
-%%                 `*' - if the registered name of the caller's pid
-%%                       matches caller's module name.
-%%                 `RegisteredName' - of the calling process
-%%                 `X.Y.Z' - pid of the caller with leading `0.' stripped.
-%%   * regname - prints `<RegisteredName>' of the process or its pid
-%%               if the process is not registered
+%%   <dl>
+%%     <dt>lev</dt>
+%%        <dd>prints "[X]" to the log to indicate the log level, where
+%%           `X` is the first capitalized letter of the log level.</dd>
+%%     <dt>'LEVEL'</dt><dd>same as 'level' but is printed in upper case.</dd>
+%%     <dt>modline</dt><dd>prints 'Module:Line' to the log.</dd>
+%%     <dt>regpid</dt><dd>prints:</dd>
+%%              <dd>`*' - if the registered name of the caller's pid
+%%                       matches caller's module name.</dd>
+%%              <dd>`RegisteredName' - of the calling process</dd>
+%%              <dd>`X.Y.Z' - pid of the caller with leading `0.' stripped.</dd>
+%%   <dt>regname</dt>
+%%              <dd>prints `<RegisteredName>' of the process or its pid
+%%                  if the process is not registered</dd>
+%%   </dl>
 %% @end
 
 -export([format/2]).
@@ -57,6 +63,7 @@
 
 %%%-----------------------------------------------------------------
 %%% Types
+%%%-----------------------------------------------------------------
 -type config() :: #{chars_limit       => pos_integer() | unlimited,
                     depth             => pos_integer() | unlimited,
                     legacy_header     => boolean(),
@@ -77,6 +84,7 @@
 
 %%%-----------------------------------------------------------------
 %%% API
+%%%-----------------------------------------------------------------
 -spec format(LogEvent,Config) -> unicode:chardata() when
       LogEvent :: logger:log_event(),
       Config :: config().
