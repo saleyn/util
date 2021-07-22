@@ -17,6 +17,7 @@
 %%% erlc -Diif_debug=1 ...    % Prints AST before the transform
 %%% erlc -Diif_debug=2 ...    % Prints AST after the transform
 %%% erlc -Diif_debug[=3] ...  % Prints AST before/after the transform
+%%% '''
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @end
 %%%-----------------------------------------------------------------------------

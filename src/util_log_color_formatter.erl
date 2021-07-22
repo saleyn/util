@@ -1,6 +1,6 @@
 %% @doc
 %% Implementation of coloring handler for the Erlang's logger.
-%% @see https://github.com/hauleth/logger_colorful
+%% See [https://github.com/hauleth/logger_colorful].
 %%
 %% == Options ==
 %%

@@ -36,8 +36,6 @@ subst_env_path(OsPath, Bindings) when is_list(Bindings) ->
     replace_env_vars(OsPath, Bindings).
 
 %%------------------------------------------------------------------------
-%% @spec (OsPath) -> Path::string()
-%%         OsPath = string() | binary()
 %% @doc Perform replacement of environment variable values in the OsPath.
 %% ```
 %% Example:
@@ -54,10 +52,6 @@ replace_env_vars(OsPath) ->
 
 
 %%------------------------------------------------------------------------
-%% @spec (OsPath, Bindings) -> Path::string()
-%%          OsPath   = string() | binary()
-%%          Bindings = [{Name, Value::string()}]
-%%          Name     = atom() | string()
 %% @doc Perform replacement of environment variable values in the OsPath.
 %%      This function also allows to provide a list of `Bindings' that
 %%      override the environment (they are checked before environment
