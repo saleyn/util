@@ -1,12 +1,15 @@
 %%%-----------------------------------------------------------------------------
 %%% @doc Conditional expression functions
+%%% This module exports a parse transform and implements several
+%%% condition-checking functions.
+%%%
 %%% When using this as a parse transform, include `{parse_transform,iif}' option.
 %%% In that case the following code transforms will be done:
 %%% ```
-%%% iif(A, B, C)   -> case A of true -> B; _ -> C end
+%%% iif(A, B, C)   -> begin V = A, if V -> B; true -> C end end
 %%% iif(A,B,C,D)   -> case A of B -> C; _ -> D end
-%%% ife(A,B)       -> case A of false -> B; undefined -> B; [] -> B; _ -> A end
-%%% ife(A,B,C)     -> case A of false -> B; undefined -> B; [] -> B; _ -> C end
+%%% nvl(A,B)       -> case A of false -> B; undefined -> B; [] -> B; _ -> A end
+%%% nvl(A,B,C)     -> case A of false -> B; undefined -> B; [] -> B; _ -> C end
 %%% '''
 %%% For debugging the AST of the resulting transform, use `iif_debug'
 %%% command-line option:
@@ -207,7 +210,7 @@ update(Node) ->
             _ ->
               Node
           end;
-        {atom, Line, ife} ->
+        {atom, Line, nvl} ->
           case erl_syntax:application_arguments(Node) of
             [A,B] ->
               %% This is a call to ife(A, B).

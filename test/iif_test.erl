@@ -7,8 +7,8 @@
 t() ->
   A     = is_tuple(erlang:timestamp()),
   ok    = iif(A, ok, error),
-  ok    = ife(false, ok),
-  error = ife(true, ok, error).
+  ok    = nvl(false, ok),
+  error = nvl(true, ok, error).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -28,12 +28,12 @@ iif_test() ->
   ?assertEqual(ok,    iif(1, 1, ok, error)),
   ?assertEqual(error, iif(1, 2, ok, error)).
 
-ife_test() ->
-  ?assertEqual(ok,    ife(false, ok)),
-  ?assertEqual(true,  ife(true,  ok)),
-  ?assertEqual(1,     ife(1,     ok)),
-  ?assertEqual(error, ife(true,  ok, error)),
-  ?assertEqual(ok,    ife(false, ok, error)),
-  ?assertEqual(error, ife(1,     ok, error)).
+nvl_test() ->
+  ?assertEqual(ok,    nvl(false, ok)),
+  ?assertEqual(true,  nvl(true,  ok)),
+  ?assertEqual(1,     nvl(1,     ok)),
+  ?assertEqual(error, nvl(true,  ok, error)),
+  ?assertEqual(ok,    nvl(false, ok, error)),
+  ?assertEqual(error, nvl(1,     ok, error)).
 
 -endif. 
