@@ -9,7 +9,8 @@ t() ->
   A     = is_tuple(erlang:timestamp()),
   ok    = iif(A, ok, error),
   ok    = nvl(false, ok),
-  error = nvl(true, ok, error).
+  error = nvl(true, ok, error),
+  "Test: 1, ok" = sprintf("Test: ~w, ~s", [1, "ok"]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
