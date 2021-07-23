@@ -1,6 +1,7 @@
 -module(iif_test).
 
 -compile({parse_transform, iif}).
+-compile({parse_transform, sprintf}).
 
 -export([t/0]).
 

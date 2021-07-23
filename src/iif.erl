@@ -13,11 +13,6 @@
 %%% nvl(A,B)       -> case A of false -> B; undefined -> B; [] -> B; _ -> A end
 %%% nvl(A,B,C)     -> case A of false -> B; undefined -> B; [] -> B; _ -> C end
 %%% '''
-%%% Also, unless `-Dsprintf=no|none|false|0' is given to the compiler, this
-%%% transform will be applied:
-%%% ```
-%%% sprintf(Fmt, Args) -> lists:flatten(io_lib:format(Fmt, Args))
-%%% '''
 %%% For debugging the AST of the resulting transform, use `iif_debug'
 %%% command-line option:
 %%% ```
@@ -76,15 +71,7 @@ parse_transform(Ast, Opts) ->
             {d,iif_debug,N} when N > 0 -> N;
             _                          -> 0
           end,
-  SPOpt = case lists:keyfind(sprintf, 2, Opts) of
-            {d,sprintf} ->
-              true;
-            {d,sprintf,I} when I == 0; I == false; I==no; I==none ->
-              false;
-            _ ->
-              true
-          end,
-  Args = #{sprintf => SPOpt},
+  Args = #{debug => Debug},
 	(Debug band 1) > 0 andalso io:format("AST:\n  ~p~n",[Ast]),
   Tree = erl_syntax:form_list(Ast),
 	(Debug band 4) > 0 andalso io:format("AST Tree:\n  ~p~n",[Tree]),
@@ -183,9 +170,6 @@ syn_atom(A)            -> syn_atom(A, get(line)).
 syn_atom(A, Line)      -> erl_syntax:set_pos(erl_syntax:atom(A), Line).
 syn_var (V)            -> syn_var(V, get(line)).
 syn_var (V, Line)      -> erl_syntax:set_pos(erl_syntax:variable(V), Line).
-syn_call(M,F,A)        -> L=get(line),
-                          erl_syntax:set_pos(
-                            erl_syntax:application(syn_atom(M, L), syn_atom(F, L), A), L).
 syn_if  (V,Then,Else)  -> L=get(line), erl_syntax:set_pos(erl_syntax:if_expr(
                                                     [clause3([],[[V]],[Then],L),
                                                      clause3([],[[syn_atom('true',L)]],[Else], L)]),
@@ -200,7 +184,7 @@ make_var_name({I,_} = Line) ->
   put(count, K+1),
   syn_var(list_to_atom(lists:append(["__I",integer_to_list(I),"_",integer_to_list(K)])), Line).
 
-update(Node, #{sprintf := EnableSPrintf}) ->
+update(Node, _Opts) ->
  	case erl_syntax:type(Node) of
 		application ->
       case erl_syntax:application_operator(Node) of
@@ -269,17 +253,6 @@ update(Node, #{sprintf := EnableSPrintf}) ->
                    clause3([syn_nil()],          [],[B]),
                    clause3([syn_var('_')],       [],[C])])
               ]);
-            _ ->
-              Node
-          end;
-        {atom, Line, sprintf} when EnableSPrintf ->
-          put(line, Line),
-          case erl_syntax:application_arguments(Node) of
-            [A,B] ->
-              %% This is a call to sprintf(Fmt, Args).
-              %% Replace it with:
-              %%   lists:flatten(io_libs:format(Fmt, Args)
-              syn_call(lists, flatten, [syn_call(io_lib, format, [A,B])]);
             _ ->
               Node
           end;
