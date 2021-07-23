@@ -36,4 +36,7 @@ nvl_test() ->
   ?assertEqual(ok,    nvl(false, ok, error)),
   ?assertEqual(error, nvl(1,     ok, error)).
 
+sprintf_test() ->
+  ?assertEqual("Test: 1, ok", sprintf("Test: ~w, ~s", [1, "ok"])).
+
 -endif. 

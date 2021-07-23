@@ -13,6 +13,11 @@
 %%% nvl(A,B)       -> case A of false -> B; undefined -> B; [] -> B; _ -> A end
 %%% nvl(A,B,C)     -> case A of false -> B; undefined -> B; [] -> B; _ -> C end
 %%% '''
+%%% Also, unless `-Dsprintf=no|none|false|0' is given to the compiler, this
+%%% transform will be applied:
+%%% ```
+%%% sprintf(Fmt, Args) -> lists:flatten(io_lib:format(Fmt, Args))
+%%% '''
 %%% For debugging the AST of the resulting transform, use `iif_debug'
 %%% command-line option:
 %%% ```
@@ -71,12 +76,22 @@ parse_transform(Ast, Opts) ->
             {d,iif_debug,N} when N > 0 -> N;
             _                          -> 0
           end,
+  SPOpt = case lists:keyfind(sprintf, 2, Opts) of
+            {d,sprintf} ->
+              true;
+            {d,sprintf,I} when I == 0; I == false; I==no; I==none ->
+              false;
+            _ ->
+              true
+          end,
+  Args = #{sprintf => SPOpt},
 	(Debug band 1) > 0 andalso io:format("AST:\n  ~p~n",[Ast]),
   Tree = erl_syntax:form_list(Ast),
 	(Debug band 4) > 0 andalso io:format("AST Tree:\n  ~p~n",[Tree]),
   put(count, 1),
   try
-    ModifiedTree = recurse(Tree),
+    ModifiedTree = recurse(Tree, Args),
+    erase(line),
     erase(count),
     Res = erl_syntax:revert_forms(ModifiedTree),
     (Debug band 2) > 0 andalso io:format("AST After:\n  ~p~n",[Res]),
@@ -146,12 +161,13 @@ execute(V, F) when is_function(F,1) -> F(V);
 execute(_, V)                       -> V.
 
 %% Parse transform support
-recurse(Tree) ->
+recurse(Tree, Opts) ->
   update(case erl_syntax:subtrees(Tree) of
            []   -> Tree;
-           List -> erl_syntax:update_tree(Tree, [[recurse(Subtree) || Subtree <- Group]
+           List -> erl_syntax:update_tree(Tree, [[recurse(Subtree, Opts) || Subtree <- Group]
                                                  || Group <- List])
-         end).
+         end,
+         Opts).
 
 %set_pos([H|T], Line) ->
 %  [set_pos(H, Line) | set_pos(T, Line)];
@@ -160,29 +176,36 @@ recurse(Tree) ->
 %set_pos(T, Line) when is_tuple(T), tuple_size(T) > 1 ->
 %  setelement(2, T, Line).
   
-clause3(A,B,C, Line) ->
-  erl_syntax:set_pos(erl_syntax:clause(A,B,C), Line).
+clause3(A,B,C)         -> clause3(A,B,C,get(line)).
+clause3(A,B,C, Line)   -> erl_syntax:set_pos(erl_syntax:clause(A,B,C), Line).
 
-syn_atom (A, Line)          -> erl_syntax:set_pos(erl_syntax:atom(A), Line).
-syn_var  (V, Line)          -> erl_syntax:set_pos(erl_syntax:variable(V), Line).
-syn_if   (V,Then,Else,Line) -> erl_syntax:set_pos(erl_syntax:if_expr(
-                                                    [clause3([],[[V]],[Then],Line),
-                                                     clause3([],[[syn_atom('true',Line)]],[Else], Line)]),
-                                                  Line).
-syn_case (A, Clauses, Line) -> erl_syntax:set_pos(erl_syntax:case_expr(A, Clauses), Line).
-syn_block(Clauses,    Line) -> erl_syntax:set_pos(erl_syntax:block_expr(Clauses), Line).
-syn_match(A, B,       Line) -> erl_syntax:set_pos(erl_syntax:match_expr(A, B), Line).
+syn_atom(A)            -> syn_atom(A, get(line)).
+syn_atom(A, Line)      -> erl_syntax:set_pos(erl_syntax:atom(A), Line).
+syn_var (V)            -> syn_var(V, get(line)).
+syn_var (V, Line)      -> erl_syntax:set_pos(erl_syntax:variable(V), Line).
+syn_call(M,F,A)        -> L=get(line),
+                          erl_syntax:set_pos(
+                            erl_syntax:application(syn_atom(M, L), syn_atom(F, L), A), L).
+syn_if  (V,Then,Else)  -> L=get(line), erl_syntax:set_pos(erl_syntax:if_expr(
+                                                    [clause3([],[[V]],[Then],L),
+                                                     clause3([],[[syn_atom('true',L)]],[Else], L)]),
+                                                  L).
+syn_case (A, Clauses)  -> erl_syntax:set_pos(erl_syntax:case_expr(A, Clauses), get(line)).
+syn_block(Clauses)     -> erl_syntax:set_pos(erl_syntax:block_expr(Clauses), get(line)).
+syn_match(A, B)        -> erl_syntax:set_pos(erl_syntax:match_expr(A, B), get(line)).
+syn_nil()              -> erl_syntax:set_pos(erl_syntax:nil(), get(line)).
 
 make_var_name({I,_} = Line) ->
   K = get(count),
   put(count, K+1),
   syn_var(list_to_atom(lists:append(["__I",integer_to_list(I),"_",integer_to_list(K)])), Line).
 
-update(Node) ->
+update(Node, #{sprintf := EnableSPrintf}) ->
  	case erl_syntax:type(Node) of
 		application ->
       case erl_syntax:application_operator(Node) of
         {atom, Line, iif} ->
+          put(line, Line),
           %io:format("Application: Op=~p ~1024p\n", [erl_syntax:application_operator(Node), erl_syntax:application_arguments(Node)]),
           case erl_syntax:application_arguments(Node) of
             [A,B,C] ->
@@ -193,10 +216,7 @@ update(Node) ->
               %%     if _V -> B; _ -> C end
               %%   end
               Var = make_var_name(Line),
-              syn_block([
-                  syn_match(Var, A, Line),
-                  syn_if(Var, B, C, Line)
-                ], Line);
+              syn_block([syn_match(Var, A), syn_if(Var, B, C)]);
             [A,B,C,D] ->
               %% This is a call to iif(A, B, C, D).
               %% Replace it with:
@@ -206,16 +226,16 @@ update(Node) ->
               %%   end
               Var = make_var_name(Line),
               syn_block([
-                  syn_match(Var, A, Line), 
+                  syn_match(Var, A), 
                   syn_case(Var,
-                    [clause3([B],                  [], [C], Line),
-                     clause3([syn_var('_', Line)], [], [D], Line)],
-                    Line)
-                ], Line);
+                    [clause3([B],            [], [C]),
+                     clause3([syn_var('_')], [], [D])])
+                ]);
             _ ->
               Node
           end;
         {atom, Line, nvl} ->
+          put(line, Line),
           case erl_syntax:application_arguments(Node) of
             [A,B] ->
               %% This is a call to ife(A, B).
@@ -226,14 +246,13 @@ update(Node) ->
               %%   end
               Var = make_var_name(Line),
               syn_block([
-                syn_match(Var, A, Line),
+                syn_match(Var, A),
                 syn_case(Var,
-                  [clause3([syn_atom(false,     Line)],[],[B], Line),
-                   clause3([syn_atom(undefined, Line)],[],[B], Line),
-                   clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
-                   clause3([syn_var('_',        Line)],[],[A], Line)],
-                  Line)],
-                Line);
+                  [clause3([syn_atom(false)    ],[],[B]),
+                   clause3([syn_atom(undefined)],[],[B]),
+                   clause3([syn_nil()],          [],[B]),
+                   clause3([syn_var('_')],       [],[A])])
+              ]);
             [A,B,C] ->
               %% This is a call to ife(A, B, C).
               %% Replace it with a case expression:
@@ -243,14 +262,24 @@ update(Node) ->
               %%   end
               Var = make_var_name(Line),
               syn_block([
-                syn_match(Var, A, Line),
+                syn_match(Var, A),
                 syn_case(Var,
-                  [clause3([syn_atom(false,     Line)],[],[B], Line),
-                   clause3([syn_atom(undefined, Line)],[],[B], Line),
-                   clause3([erl_syntax:set_pos(erl_syntax:nil(),Line)], [], [B], Line),
-                   clause3([syn_var('_',        Line)],[],[C], Line)],
-                  Line)],
-                Line);
+                  [clause3([syn_atom(false)    ],[],[B]),
+                   clause3([syn_atom(undefined)],[],[B]),
+                   clause3([syn_nil()],          [],[B]),
+                   clause3([syn_var('_')],       [],[C])])
+              ]);
+            _ ->
+              Node
+          end;
+        {atom, Line, sprintf} when EnableSPrintf ->
+          put(line, Line),
+          case erl_syntax:application_arguments(Node) of
+            [A,B] ->
+              %% This is a call to sprintf(Fmt, Args).
+              %% Replace it with:
+              %%   lists:flatten(io_libs:format(Fmt, Args)
+              syn_call(lists, flatten, [syn_call(io_lib, format, [A,B])]);
             _ ->
               Node
           end;
