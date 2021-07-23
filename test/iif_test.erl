@@ -1,7 +1,6 @@
 -module(iif_test).
 
 -compile({parse_transform, iif}).
--compile({parse_transform, sprintf}).
 
 -export([t/0]).
 
@@ -9,8 +8,7 @@ t() ->
   A     = is_tuple(erlang:timestamp()),
   ok    = iif(A, ok, error),
   ok    = nvl(false, ok),
-  error = nvl(true, ok, error),
-  "Test: 1, ok" = sprintf("Test: ~w, ~s", [1, "ok"]).
+  error = nvl(true, ok, error).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -37,8 +35,5 @@ nvl_test() ->
   ?assertEqual(error, nvl(true,  ok, error)),
   ?assertEqual(ok,    nvl(false, ok, error)),
   ?assertEqual(error, nvl(1,     ok, error)).
-
-sprintf_test() ->
-  ?assertEqual("Test: 1, ok", sprintf("Test: ~w, ~s", [1, "ok"])).
 
 -endif. 
