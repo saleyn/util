@@ -4,6 +4,7 @@
 %%% Use `{parse_transform,sprintf}' compiler's option to use this transform.
 %%% ```
 %%% sprintf(Fmt, Args) -> lists:flatten(io_lib:format(Fmt, Args))
+%%% i2l(Int)           -> integer_to_list(Int)
 %%% '''
 %%% @author Serge Aleynikov <saleyn(at)gmail(dot)com>
 %%% @end
@@ -33,7 +34,7 @@
 
 % If using this module as a parse transform, we need to export the following:
 -export([parse_transform/2]).
--export([to_string/1, to_string/2, reset_float_fmt/0, set_float_fmt/1, get_float_fmt/0]).
+-export([str/1, str/2, reset_float_fmt/0, set_float_fmt/1, get_float_fmt/0]).
 
 %%%-----------------------------------------------------------------------------
 %%% External API
@@ -46,21 +47,21 @@ parse_transform(Ast, _Opts) ->
   erase(line),
   erl_syntax:revert_forms(ModifiedTree).
 
--spec to_string(term()) -> string().
-to_string(I) when is_integer(I) -> integer_to_list(I);
-to_string(I) when is_binary(I)  -> binary_to_list(I);
-to_string(I) when is_float(I)   -> to_string(I, get_float_fmt());
-to_string(I) when is_atom(I)    -> atom_to_list(I);
-to_string(I) when is_list(I)    ->
+-spec str(term()) -> string().
+str(I) when is_integer(I) -> integer_to_list(I);
+str(I) when is_binary(I)  -> binary_to_list(I);
+str(I) when is_float(I)   -> str(I, get_float_fmt());
+str(I) when is_atom(I)    -> atom_to_list(I);
+str(I) when is_list(I)    ->
   try
     lists:flatten(io_lib:format("~s", [I]))
   catch _:_ ->
     lists:flatten(io_lib:format("~p", [I]))
   end;
-to_string(I) ->
+str(I) ->
   lists:flatten(io_lib:format("~p", [I])).
 
-to_string(I, Opts) when is_float(I) ->
+str(I, Opts) when is_float(I) ->
   float_to_list(I, Opts).
 
 %% @doc Erase custom float format from the process dictionary
@@ -90,29 +91,38 @@ syn_call(M,F,A)   -> L=get(line),
                      erl_syntax:set_pos(
                        erl_syntax:application(syn_atom(M, L), syn_atom(F, L), A), L).
 
-update(Node) ->
- 	case erl_syntax:type(Node) of
-		application ->
-      case erl_syntax:application_operator(Node) of
-        {atom, Line, sprintf} ->
-          put(line, Line),
-          case erl_syntax:application_arguments(Node) of
-            [A,B] ->
-              %% This is a call to sprintf(Fmt, Args).
-              %% Replace it with:
-              %%   lists:flatten(io_libs:format(Fmt, Args)
-              syn_call(lists, flatten, [syn_call(io_lib, format, [A,B])]);
-            [A] ->
-              %% This is a call to sprintf(Arg).
-              %% Replace it with:
-              %%   sprintf:to_string(Args)
-              syn_call(sprintf, to_string, [A]);
-            _ ->
-              Node
-          end;
-        _ ->
-          Node
-      end;
-		_ ->
-			Node
-	end.
+update(Node)               -> update2(Node, erl_syntax:type(Node)).
+update2(Node, application) -> update3(Node, erl_syntax:application_operator(Node));
+update2(Node, _)           -> Node.
+
+update3(Node, {atom, Line, sprintf}) ->
+  %% Replace sprintf(A, B) -> lists:flatten(io_lib:format(A, B)).
+  %%         sprintf(A)    -> sprintf:str(A).
+  put(line, Line),
+  case erl_syntax:application_arguments(Node) of
+    [A,B] ->
+      %% This is a call to sprintf(Fmt, Args).
+      %% Replace it with:
+      %%   lists:flatten(io_libs:format(Fmt, Args)
+      syn_call(lists, flatten, [syn_call(io_lib, format, [A,B])]);
+    [A] ->
+      %% This is a call to sprintf(Arg).
+      %% Replace it with:
+      %%   sprintf:str(Args)
+      syn_call(sprintf, str, [A]);
+    _ ->
+      Node
+  end;
+update3(Node, {atom, Line, i2l}) ->
+  %% Replace i2l(A) -> integer_to_list(A).
+  put(line, Line),
+  case erl_syntax:application_arguments(Node) of
+    [A] ->
+      erl_syntax:set_pos(
+        erl_syntax:application(syn_atom(integer_to_list, Line), [A]),
+        Line);
+    _ ->
+      Node
+  end;
+update3(Node, _) ->
+  Node.
