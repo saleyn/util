@@ -5,6 +5,8 @@
 %%% ```
 %%% sprintf(Fmt, Args) -> lists:flatten(io_lib:format(Fmt, Args))
 %%% i2l(Int)           -> integer_to_list(Int)
+%%% b2l(Bin)           -> binary_to_list(Bin)
+%%% str(Term)          -> sprintf:str(Term)
 %%% '''
 %%% @author Serge Aleynikov <saleyn(at)gmail(dot)com>
 %%% @end
@@ -61,6 +63,8 @@ str(I) when is_list(I)    ->
 str(I) ->
   lists:flatten(io_lib:format("~p", [I])).
 
+str(I, undefined) when is_float(I) ->
+  float_to_list(I);
 str(I, Opts) when is_float(I) ->
   float_to_list(I, Opts).
 
@@ -68,8 +72,9 @@ str(I, Opts) when is_float(I) ->
 reset_float_fmt()   -> erase(float_fmt).
 
 %% @doc Store custom float format in the process dictionary
+%%      Return previously stored format
 %% @see //kernel/erlang/float_to_list/2
-set_float_fmt(Opts) -> put(float_fmt, Opts).
+set_float_fmt(Opts) -> V=get(float_fmt), put(float_fmt, Opts), V.
 
 %% @doc Get custom float format from the process dictionary
 get_float_fmt()     -> get(float_fmt).
@@ -87,15 +92,21 @@ recurse(Tree) ->
          end).
 
 syn_atom(A, Line) -> erl_syntax:set_pos(erl_syntax:atom(A), Line).
+syn_call(F,A)     -> L=get(line),
+                     erl_syntax:set_pos(
+                       erl_syntax:application(syn_atom(F, L), A), L).
 syn_call(M,F,A)   -> L=get(line),
                      erl_syntax:set_pos(
                        erl_syntax:application(syn_atom(M, L), syn_atom(F, L), A), L).
 
-update(Node)               -> update2(Node, erl_syntax:type(Node)).
-update2(Node, application) -> update3(Node, erl_syntax:application_operator(Node));
-update2(Node, _)           -> Node.
+update(Node)                     -> update2(Node, erl_syntax:type(Node)).
+update2(Node, application)       -> update3(Node, erl_syntax:application_operator(Node));
+update2(Node, _)                 -> Node.
 
-update3(Node, {atom, Line, sprintf}) ->
+update3(Node, {atom, Line, Fun}) -> update4(Fun, Node, Line);
+update3(Node, _)                 -> Node.
+
+update4(sprintf, Node, Line) ->
   %% Replace sprintf(A, B) -> lists:flatten(io_lib:format(A, B)).
   %%         sprintf(A)    -> sprintf:str(A).
   put(line, Line),
@@ -113,16 +124,26 @@ update3(Node, {atom, Line, sprintf}) ->
     _ ->
       Node
   end;
-update3(Node, {atom, Line, i2l}) ->
+update4(i2l, Node, Line) ->
   %% Replace i2l(A) -> integer_to_list(A).
   put(line, Line),
   case erl_syntax:application_arguments(Node) of
-    [A] ->
-      erl_syntax:set_pos(
-        erl_syntax:application(syn_atom(integer_to_list, Line), [A]),
-        Line);
-    _ ->
-      Node
+    [A] -> syn_call(integer_to_list, [A]);
+    _   -> Node
   end;
-update3(Node, _) ->
+update4(b2l, Node, Line) ->
+  %% Replace b2l(A) -> binary_to_list(A).
+  put(line, Line),
+  case erl_syntax:application_arguments(Node) of
+    [A] -> syn_call(binary_to_list, [A]);
+    _   -> Node
+  end;
+update4(str, Node, Line) ->
+  %% Replace str(A) -> sprintf:str(A).
+  put(line, Line),
+  case erl_syntax:application_arguments(Node) of
+    [A] -> syn_call(sprintf, str, [A]);
+    _   -> Node
+  end;
+update4(_, Node, _) ->
   Node.
