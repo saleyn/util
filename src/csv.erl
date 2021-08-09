@@ -302,8 +302,17 @@ scan_mlt2([], Acc) ->
   Acc.
 
 %%------------------------------------------------------------------------------
-%% @doc Load CSV data from File to MySQL database
-%% NOTE: this function requires https://github.com/mysql-otp/mysql-otp.git
+%% @doc Load CSV data from a `File' to a `MySQL' database.
+%% `Tab' is the name of a table where to load data.  `MySqlPid' is the pid of a
+%% MySQL database connection returned by `mysql:start_link/1'.
+%% The data from the file is loaded atomically - i.e. either the whole file
+%% loading succeeds or fails.  This is accomplished by first loading data to a
+%% temporary table, and then using the database's ACID properties to replace the
+%% target table with the temporary table.
+%%
+%% Presently the table is entirely replaced with the data from file.
+%%
+%% NOTE: this function requires [https://github.com/mysql-otp/mysql-otp.git]
 %% @end
 %%------------------------------------------------------------------------------
 -spec load_to_mysql(File::string(), Tab::string(),
