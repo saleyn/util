@@ -20,7 +20,7 @@ Erlang utility modules:
 | pcap                  | reader/writer of packet capture files (tcpdump, wireshark)                           |
 | restrict_remsh_mod    | to be used for remote shells to restrict `q()`, `init:stop()`, `erlang:halt()`, etc. |
 | smtp                  | SMTP client supporting tcp and ssl protocols                                         |
-| sntp                  | simple SNMP client                                                                   |
+| sntp                  | simple SNTP client                                                                   |
 | stringx               | miscelaneous string functions                                                        |
 | user_default          | extending shell with useful debugging and profiling commands                         |
 
