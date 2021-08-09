@@ -14,11 +14,50 @@
 -export([parse/1, parse/2, parse_line/1]).
 -export([max_field_lengths/2, guess_data_types/2, guess_data_type/1, load_to_mysql/4]).
 
+-type load_options() ::
+  [{batch_size, integer()}|
+   {blob_size,  integer()}|
+   {save_create_sql_to_file, string()}|
+   {guess_types,boolean()}|
+   {guess_limit_rows, integer()}|
+   {max_nulls_pcnt, float()}|
+   {primary_key,PKColumns::binary()|[binary()|list()]}|
+   {encoding,   string()|atom()}|
+   {verbose,    boolean()}].
+%% Options for loading data to a database.
+%% <dl>
+%% <dt>{batch_size, Size}</dt>
+%%   <dd>Number of records per SQL insert/update/replace call</dd>
+%% <dt>{blob_size, Size}</dt>
+%%   <dd>Threshold in number of bytes at which a VARCHAR field is defined as BLOB</dd>
+%% <dt>{save_create_sql_to_file, Filename::string()}</dt>
+%%   <dd>Save CREATE TABLE sql statement to a file</dd>
+%% <dt>guess_types</dt>
+%%   <dd>When specified, the function will try to guess the type of data in columns
+%%       instead of treating all data as string fields. The possible data typed guessed:
+%%       integer, float, date, datetime, number, string</dd>
+%% <dt>{guess_limit_rows, Limit}</dt>
+%%   <dd>Limit the number of rows for guessing the column data types</dd>
+%% <dt>{max_nulls_pcnt, Percent}</dt>
+%%   <dd>A percentage threshold of permissible NULLs in a column (0-100), above which
+%%       the column data type is forced to be treated as `string'</dd>
+%% <dt>{primary_key, Fields}</dt>
+%%   <dd>Names of primary key fields in the created table</dd>
+%% <dt>{encoding, Encoding}</dt>
+%%   <dd>The name of the encoding to use for storing data. For the list of permissible
+%%       values [see this
+%%       link](https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html)</dd>
+%% <dt>verbose</dt>
+%%   <dd>Print additional details to stdout</dd>
+%% </dl>
+-export_type([load_options/0]).
+
 %%------------------------------------------------------------------------------
 %% CSV parsing
 %%------------------------------------------------------------------------------
--spec parse(string()) -> [[string()]].
-parse(File) when is_list(File) ->
+%% @doc Parse a CSV file using default options.
+-spec parse(string()) -> [[binary()]].
+parse(File) when is_list(File); is_binary(File) ->
   parse(File, []).
 
 %%------------------------------------------------------------------------------
@@ -30,10 +69,15 @@ parse(File) when is_list(File) ->
 %% dropped, and if a row has fewer columns, empty columns will be added.</dd>
 %%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
 %%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
+%%   <dt>binary</dt><dd>Return fields as binaries (default)</dd>
+%%   <dt>list</dt><dd>Return fields as lists</dd>
 %% </dl>
 %% @end
 %%------------------------------------------------------------------------------
--spec parse(string(), [fix_lengths | {open, Opts::list()}]) -> [[string()]].
+-spec parse(binary()|string(), [fix_lengths | binary | list |
+                                {open, Opts::list()}]) -> [[string()]].
+parse(File, Opts) when is_binary(File) ->
+  parse(binary_to_list(File), Opts);
 parse(File, Opts) when is_list(File), is_list(Opts) ->
   FileOpts = proplists:get_value(open,   Opts, []),
   Mode     = case proplists:get_value(binary, Opts,  true) andalso
@@ -88,6 +132,8 @@ trim_eol(N, Line) when N < byte_size(Line) ->
 trim_eol(N, Line) ->
   byte_size(Line) - N.
 
+%% @doc Parse a CSV line
+-spec parse_line(binary()) -> list().
 parse_line(Line) ->
   parse_line(1, Line).
 
@@ -162,14 +208,22 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
     end,
   MLens(CsvL, []).
 
-guess_data_types(HasHeaders, CSV) ->
-  guess_data_types(HasHeaders, CSV, 20.0, 1_000_000).
-
 %%------------------------------------------------------------------------------
 %% @doc Guess data types of fields in the given CSV list of rows obtained by
-%%      parsing a CSV file with `parse_csv_file(File,[fix_lengths])'.
+%%      parsing a CSV file with `parse(File,[fix_lengths])'.
+%%      The function returns a list of tuples `{Type, MaxFieldLen, NumOfNulls}',
+%%      where the `Type' is a field type, `MaxFieldLen' is the max length of
+%%      data in this column, and `NumOfNulls' is the number of rows with empty
+%%      values in this column.
 %% @end
 %%------------------------------------------------------------------------------
+-spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::[binary()]]) ->
+        {Type::string|integer|number|float|date|datetime,
+         MaxFieldLen::integer(),
+         NumOfNulls::integer()}.
+guess_data_types(HasHeaders, CSV) when is_boolean(HasHeaders), is_list(CSV) ->
+  guess_data_types(HasHeaders, CSV, 20.0, 1_000_000).
+
 -spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::list()], number(), integer()) ->
         {[{FieldType::string|date|datetime|integer|float|number,
            MaxFieldLength::integer(),
@@ -253,15 +307,7 @@ scan_mlt2([], Acc) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec load_to_mysql(File::string(), Tab::string(),
-                    MySqlPid::pid(), Opts::[{batch_size, integer()}|
-                                            {blob_size,  integer()}|
-                                            {save_create_sql_to_file, string()}|
-                                            {guess_types,boolean()}|
-                                            {guess_limit_rows, integer()}|
-                                            {max_nulls_pcnt, float()}|
-                                            {primary_key,PKColumns::binary()|[binary()|list()]}|
-                                            {encoding,   string()|atom()}|
-                                            {verbose,    boolean()}]) ->
+                    MySqlPid::pid(), Opts::load_options()) ->
         {Columns::list(), RecCount::integer()}.
 load_to_mysql(File, Tab, MySqlPid, Opts)
     when is_list(File), is_list(Tab), is_pid(MySqlPid), is_list(Opts) ->
@@ -452,6 +498,7 @@ cleanup_header([C|T]) when (C >= $a andalso C =< $z);
 cleanup_header([_|T])  -> cleanup_header(T);
 cleanup_header([])     -> [].
 
+%% @doc Guess the type of data by its value
 -spec guess_data_type(binary()) ->
   {null | date | datetime | integer | float | string, term(), string()}.
 guess_data_type(S) ->

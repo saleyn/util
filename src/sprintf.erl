@@ -72,8 +72,8 @@ str(I, Opts) when is_float(I) ->
 reset_float_fmt()   -> erase(float_fmt).
 
 %% @doc Store custom float format in the process dictionary
-%%      Return previously stored format
-%% @see //kernel/erlang/float_to_list/2
+%%      Return previously stored format.
+%% Also see float_to_list/2 [http://erlang.org/doc/man/erlang.html#float_to_list-2]
 set_float_fmt(Opts) -> V=get(float_fmt), put(float_fmt, Opts), V.
 
 %% @doc Get custom float format from the process dictionary
