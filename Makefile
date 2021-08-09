@@ -49,7 +49,7 @@ clean-docs:
 publish:
 	$(REBAR) hex publish --replace
 
-github-docs:
+github-docs gh-pages:
 	@if git branch | grep -q gh-pages ; then \
 		git checkout gh-pages; \
 	else \
