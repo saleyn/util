@@ -74,7 +74,7 @@ parse(File) when is_list(File); is_binary(File) ->
 %% </dl>
 %% @end
 %%------------------------------------------------------------------------------
--spec parse(binary()|string(), [fix_lengths | binary | list | notrim |
+-spec parse(binary()|string(), [fix_lengths | binary | list |
                                 {open, Opts::list()}]) -> [[string()]].
 parse(File, Opts) when is_binary(File) ->
   parse(binary_to_list(File), Opts);
