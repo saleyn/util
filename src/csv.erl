@@ -160,7 +160,6 @@ trim(Line, I, End, Inc) ->
   end.
 
 trim(Line, Pos, End) when Pos < End ->
-  io:format("Line ~p, pos=~w, end=~w\n", [Line, Pos, End]),
   Front = trim(Line, Pos, End,    1),
   Back  = trim(Line, End, Front, -1),
   {Front, Back+1};
