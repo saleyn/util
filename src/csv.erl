@@ -74,7 +74,7 @@ parse(File) when is_list(File); is_binary(File) ->
 %% </dl>
 %% @end
 %%------------------------------------------------------------------------------
--spec parse(binary()|string(), [fix_lengths | binary | list |
+-spec parse(binary()|string(), [fix_lengths | binary | list | notrim |
                                 {open, Opts::list()}]) -> [[string()]].
 parse(File, Opts) when is_binary(File) ->
   parse(binary_to_list(File), Opts);
@@ -124,7 +124,7 @@ trim_eol(N, Line) when N < byte_size(Line) ->
   Z = byte_size(Line),
   M = N+1,
   case binary:at(Line, Z-M) of
-    C when C == $\r; C == $\n ->
+    C when C == $\r; C == $\n; C == $  ->
       trim_eol(M, Line);
     _ ->
       Z-N
@@ -149,14 +149,34 @@ field(Line, Pos, Len, true = _HasEscDblQuote) ->
 field(Line, Pos, Len, _) ->
   binary:part(Line, Pos, Len).
 
+trim(_Line, I, I, _Inc) ->
+  I;
+trim(Line, I, End, Inc) ->
+  case binary:at(Line, I) of
+    $  ->
+      trim(Line, I+Inc, End, Inc);
+    _ ->
+      I
+  end.
+
+trim(Line, Pos, End) when Pos < End ->
+  io:format("Line ~p, pos=~w, end=~w\n", [Line, Pos, End]),
+  Front = trim(Line, Pos, End,    1),
+  Back  = trim(Line, End, Front, -1),
+  {Front, Back+1};
+trim(_Line, Pos, End) ->
+  {Pos, End+1}.
+
 parse_csv_field(From, To, Line, Pos,Len, Fields, HasEscDblQuote) when From >= To ->
-  lists:reverse([field(Line, Pos, Len, HasEscDblQuote) | Fields]);
+  {Start, End} = trim(Line, Pos, Pos+Len-1),
+  lists:reverse([field(Line, Start, End-Start, HasEscDblQuote) | Fields]);
 parse_csv_field(From, To, Line, Pos,Len, Fields, HasEscDblQuote) ->
   case Line of
     <<_:From/binary, "\"", _/binary>> ->
       parse_csv_field_q(From+1, To, Line, From+1, 0, Fields, HasEscDblQuote);
     <<_:From/binary, ",", _/binary>> ->
-      parse_csv_field(From+1,To,Line, From+1, 0, [field(Line,Pos,Len,HasEscDblQuote)|Fields], false);
+      {Start, End} = trim(Line, Pos, Pos+Len-1),
+      parse_csv_field(From+1,To,Line, From+1, 0, [field(Line,Start,End-Start,HasEscDblQuote)|Fields], false);
     _ ->
       parse_csv_field(From+1,To,Line, Pos,Len+1, Fields, HasEscDblQuote)
   end.
@@ -585,17 +605,24 @@ i(C) -> C - $0.
 -include_lib("eunit/include/eunit.hrl").
 
 parse_test() ->
-  ?assertEqual([<<>>],        parse_line(<<"\n">>)),
-  ?assertEqual([<<>>],        parse_line(<<"\r\n">>)),
-  ?assertEqual([<<>>],        parse_line(<<"\n\r">>)),
-  ?assertEqual([<<>>],        parse_line(<<"\n\r\n">>)),
-  ?assertEqual([<<"a">>],     parse_line(<<"a\r\n">>)),
-  ?assertEqual([<<>>,<<>>],   parse_line(<<",\r\n">>)),
-  ?assertEqual([<<>>,<<>>],   parse_line(<<",">>)),
-  ?assertEqual([<<>>,<<"a">>],parse_line(<<",a">>)),
+  ?assertEqual([<<>>],            parse_line(<<"\n">>)),
+  ?assertEqual([<<>>],            parse_line(<<"\r\n">>)),
+  ?assertEqual([<<>>],            parse_line(<<"\n\r">>)),
+  ?assertEqual([<<>>],            parse_line(<<"\n\r\n">>)),
+  ?assertEqual([<<"a">>],         parse_line(<<"a\r\n">>)),
+  ?assertEqual([<<>>,<<>>],       parse_line(<<",\r\n">>)),
+  ?assertEqual([<<>>,<<>>],       parse_line(<<",">>)),
+  ?assertEqual([<<>>,<<"a">>],    parse_line(<<",a">>)),
+  ?assertEqual([<<"a">>,<<"b">>], parse_line(<<"a , b">>)),
+  ?assertEqual([<<"a">>,<<"b">>], parse_line(<<" a , b ">>)),
+  ?assertEqual([<<"a">>,<<"b">>], parse_line(<<" a, b ">>)),
+  ?assertEqual([<<"a">>,<<"b">>], parse_line(<<" a,b ">>)),
+  ?assertEqual([<<"a">>,<<"b">>], parse_line(<<" a, \"b\" ">>)),
+  ?assertEqual([<<"a">>,<<"b">>], parse_line(<<" a , b \r\n">>)),
   ?assertEqual([<<"a">>,<<"b \r\nbb">>,<<"c">>],parse_line(<<"\"a\",\"b \r\nbb\",\"c\"\r\n">>)),
   ?assertEqual([<<"a\"b">>,<<"c\"">>],          parse_line(<<"\"a\"\"b\",\"c\"\"\"">>)),
   ?assertEqual([<<"a,b">>],                     parse_line(<<"\"a\,b\"">>)),
+  ?assertEqual([<<"a, b">>],                    parse_line(<<"\"a\, b\"">>)),
   Lines = [<<"a,bb,ccc">>,
            <<",b,c">>,
            <<",b,\"c,d\"">>,
