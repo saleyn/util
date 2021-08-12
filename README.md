@@ -21,6 +21,7 @@ Erlang utility modules:
 | restrict_remsh_mod    | to be used for remote shells to restrict `q()`, `init:stop()`, `erlang:halt()`, etc. |
 | smtp                  | SMTP client supporting tcp and ssl protocols                                         |
 | sntp                  | simple SNTP client                                                                   |
+| str                   | stringification functions including `str/1` and `str/2` parse transforms             |
 | stringx               | miscelaneous string functions                                                        |
 | user_default          | extending shell with useful debugging and profiling commands                         |
 

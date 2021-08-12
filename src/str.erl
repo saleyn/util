@@ -1,12 +1,13 @@
 %%%-----------------------------------------------------------------------------
-%%% @doc Parse transform that implements `sprintf/2'
+%%% @doc Parse transform that implements `str/2'
 %%%
-%%% Use `{parse_transform,sprintf}' compiler's option to use this transform.
+%%% Use `{parse_transform,str}' compiler's option to use this transform.
 %%% ```
-%%% sprintf(Fmt, Args) -> lists:flatten(io_lib:format(Fmt, Args))
+%%% str(Fmt, Args)     -> lists:flatten(io_lib:format(Fmt, Args))
+%%% throw(Fmt, Args)   -> throw(lists:flatten(io_lib:format(Fmt, Args))
 %%% i2l(Int)           -> integer_to_list(Int)
 %%% b2l(Bin)           -> binary_to_list(Bin)
-%%% str(Term)          -> sprintf:str(Term)
+%%% str(Term)          -> str:str(Term)
 %%% '''
 %%% @author Serge Aleynikov <saleyn(at)gmail(dot)com>
 %%% @end
@@ -32,7 +33,7 @@
 %%% TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 %%% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%%-----------------------------------------------------------------------------
--module(sprintf).
+-module(str).
 
 % If using this module as a parse transform, we need to export the following:
 -export([parse_transform/2]).
@@ -42,7 +43,7 @@
 %%% External API
 %%%-----------------------------------------------------------------------------
 
-%% @doc Parse transform to be used by providing `{parse_transform, sprintf}' option.
+%% @doc Parse transform to be used by providing `{parse_transform, str}' option.
 parse_transform(Ast, _Opts) ->
   Tree = erl_syntax:form_list(Ast),
   ModifiedTree = recurse(Tree),
@@ -50,16 +51,15 @@ parse_transform(Ast, _Opts) ->
   erl_syntax:revert_forms(ModifiedTree).
 
 -spec str(term()) -> string().
+str(I) when is_list(I)    ->
+  lists:flatten(
+    try          io_lib:format("~s", [I])
+    catch _:_ -> io_lib:format("~p", [I])
+    end);
 str(I) when is_integer(I) -> integer_to_list(I);
 str(I) when is_binary(I)  -> binary_to_list(I);
 str(I) when is_float(I)   -> str(I, get_float_fmt());
 str(I) when is_atom(I)    -> atom_to_list(I);
-str(I) when is_list(I)    ->
-  try
-    lists:flatten(io_lib:format("~s", [I]))
-  catch _:_ ->
-    lists:flatten(io_lib:format("~p", [I]))
-  end;
 str(I) ->
   lists:flatten(io_lib:format("~p", [I])).
 
@@ -106,21 +106,30 @@ update2(Node, _)                 -> Node.
 update3(Node, {atom, Line, Fun}) -> update4(Fun, Node, Line);
 update3(Node, _)                 -> Node.
 
-update4(sprintf, Node, Line) ->
-  %% Replace sprintf(A, B) -> lists:flatten(io_lib:format(A, B)).
-  %%         sprintf(A)    -> sprintf:str(A).
+update4(str, Node, Line) ->
+  %% Replace str(A, B) -> lists:flatten(io_lib:format(A, B)).
+  %%         str(A)    -> str:str(A).
   put(line, Line),
   case erl_syntax:application_arguments(Node) of
     [A,B] ->
-      %% This is a call to sprintf(Fmt, Args).
+      %% This is a call to str(Fmt, Args).
       %% Replace it with:
       %%   lists:flatten(io_libs:format(Fmt, Args)
       syn_call(lists, flatten, [syn_call(io_lib, format, [A,B])]);
     [A] ->
-      %% This is a call to sprintf(Arg).
+      %% This is a call to str(Arg).
       %% Replace it with:
       %%   sprintf:str(Args)
-      syn_call(sprintf, str, [A]);
+      syn_call(str, str, [A]);
+    _ ->
+      Node
+  end;
+update4(throw, Node, Line) ->
+  %% Replace throw(A, B) -> throw(lists:flatten(io_lib:format(A, B))).
+  put(line, Line),
+  case erl_syntax:application_arguments(Node) of
+    [A,B] ->
+      syn_call(throw, [syn_call(lists, flatten, [syn_call(io_lib, format, [A,B])])]);
     _ ->
       Node
   end;
@@ -136,13 +145,6 @@ update4(b2l, Node, Line) ->
   put(line, Line),
   case erl_syntax:application_arguments(Node) of
     [A] -> syn_call(binary_to_list, [A]);
-    _   -> Node
-  end;
-update4(str, Node, Line) ->
-  %% Replace str(A) -> sprintf:str(A).
-  put(line, Line),
-  case erl_syntax:application_arguments(Node) of
-    [A] -> syn_call(sprintf, str, [A]);
     _   -> Node
   end;
 update4(_, Node, _) ->

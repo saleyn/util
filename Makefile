@@ -22,7 +22,7 @@ all:
 	@$(REBAR) compile
 
 test eunit:
-	@$(REBAR) $@
+	@$(REBAR) eunit
 
 # This is just an example of using make instead of rebar to do fast compilation
 all-fast: $(patsubst src/%.app.src,ebin/%.app,$(wildcard src/*.app.src))
@@ -81,3 +81,5 @@ tar:
 		--exclude="Makefile" --exclude="rebar.*" --exclude="*.mk" \
 		--exclude="*.o" --exclude=".git*" * && \
 		echo "Created $(TARBALL).tgz"
+
+.PHONY: test
