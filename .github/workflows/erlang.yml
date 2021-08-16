@@ -17,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install xmllint
+      run:  sudo apt-get install gawk
     - name: Compile
       run:  make
     - name: Run tests
