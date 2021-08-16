@@ -18,6 +18,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Compile
-      run: make
+      run:  make
     - name: Run tests
-      run: make eunit
+      run:  make eunit
+    - name: Make documentation
+      run:  |
+            git config user.name  github-actions
+            git config user.email github-actions@github.com
+            make gh-pages
