@@ -1,9 +1,8 @@
-util
-====
+# Erlang Utility Modules
 
 [![build](https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg)](https://github.com/saleyn/util/actions/workflows/erlang.yml)
 
-Erlang utility modules:
+## Content:
 
 | Module                | Description                                                                          |
 | --------------------- | ------------------------------------------------------------------------------------ |
@@ -25,7 +24,6 @@ Erlang utility modules:
 | stringx               | miscelaneous string functions                                                        |
 | user_default          | extending shell with useful debugging and profiling commands                         |
 
-Documentation
--------------
+## Documentation
 
 See project documentation: http://saleyn.github.io/util

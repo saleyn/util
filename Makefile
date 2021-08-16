@@ -38,6 +38,7 @@ clean:
 	@rm -fr ebin doc
 
 docs: doc ebin clean-docs
+	@awk -f bin/md-edoc.awk version=$(shell git descr --abbrev=1 --tags) README.md > src/overview.edoc
 	@$(REBAR) doc skip_deps=true
 
 doc ebin:
@@ -45,6 +46,11 @@ doc ebin:
 
 clean-docs:
 	rm -f doc/*.{css,html,png} doc/edoc-info
+
+set-version:
+	@[ -z $(version) ] && echo "Missing version=X.Y.Z!" && exit 1 || true
+	@sed -i "s/{$(PROJECT), \"[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\"}/{$(PROJECT), \"$(version)\"}/" rebar.config
+	@sed -i "s/{vsn, \"[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\"}/{vsn, \"$(version)\"}/" src/$(PROJECT).app.src
 
 publish:
 	$(REBAR) hex publish --replace

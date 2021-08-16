@@ -6,6 +6,7 @@ deps
 doc/
 ebin/
 src/erlang_scan.erl
+src/overview.edoc
 *.o
 *.beam
 *.plt
