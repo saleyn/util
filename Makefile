@@ -38,7 +38,7 @@ clean:
 	@rm -fr ebin doc
 
 docs: doc ebin clean-docs
-	@awk -f bin/md-edoc.awk version=$(shell git descr --abbrev=1 --tags) README.md > src/overview.edoc
+	@gawk -f bin/md-edoc.awk version=$(shell git descr --abbrev=1 --tags) README.md > src/overview.edoc
 	@$(REBAR) doc skip_deps=true
 
 doc ebin:
