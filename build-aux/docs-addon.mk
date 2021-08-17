@@ -20,7 +20,7 @@ github-docs gh-pages:
 	fi
 	rm -f rebar.lock
 	git checkout master -- src $(shell [ -d include ] && echo include)
-	git checkout master -- Makefile rebar.* build-aux/docs-addon.mk
+	git checkout master -- Makefile rebar.* build-aux/docs-addon.mk README.md
 	make docs
 	mv doc/*.* .
 	make clean
