@@ -28,7 +28,7 @@
 %% @see pmap/3
 %% @end
 %%-------------------------------------------------------------------------
--spec pmap(fun(() -> term()), [Args::term()]) -> [Reply].
+-spec pmap(fun(() -> term()), [Args::term()]) -> [Reply::term()].
 pmap(F, List) ->
     pmap(F, List, infinity).
 
@@ -37,7 +37,7 @@ pmap(F, List) ->
 %%      the list concurrently.  Same as pmap/2 but has a `Timeout' option.
 %% @end
 %%-------------------------------------------------------------------------
--spec pmap(fun((term()) -> term()), [Args], integer()|infinity) -> [Reply].
+-spec pmap(fun((term()) -> term()), Args::[term()], integer()|infinity) -> [Reply::term()].
 pmap(F, List, Timeout) ->
     Ref = make_ref(),
     [wait_result(Ref, Worker, Timeout) || Worker <- [spawn_worker(self(),Ref,F,E) || E <- List]].

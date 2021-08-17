@@ -1,6 +1,10 @@
 docs: doc ebin clean-docs
+	@mkdir -p build-aux
+	@for f in edoc.css md-to-edoc.awk md-to-edoc.sh; do \
+    [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
+   done
 	@build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
-ifeq ($(REBAR),rebar3)
+ifneq (,$(filter $(REBAR),rebar3))
 	@$(REBAR) edoc
 else
 	@$(REBAR) doc skip_deps=true
@@ -29,6 +33,3 @@ github-docs gh-pages:
 		else ret=1; git reset --hard; \
 		fi; \
 		set -e; git checkout master && echo 'Switched to master'; exit $$ret"
-
-
-

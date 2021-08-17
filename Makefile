@@ -24,7 +24,7 @@ all:
 test eunit:
 	@$(REBAR) eunit
 
-include build-aux/gh-addon.mk
+include build-aux/docs-addon.mk
 
 # This is just an example of using make instead of rebar to do fast compilation
 all-fast: $(patsubst src/%.app.src,ebin/%.app,$(wildcard src/*.app.src))
