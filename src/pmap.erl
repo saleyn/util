@@ -23,26 +23,21 @@
 -endif.
 
 %%-------------------------------------------------------------------------
-%% @spec (F, MultiArgs) -> [Reply]
-%%          F = () -> Term
-%%          MultiArgs = [Args]
 %% @doc Evaluate the `MultiArgs' list by calling `F' on each argument in
 %%      the list concurrently.
 %% @see pmap/3
 %% @end
 %%-------------------------------------------------------------------------
+-spec pmap(fun(() -> term()), [Args::term()]) -> [Reply].
 pmap(F, List) ->
     pmap(F, List, infinity).
 
 %%-------------------------------------------------------------------------
-%% @spec (F, MultiArgs, Timeout) -> [Reply]
-%%          F         = (Args) -> Term
-%%          MultiArgs = [Args]
-%%          Timeout   = integer() | infinity
 %% @doc Evaluate the `MultiArgs' list by calling `F' on each argument in
 %%      the list concurrently.  Same as pmap/2 but has a `Timeout' option.
 %% @end
 %%-------------------------------------------------------------------------
+-spec pmap(fun((term()) -> term()), [Args], integer()|infinity) -> [Reply].
 pmap(F, List, Timeout) ->
     Ref = make_ref(),
     [wait_result(Ref, Worker, Timeout) || Worker <- [spawn_worker(self(),Ref,F,E) || E <- List]].
@@ -64,10 +59,6 @@ wait_result(Ref, {Pid,MonRef}, Timeout) ->
     end.
 
 %%-------------------------------------------------------------------------
-%% @spec (PidMsgs, Timeout::timeout()) -> {Success, Error}
-%%          PidMsgs = [{Pid, Msg}]
-%%          Success = [OkReply]
-%%          Error   = [ErrorReply]
 %% @doc Send messages to pids and wait for replies.
 %%      Each Pid would get a message in the form:
 %%      `{{FromPid, Ref}, Msg}' and would have to reply with:
@@ -76,6 +67,7 @@ wait_result(Ref, {Pid,MonRef}, Timeout) ->
 %%      form: `{Pid, ErrorReason}'.
 %% @end
 %%-------------------------------------------------------------------------
+-spec multicall([{pid(), term()}], Timeout::timeout()) -> {[OkReply::term()], [ErrorReply::term()]}.
 multicall([], _Timeout) ->
     {[], []};
 multicall(PidMsgs, Timeout) when is_list(PidMsgs) ->
@@ -138,11 +130,10 @@ gather_results(Set, Replies, Errors, Monitors, Timeout) ->
     end.
 
 %%-------------------------------------------------------------------------
-%% @spec (From, Reply) -> ok
-%%          From = {FromPid::pid(), Ref::reference()}
 %% @doc Send a reply back to sender.
 %% @end
 %%-------------------------------------------------------------------------
+-spec reply({pid(), reference()}, Reply::term()) -> ok.
 reply({FromPid, Ref}, Msg) ->
     catch FromPid ! {{self(), Ref}, Msg},
     ok.

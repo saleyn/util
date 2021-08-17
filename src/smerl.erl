@@ -98,15 +98,15 @@
 %% TODO: write docstring
 -type export() :: {Function :: atom(), Arity :: arity()}.
 
-%% @type exports(). A list of {@type export()}s.
 -type exports() :: [export()].
+%% A list of {@type export()}s.
 
-%% @type func_form(). The abstract form for the function, as described
-%%    in the ERTS Users' manual.
 -type func_form() :: erl_parse:abstract_form().
+%% The abstract form for the function, as described
+%% in the ERTS Users' manual.
 
-%% @type func_forms(). A list of {@type func_form()}s.
 -type func_forms() :: [func_form()].
+%% A list of {@type func_form()}s.
 
 %% The record type holding the abstract representation for a module.
 -record(meta_mod, {module             :: module(),
@@ -116,20 +116,16 @@
                    export_all = false :: boolean()
                   }).
 
-%% @type meta_mod(). A data structure holding the abstract representation
-%%  for a module.
 -type meta_mod() :: #meta_mod{}.
+%% A data structure holding the abstract representation
+%% for a module.
 
-%% TODO: write docstring
 -type result(Value) :: result(Value, term()).
 
-%% TODO: write docstring
 -type result(Value, Error) :: {ok, Value} | {error, Error}.
 
-%% TODO: write docstring
 -type ok_t(Value) :: {ok, Value} | error.
 
-%% TODO: write docstring
 -type error_t(Error) :: ok | {error, Error}.
 
 %%% ================================================================= [ Macros ]
@@ -726,11 +722,10 @@ get_forms(Module, Path) ->
     {ok, {_, [{abstract_code, {raw_abstract_v1, Forms}}]}} ->
       {ok, Forms};
     _Err ->
-      case filename:find_src(Module, [{"ebin", "src"}]) of
+      case filelib:find_source(Module) of
         {error, _} = Err ->
           get_forms_from_binary(Module, Err);
-        {SrcPath, _} ->
-          Filename = SrcPath ++ ".erl",
+        {ok, Filename} ->
           epp:parse_file(Filename, [filename:dirname(Filename)], [])
       end
   end.

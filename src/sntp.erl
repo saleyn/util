@@ -21,20 +21,20 @@
 %%%------------------------------------------------------------------------
 
 %%-------------------------------------------------------------------------
-%% @spec () -> [ ip_address() ]
 %% @doc Return a list of default NTP time servers for this host.
 %% @end
 %%-------------------------------------------------------------------------
+-spec time_servers() -> [ ip_address() ].
 time_servers() ->
     time_servers(true).
     
 %%-------------------------------------------------------------------------
-%% @spec (boolean()) -> [ ip_address() ]
 %% @doc Return a list of default NTP time servers for this host. If 
 %%      `Resolve' is true, the list will contain IP addresses or else 
 %%      host names.
 %% @end
 %%-------------------------------------------------------------------------
+-spec time_servers(boolean()) -> [ ip_address() ].
 time_servers(Resolve) when is_boolean(Resolve) ->
     {ok, Bin} = file:read_file("/etc/ntp.conf"),
     Res = re:run(Bin, <<"(?:^|\\n)[^#]\\s*erver\\s+([a-zA-Z0-9\\.-]+)">>,
@@ -48,22 +48,21 @@ time_servers(Resolve) when is_boolean(Resolve) ->
     end.
 
 %%-------------------------------------------------------------------------
-%% @spec () -> {Min::integer(), Max::integer(), Avg::integer()}
 %% @doc Query NTP time sources from `"/etc/ntp.conf"' and return 
 %%      min/max/avg offset of current host from given time sources.
 %% @see avg_time/1
 %% @end
 %%-------------------------------------------------------------------------
+-spec avg_time() -> {Min::integer(), Max::integer(), Avg::integer()}.
 avg_time() ->
     avg_time(time_servers()).
 
 %%-------------------------------------------------------------------------
-%% @spec (ServerAddresses) -> {Min::integer(), Max::integer(), Avg::integer()}
-%%          ServerAddresses = [ ip_address() ]
 %% @doc Query `ServerAddress' NTP time sources and return min/max/avg offset
 %%      of current host from given time sources.
 %% @end
 %%-------------------------------------------------------------------------
+-spec avg_time([ ip_address() ]) -> {Min::integer(), Max::integer(), Avg::integer()}.
 avg_time(ServerAddresses) ->
     Results = [time(3, Addr, []) || Addr <- ServerAddresses],
     {Min, Max, Sum, N} = 
@@ -79,11 +78,11 @@ avg_time(ServerAddresses) ->
     {Min, Max, round(Sum/N)}.
 
 %%-------------------------------------------------------------------------
-%% @spec (ServerAddress::ip_address()) -> #sntp{}
 %% @doc Query `ServerAddress' time source to find out server time and 
 %%      current host's offset from time source.
 %% @end
 %%-------------------------------------------------------------------------
+-spec time(ServerAddress::ip_address()) -> #sntp{}.
 time(ServerAddress) ->
     {ok, S} = gen_udp:open(0, [binary, {active, false}]),
     try
@@ -159,7 +158,7 @@ now_to_sntp_time({_,_,USec} = Now) ->
         (calendar:datetime_to_gregorian_seconds(calendar:now_to_universal_time(Now)) - 59958230400),
     {SecsSinceJan1900, round(USec * (1 bsl 32) / 1000000)}.
 
-%% @spec (Resolve, Name) -> ip_address() | nxdomain
+-spec resolve(Resolve::boolean(), Name::string()|tuple()) -> ip_address() | nxdomain.
 resolve(_, {_, _, _, _} = IP) ->
     IP;
 resolve(false, Name) ->

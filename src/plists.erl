@@ -155,9 +155,8 @@
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
-
 -module(plists).
+
 -export([all/2, all/3, any/2, any/3, filter/2, filter/3,
 fold/3, fold/4, fold/5, foreach/2, foreach/3, map/2, map/3,
 partition/2, partition/3, sort/1, sort/2, sort/3,
@@ -169,13 +168,13 @@ runmany/3, runmany/4]).
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List) -> bool()
+-spec all(Fun, List) -> bool().
 all(Fun, List) ->
     all(Fun, List, 1).
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List, Malt) -> bool()
+-spec all(Fun, List, Malt) -> bool().
 all(Fun, List, Malt) ->
     try runmany(fun (L) ->
 			B = lists:all(Fun, L),
@@ -197,13 +196,13 @@ all(Fun, List, Malt) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List) -> bool()
+-spec any(Fun, List) -> bool().
 any(Fun, List) ->
     any(Fun, List, 1).
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List, Malt) -> bool()
+-spec any(Fun, List, Malt) -> bool().
 any(Fun, List, Malt) ->
     try runmany(fun (L) ->
 			B = lists:any(Fun, L),
@@ -225,13 +224,13 @@ any(Fun, List, Malt) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List) -> list()
+-spec filter(Fun, List) -> list().
 filter(Fun, List) ->
     filter(Fun, List, 1).
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List, Malt) -> list()
+-spec filter(Fun, List, Malt) -> list().
 filter(Fun, List, Malt) ->
     runmany(fun (L) ->
 		    lists:filter(Fun, L)
@@ -246,12 +245,12 @@ filter(Fun, List, Malt) ->
 
 % @doc Like below, but assumes 1 as the Malt. This function is almost useless,
 % and is intended only to aid converting code from using lists to plists.
-% @spec (Fun, InitAcc, List) -> term()
+-spec fold(Fun, InitAcc, List) -> term().
 fold(Fun, InitAcc, List) ->
     fold(Fun, Fun, InitAcc, List, 1).
 
 % @doc Like below, but uses the Fun as the Fuse by default.
-% @spec (Fun, InitAcc, List, Malt) -> term()
+-spec fold(Fun, InitAcc, List, Malt) -> term().
 fold(Fun, InitAcc, List, Malt) ->
     fold(Fun, Fun, InitAcc, List, Malt).
 
@@ -272,7 +271,7 @@ fold(Fun, InitAcc, List, Malt) ->
 %
 % Malt is the malt for the initial folding of sublists, and for the
 % possible recursive fuse.
-% @spec (Fun, Fuse, InitAcc, List, Malt) -> term()
+-spec fold(Fun, Fuse, InitAcc, List, Malt) -> term().
 fold(Fun, Fuse, InitAcc, List, Malt) ->
     Fun2 = fun (L) -> lists:foldl(Fun, InitAcc, L) end,
     runmany(Fun2, Fuse, List, Malt).
@@ -280,14 +279,14 @@ fold(Fun, Fuse, InitAcc, List, Malt) ->
 % @doc Similiar to foreach in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>
 % except it makes no guarantee about the order it processes list elements.
-% @spec (Fun, List) -> void()
+-spec foreach(Fun, List) -> void().
 foreach(Fun, List) ->
     foreach(Fun, List, 1).
 
 % @doc Similiar to foreach in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>
 % except it makes no guarantee about the order it processes list elements.
-% @spec (Fun, List, Malt) -> void()
+-spec foreach(Fun, List, Malt) -> void().
 foreach(Fun, List, Malt) ->
     runmany(fun (L) ->
 		    lists:foreach(Fun, L)
@@ -299,13 +298,13 @@ foreach(Fun, List, Malt) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List) -> list()
+-spec map(Fun, List) -> list().
 map(Fun, List) ->
     map(Fun, List, 1).
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List, Malt) -> list()
+-spec map(Fun, List, Malt) -> list().
 map(Fun, List, Malt) ->
     runmany(fun (L) ->
 		    lists:map(Fun, L)
@@ -317,13 +316,13 @@ map(Fun, List, Malt) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List) -> {list(), list()}
+-spec partition(Fun, List) -> {list(), list()}.
 partition(Fun, List) ->
     partition(Fun, List, 1).
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List, Malt) -> {list(), list()}
+-spec partition(Fun, List, Malt) -> {list(), list()}.
 partition(Fun, List, Malt) ->
     runmany(fun (L) ->
 		    lists:partition(Fun, L)
@@ -338,7 +337,7 @@ partition(Fun, List, Malt) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (List) -> list()
+-spec sort(List) -> list().
 sort(List) ->
     sort(fun (A, B) ->
 		 A =< B
@@ -347,7 +346,7 @@ sort(List) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List) -> list()
+-spec sort(Fun, List) -> list().
 sort(Fun, List) ->
     sort(Fun, List, ?SORTMALT).
 
@@ -358,7 +357,7 @@ sort(Fun, List) ->
 % sorted in a seperate process, and each merging of results is done in a
 % seperate process. Malt defaults to 100, causing the list to be split into
 % 100-element sublists.
-% @spec (Fun, List, Malt) -> list()
+-spec sort(Fun, List, Malt) -> list().
 sort(Fun, List, Malt) ->
     Fun2 = fun (L) ->
 	    lists:sort(Fun, L)
@@ -370,7 +369,7 @@ sort(Fun, List, Malt) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (List) -> list()
+-spec usort(List) -> list().
 usort(List) ->
     usort(fun (A, B) ->
 		 A =< B
@@ -379,7 +378,7 @@ usort(List) ->
 
 % @doc Same semantics as in module
 % <a href="http://www.erlang.org/doc/man/lists.html">lists</a>.
-% @spec (Fun, List) -> list()
+-spec usort(Fun, List) -> list().
 usort(Fun, List) ->
     usort(Fun, List, ?SORTMALT).
 
@@ -392,7 +391,7 @@ usort(Fun, List) ->
 % 100-element sublists.
 %
 % usort removes duplicate elments while it sorts.
-% @spec (Fun, List, Malt) -> list()
+-spec usort(Fun, List, Malt) -> list().
 usort(Fun, List, Malt) ->
     Fun2 = fun (L) ->
 	    lists:usort(Fun, L)
@@ -403,7 +402,7 @@ usort(Fun, List, Malt) ->
     runmany(Fun2, {recursive, Fuse}, List, Malt).
 
 % @doc Like below, assumes default MapMalt of 1.
-% @spec (MapFunc, List) -> Dict
+-spec % MapFunc = (MapFunc, List) -> Dict.
 % MapFunc = (term()) -> DeepListOfKeyValuePairs
 % DeepListOfKeyValuePairs = [DeepListOfKeyValuePairs] | {Key, Value}
 mapreduce(MapFunc, List) ->
@@ -432,10 +431,12 @@ mapreduce(MapFunc, List, MapMalt) ->
 %
 % mapreduce requires OTP R11B, or it may leave monitoring messages in the
 % message queue.
-% @spec (MapFunc, List, InitState, ReduceFunc, MapMalt) -> Dict
-% MapFunc = (term()) -> DeepListOfKeyValuePairs
-% DeepListOfKeyValuePairs = [DeepListOfKeyValuePairs] | {Key, Value}
-% ReduceFunc = (OldState, Key, Value) -> NewState
+-spec mapreduce(MapFunc :: fun((term()) -> DeepListOfKeyValuePairs),
+                List    :: [DeepListOfKeyValuePairs] | {Key, Value},
+                InitState::term(),
+                ReduceFunc :: fun((OldState::term(), Key::term(), Value::term()) ->
+                                NewState::term()),
+                MapMalt::term()) -> Dict.
 mapreduce(MapFunc, List, InitState, ReduceFunc, MapMalt) ->
     Parent = self(),
     {Reducer, ReducerRef} =
@@ -493,7 +494,7 @@ add_key(Dict, Key, Value) ->
 
 % @doc Like below, but assumes a Malt of 1,
 % meaning each element of the list is processed by a seperate process.
-% @spec (Fun, Fuse, List) -> term()
+-spec runmany(Fun, Fuse, List) -> term().
 runmany(Fun, Fuse, List) ->
     runmany(Fun, Fuse, List, 1).
 
@@ -528,10 +529,9 @@ runmany(Fun, Fuse, List) ->
 % Even if you pass {recursive, FuseFunc}, a recursive fuse is only done if
 % the malt contains {nodes, NodeList} or {processes, X}. If this is not the
 % case, a linear fuse is done.
-% @spec (Fun, Fuse, List, Malt) -> term()
-% Fun = (list()) -> term()
-% Fuse = FuseFunc | {recursive, FuseFunc}
-% FuseFunc = (term(), term()) -> term()
+-spec runmany(Fun  :: fun((list()) -> term()),
+              Fuse :: fun((term(), term()) -> term())| {recursive, FuseFunc},
+              List :: list(), Malt :: list()) -> term().
 runmany(Fun, Fuse, List, Malt) when is_list(Malt) ->
     runmany(Fun, Fuse, List, local, no_split, Malt);
 runmany(Fun, Fuse, List, Malt) ->
@@ -727,14 +727,14 @@ cluster_runmany(Fun, Fuse, [Task|TaskList], [N|Nodes], Running, Results) ->
     Fun3 = fun () ->
 		   try Fun2()
 		   catch
-		         exit:siblingdied ->
-			   ok;
-			 exit:Reason ->
-			   Parent ! {self(), error, Reason};
-       error:R:STrace ->
-			   Parent ! {self(), error, {R, STrace}};
-       throw:R:STrace ->
-			   Parent ! {self(), error, {{nocatch, R}, STrace}}
+		     exit:siblingdied ->
+           ok;
+         error:R:ST ->
+           Parent ! {self(), error, {R, ST}};
+         throw:R:ST ->
+           Parent ! {self(), error, {{nocatch, R}, ST}};
+         exit:Reason ->
+           Parent ! {self(), error, Reason}
 			 end
 	   end,
     Pid = spawn(N, Fun3),
