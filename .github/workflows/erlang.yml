@@ -18,9 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install gawk
-      run:  |
-            apt update && apt install sudo
-            sudo apt-get install gawk
+      run:  apt update && apt install sudo && sudo apt-get install gawk
     - name: Compile
       run:  make
     - name: Run tests

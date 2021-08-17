@@ -18,7 +18,7 @@ github-docs gh-pages:
 	make docs
 	mv doc/*.* .
 	make clean
-	rm -fr src c_src include Makefile erl_crash.dump priv rebar.* README*
+	rm -fr src c_src include Makefile erl_crash.dump priv rebar.* README* .github .travis* .gitignore
 	@FILES=`git status -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
 	for f in $$FILES ; do \
 		echo "Adding $$f"; git add $$f; \
