@@ -1,9 +1,9 @@
-docs: doc ebin clean-docs
+docs:
 	@mkdir -p build-aux
 	@for f in edoc.css md-to-edoc.awk md-to-edoc.sh; do \
     [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
    done
-	@build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
+	@sh -c "build-aux/md-to-edoc.sh README.md" > build-aux/overview.edoc
 ifneq (,$(filter $(REBAR),rebar3))
 	@$(REBAR) edoc
 else
