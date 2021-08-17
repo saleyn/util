@@ -50,11 +50,9 @@ BEGIN {
 # Print main title
 /^#[^#]/ && !main_title {
   title = gensub(/^# */, "", "g")
-  #out   = sprintf("@title %s\n@doc %s\n@version %s\n", title, title, vsn)
-  #gsub(/^# */, out)
   print "@version", vsn
-  print "@doc",title,"\n"
-  print "=",title, "=\n"
+  print "@doc\n"
+  print "==",title,"==\n"
   main_title=1
   next
 }
@@ -128,9 +126,9 @@ in_list_ordered {
 /^#/ {
   gsub(/#/, "=")
   match($0, /^=+/)
-  n = RLENGTH
+  n = RLENGTH < 2 ? 2 : RLENGTH
   if (!match($0, /=$/)) {
-    s = sprintf(" %s", substr("===", 1, n))
+    s = sprintf(" %s", substr("====", 1, n))
     gsub(/$/, s)
   }
   pop_all_lists()
@@ -149,12 +147,12 @@ in_list_ordered {
   # Print rows
   delim = in_table ? "</td><td class=\"tab\">" : "</th><th class=\"tab\">"
   if (!in_table) {
-    print("<table>\n")
+    print("<table class=\"tab\">\n")
     in_table=1
   }
   gsub(/ *\| */, delim)
-  sub(/<\/t[dh]>/,     "<tr>")  # Remove first occurance of </td> with <tr>
-  sub(/<t[dh][^>]+>$/, "</tr>") # Replace last occrance of <td> with </tr>
+  sub(/<\/t[dh]>/,     "<tr class=\"tab\">")  # Remove first occurance of </td> with <tr>
+  sub(/<t[dh][^>]+>$/, "</tr>")               # Replace last occrance of <td> with </tr>
   print
   next
 }

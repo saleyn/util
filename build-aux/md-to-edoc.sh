@@ -5,4 +5,4 @@
 SCRIPT=$(readlink -f $0)
 AWK=${SCRIPT%.sh}.awk
 
-gawk -f ${AWK} vsn=$(git describe master --abbrev=1 --always --tags) "$1"
+gawk -f ${AWK} vsn=$(git describe master --always --tags) "$1"

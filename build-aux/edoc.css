@@ -81,13 +81,13 @@ pre {
   background-color: #85C2FF;
 }
 
-table {
+table.tab {
   border-collapse: collapse;
   border: 1px solid gray;
 }
 
 /* Column separators excluding the border */
-table td + td {
+table.tab td.tab + td.tab {
   border-left: 1px solid gray;
 }
 
@@ -96,7 +96,7 @@ td.tab {
 }
 
 /* table alternative row coloring */
-tr:nth-child(even) {
+tr.tab:nth-child(even) {
   background-color: #e6e4e4;
 }
 
