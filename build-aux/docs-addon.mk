@@ -1,9 +1,5 @@
 docs:
-	@mkdir -p build-aux
-	@for f in edoc.css md-to-edoc.awk md-to-edoc.sh; do \
-    [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
-   done
-	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
+	$(prep-docs)
 ifeq (rebar3,$(REBAR))
 	@$(REBAR) edoc
 else ifeq (rebar,$(REBAR))
@@ -11,6 +7,14 @@ else ifeq (rebar,$(REBAR))
 else
 	rebar3 edoc
 endif
+
+define prep-docs =
+	@mkdir -p build-aux
+	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh; do \
+    [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
+   done
+	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
+endef
 
 github-docs gh-pages:
 	@if git branch | grep -q gh-pages ; then \
@@ -21,8 +25,7 @@ github-docs gh-pages:
 	rm -f rebar.lock
 	git checkout master -- src $(shell [ -d include ] && echo include)
 	git checkout master -- Makefile rebar.* README.md
-	git checkout master -- build-aux/docs-addon.mk || \
-		curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk
+	$(prep-docs)
 	@# Create google verification file if one exists in the master
 	GOOG=$$(git ls-tree --name-only master build-aux/google*.html)
 	[ -n "$$GOOG" ] && git show master:$${GOOG} 2>/dev/null > $$(basename $${GOOG}) || true
@@ -42,3 +45,4 @@ github-docs gh-pages:
 		else ret=1; git reset --hard; \
 		fi; \
 		set -e; git checkout master && echo 'Switched to master'; exit $$ret"
+
