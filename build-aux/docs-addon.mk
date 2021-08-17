@@ -16,6 +16,8 @@ define prep-docs =
 	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
 endef
 
+github-docs gh-pages: GVER=$(shell git ls-tree --name-only -r master build-aux | grep 'google.*\.html')
+github-docs gh-pages: LOCAL_GVER=$(notdir $(GVER))
 github-docs gh-pages:
 	@if git branch | grep -q gh-pages ; then \
 		git checkout gh-pages; \
@@ -27,11 +29,7 @@ github-docs gh-pages:
 	git checkout master -- Makefile rebar.* README.md
 	$(prep-docs)
 	@# Create google verification file if one exists in the master
-	GOOG=$$(git ls-tree --name-only master build-aux/google*.html)
-	LOCAL_GOOG=$$(basename $${GOOG})
-	echo "GOOG=$${GOOG}"
-	echo "LocalGOOG=$${LOCAL_GOOG}"
-	[ -n "$$GOOG" ] && git show master:$${GOOG} 2>/dev/null > $${LOCAL_GOOG} || true
+	[ -n "$(GVER)" ] && git show master:$(GVER) 2>/dev/null > $(LOCAL_GVER) || true
 	git checkout master -- build-aux/google*.html || true
 	make docs
 	mv doc/*.* .
