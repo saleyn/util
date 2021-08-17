@@ -105,9 +105,8 @@ BEGIN {
 # close unordered list
 in_list_unordered {
   if (match($0, /^ *[-*] /) && RSTART+RLENGTH == li_offset) {
-    printf "%*s</li>\n", li_offset, " "
+    list_li_close()
   } else if ((match($0, /^ *[-*] /) || match($0, /^\s+/) || match($0, /^[^\s]/)) && RSTART+RLENGTH < li_offset) {
-    printf "%*s</li>\n", li_offset, " "
     list_pop()
   }
 }
@@ -115,9 +114,8 @@ in_list_unordered {
 # close ordered list
 in_list_ordered {
   if (match($0,/^ *[0-9]+\. /) && RSTART+RLENGTH == li_offset) {
-    printf "%*s</li>\n", li_offset, " "
+    list_li_close()
   } else if ((match($0,/^ *[0-9]+\. /) || match($0, /^ +/) || match($0, /^[^\s]/)) && RSTART+RLENGTH < li_offset) {
-    printf "%*s</li>\n", li_offset, " "
     list_pop()
   }
 }
@@ -208,7 +206,6 @@ END {
   else if (in_code2) printf "''"
   else if (in_code1) printf "'"
 
-  if      (in_list_unordered || in_list_ordered) printf("%*s</li>\n", li_offset, " ")
   if      (in_table) print  "</table>"
 
   pop_all_lists()
@@ -221,6 +218,7 @@ function list_push(offset, type) {
   i = list_pos++
   list_offsets[i]   = offset
   list_types[i]     = type
+  list_closed[i]    = false
   li_offset         = offset
   in_list_unordered = type == "ul"
   in_list_ordered   = type == "ol"
@@ -229,10 +227,12 @@ function list_push(offset, type) {
 function list_pop()  {
   offset = list_offset()
   if (list_pos == 0) return offset
+  list_li_close()
   printf "%*s</%s>\n", offset-2, " ", list_type()
   list_pos--
   delete list_offsets[list_pos]
   delete list_types[list_pos]
+  delete list_closed[list_pos]
   type              = list_type()
   in_list_unordered = type == "ul"
   in_list_ordered   = type == "ol"
@@ -249,6 +249,11 @@ function pop_all_lists() {
 
 function list_offset()    { return list_pos ? list_offsets[list_pos-1] :  0 }
 function list_type()      { return list_pos ? list_types[list_pos-1]   : "" }
+function list_li_close()  {
+  if (!list_pos) return
+  printf("%*s</li>\n", list_offsets[list_pos-1], " ")
+  list_closed[list_pos-1] = false
+}
 # An optional additional argument is the separator to use when joining the strings
 # back together. If the caller supplies a nonempty value, join() uses it; if it is not
 # supplied, it has a null value. In this case, join() uses a single space as a default
