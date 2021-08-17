@@ -1,6 +1,7 @@
 #==============================================================================
-# Convert *.md GitHub documents to overview.edoc
-# Author: Serge Aleynikov
+# Convert README.md GitHub document to overview.edoc
+#
+# Copyright (c) 2021 Serge Aleynikov
 #==============================================================================
 BEGIN {
     in_code3=0
@@ -33,10 +34,6 @@ BEGIN {
     $0 = gensub(/\[([^\]]+)\]\( *([^\)]+)\)/, "<a href=\"\\2\">\\1</a>", "g")
   }
   else {
-    # escape < > characters
-    #gsub(/</,"\\&lt;");
-    #gsub(/>/,"\\&gt;");
-    
     # copyright
     gsub(/\(c\)/, "\\&#169;")
     gsub(/\(C\)/, "\\&#169;")
