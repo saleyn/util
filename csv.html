@@ -5,8 +5,8 @@
 <title>Module csv</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
-<body bgcolor="white">
-<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<body class="src">
+<a name="top"></a>
 <hr>
 
 <h1>Module csv</h1>
@@ -15,23 +15,49 @@
 
 <p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
 
-<h2><a name="description">Description</a></h2>CSV file parsing functions
+<h2><a href="#" name="description">Description</a></h2>CSV file parsing functions
   
-<h2><a name="types">Data Types</a></h2>
+<h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-load_options">load_options()</a></h3>
 <p><pre>load_options() = 
-    [{batch_size, integer()} |
+    [{load_type, recreate | replace | ignore_dups | update_dups} |
+     {col_types,
+      #{binary() =&gt;
+            ColType ::
+                atom() | {ColType :: atom(), ColLen :: integer()}}} |
+     {batch_size, integer()} |
      {blob_size, integer()} |
+     {create_table, boolean()} |
      {save_create_sql_to_file, string()} |
+     {transforms, #{binary() =&gt; fun((term()) -&gt; term())}} |
      {guess_types, boolean()} |
      {guess_limit_rows, integer()} |
      {max_nulls_pcnt, float()} |
      {primary_key, PKColumns :: binary() | [binary() | list()]} |
+     {drop_temp_table, boolean()} |
      {encoding, string() | atom()} |
-     {verbose, boolean()}]</pre></p>
+     {verbose, boolean() | integer()}]</pre></p>
 <p>  Options for loading data to a database.
   <dl>
+  <dt>{load_type, Type}</dt>
+    <dd>Type of loading to perform. <code>recreate</code> will replace the table by atomically
+        dropping the old one, creating/loading the new one, and replacing the table.
+        <code>replace</code> will do an insert by using <code>REPLACE INTO</code> statement. <code>ignore_dups</code>
+        will use <code>INSERT IGNORE INTO</code> statement to ignore records with duplicate keys.
+        <code>update_dups</code> will do an <code>INSERT INTO</code> and <code>ON DUPLICATE KEY UPDATE</code>, so that
+        the old records are updated and the new ones are inserted.</dd>
+  <dt>{create_table, Allow}</dt>
+    <dd>Allow to create a table if it doesn't exist</dd>
+  <dt>{col_types, Map}</dt>
+    <dd>Types of data for all or some columens. The Map is in the format:
+        <code>ColName::binary() =&gt; ColInfo</code>, where
+        ColInfo is <code>ColType | {ColType, ColLen::integer()}</code>, and <code>ColType</code> is:
+        <code>date | datetime | integer | float | blob | number</code>.
+        </dd>
+  <dt>{transforms, Map}</dt>
+    <dd>Value transformation function for columns. The Map is in the format:
+        <code>ColName::binary() =&gt; fun((Value::term()) -&gt; term())</code>.</dd>
   <dt>{batch_size, Size}</dt>
     <dd>Number of records per SQL insert/update/replace call</dd>
   <dt>{blob_size, Size}</dt>
@@ -49,6 +75,8 @@
         the column data type is forced to be treated as <code>string</code></dd>
   <dt>{primary_key, Fields}</dt>
     <dd>Names of primary key fields in the created table</dd>
+  <dt>{drop_temp_table, boolean()}</dt>
+    <dd>When true (default), temp table is dropped.</dd>
   <dt>{encoding, Encoding}</dt>
     <dd>The name of the encoding to use for storing data. For the list of permissible
         values [see this
@@ -57,21 +85,21 @@
     <dd>Print additional details to stdout</dd>
   </dl></p>
 
-<h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#guess_data_type-1">guess_data_type/1</a></td><td>Guess the type of data by its value.</td></tr>
-<tr><td valign="top"><a href="#guess_data_types-2">guess_data_types/2</a></td><td>Guess data types of fields in the given CSV list of rows obtained by
+<h2><a href="#" name="index">Function Index</a></h2>
+<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#guess_data_type-1">guess_data_type/1</a></td><td class="tab">Guess the type of data by its value.</td></tr>
+<tr class="tab"><td class="tab"><a href="#guess_data_types-2">guess_data_types/2</a></td><td class="tab">Guess data types of fields in the given CSV list of rows obtained by
        parsing a CSV file with <code>parse(File,[fix_lengths])</code>.</td></tr>
-<tr><td valign="top"><a href="#load_to_mysql-4">load_to_mysql/4</a></td><td>Load CSV data from a <code>File</code> to a <code>MySQL</code> database.</td></tr>
-<tr><td valign="top"><a href="#max_field_lengths-2">max_field_lengths/2</a></td><td>Get max field lengths for a list obtained by parsing a CSV file with
+<tr class="tab"><td class="tab"><a href="#load_to_mysql-4">load_to_mysql/4</a></td><td class="tab">Load CSV data from a <code>File</code> to a <code>MySQL</code> database.</td></tr>
+<tr class="tab"><td class="tab"><a href="#max_field_lengths-2">max_field_lengths/2</a></td><td class="tab">Get max field lengths for a list obtained by parsing a CSV file with
        <code>parse_csv_file(File,[fix_lengths])</code>.</td></tr>
-<tr><td valign="top"><a href="#parse-1">parse/1</a></td><td>Parse a CSV file using default options.</td></tr>
-<tr><td valign="top"><a href="#parse-2">parse/2</a></td><td>Parse a given CSV file.</td></tr>
-<tr><td valign="top"><a href="#parse_line-1">parse_line/1</a></td><td>Parse a CSV line.</td></tr>
+<tr class="tab"><td class="tab"><a href="#parse-1">parse/1</a></td><td class="tab">Parse a CSV file using default options.</td></tr>
+<tr class="tab"><td class="tab"><a href="#parse-2">parse/2</a></td><td class="tab">Parse a given CSV file.</td></tr>
+<tr class="tab"><td class="tab"><a href="#parse_line-1">parse_line/1</a></td><td class="tab">Parse a CSV line.</td></tr>
 </table>
 
-<h2><a name="functions">Function Details</a></h2>
+<h2><a href="#" name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="guess_data_type-1">guess_data_type/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="guess_data_type-1">guess_data_type/1</a></h3>
 <div class="spec">
 <p><pre>guess_data_type(S :: binary()) -&gt;
                    {null | date | datetime | integer | float |
@@ -81,7 +109,7 @@
 <p> </p>
 </div><p>Guess the type of data by its value</p>
 
-<h3 class="function"><a name="guess_data_types-2">guess_data_types/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="guess_data_types-2">guess_data_types/2</a></h3>
 <div class="spec">
 <p><pre>guess_data_types(HasHeaderRow :: boolean(),
                  Rows :: [Fields :: [binary()]]) -&gt;
@@ -98,27 +126,39 @@
        data in this column, and <code>NumOfNulls</code> is the number of rows with empty
        values in this column.</p>
 
-<h3 class="function"><a name="load_to_mysql-4">load_to_mysql/4</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="load_to_mysql-4">load_to_mysql/4</a></h3>
 <div class="spec">
 <p><pre>load_to_mysql(File :: string(),
               Tab :: string(),
               MySqlPid :: pid(),
               Opts :: <a href="#type-load_options">load_options()</a>) -&gt;
-                 {Columns :: list(), RecCount :: integer()}</pre></p>
+                 {Columns :: list(),
+                  AffectedCount :: integer(),
+                  RecCount :: integer()}</pre></p>
 <p> </p>
-</div><p><p>Load CSV data from a <code>File</code> to a <code>MySQL</code> database.
+</div><p>Load CSV data from a <code>File</code> to a <code>MySQL</code> database.
   <code>Tab</code> is the name of a table where to load data.  <code>MySqlPid</code> is the pid of a
-  MySQL database connection returned by <code>mysql:start_link/1</code>.  
-The data from the file is loaded atomically - i.e. either the whole file  
-loading succeeds or fails.  This is accomplished by first loading data to a  
-temporary table, and then using the database's ACID properties to replace the  
-target table with the temporary table.</p>
- 
-  <p>Presently the table is entirely replaced with the data from file.</p>
+  MySQL database connection returned by <code>mysql:start_link/1</code>.
+  The data in the table is replaced according to <code>{import_type, Type}</code>:
+  <ul>
+  <li><code>recreate</code> - The data from the file is loaded atomically - i.e. either
+  the whole file loading succeeds or fails.  This is accomplished by first
+  loading data to a temporary table, and then using the database's ACID
+  properties to replace the target table with the temporary table.
+  The table is entirely replaced with the data from file.</li>
+  <li><code>replace</code>     - Use "REPLACE INTO" instead of "INSERT INTO" existing
+  table</li>
+  <li><code>ignore_dups</code> - The insert in the existing table is performed and the
+  records with duplicate keys are ignored</li>
+  <li><code>update_dups</code> - The insert in the existing table is performed and the
+  records with duplicate keys are updated</li>
+  <li><code>upsert</code>      - The insert/update in the existing table is performed
+  without creating a temporary table</li>
+  </ul>
  
   NOTE: this function requires <a href="https://github.com/mysql-otp/mysql-otp.git" target="_top"><tt>https://github.com/mysql-otp/mysql-otp.git</tt></a></p>
 
-<h3 class="function"><a name="max_field_lengths-2">max_field_lengths/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="max_field_lengths-2">max_field_lengths/2</a></h3>
 <div class="spec">
 <p><pre>max_field_lengths(HasHeaderRow :: boolean(),
                   Rows :: [Fields :: list()]) -&gt;
@@ -127,13 +167,13 @@ target table with the temporary table.</p>
 </div><p>Get max field lengths for a list obtained by parsing a CSV file with
        <code>parse_csv_file(File,[fix_lengths])</code>.</p>
 
-<h3 class="function"><a name="parse-1">parse/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse-1">parse/1</a></h3>
 <div class="spec">
 <p><pre>parse(File :: string()) -&gt; [[binary()]]</pre></p>
 <p> </p>
 </div><p>Parse a CSV file using default options.</p>
 
-<h3 class="function"><a name="parse-2">parse/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse-2">parse/2</a></h3>
 <div class="spec">
 <p><pre>parse(File :: binary() | string(),
       Opts ::
@@ -152,14 +192,12 @@ target table with the temporary table.</p>
     <dt>list</dt><dd>Return fields as lists</dd>
   </dl></p>
 
-<h3 class="function"><a name="parse_line-1">parse_line/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse_line-1">parse_line/1</a></h3>
 <div class="spec">
 <p><pre>parse_line(Line :: binary()) -&gt; list()</pre></p>
 <p> </p>
 </div><p>Parse a CSV line</p>
 <hr>
 
-<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc</i></p>
 </body>
 </html>

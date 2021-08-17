@@ -5,8 +5,8 @@
 <title>Module pmap</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
-<body bgcolor="white">
-<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<body class="src">
+<a name="top"></a>
 <hr>
 
 <h1>Module pmap</h1>
@@ -16,24 +16,24 @@
             $Date: 2008/07/02 03:29:58 $</p>
 <p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
 
-<h2><a name="description">Description</a></h2>Parallel map and multicall.
+<h2><a href="#" name="description">Description</a></h2>Parallel map and multicall.
   
-<h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#multicall-2">multicall/2</a></td><td>Send messages to pids and wait for replies.</td></tr>
-<tr><td valign="top"><a href="#pmap-2">pmap/2</a></td><td>Evaluate the <code>MultiArgs</code> list by calling <code>F</code> on each argument in
+<h2><a href="#" name="index">Function Index</a></h2>
+<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#multicall-2">multicall/2</a></td><td class="tab">Send messages to pids and wait for replies.</td></tr>
+<tr class="tab"><td class="tab"><a href="#pmap-2">pmap/2</a></td><td class="tab">Evaluate the <code>MultiArgs</code> list by calling <code>F</code> on each argument in
        the list concurrently.</td></tr>
-<tr><td valign="top"><a href="#pmap-3">pmap/3</a></td><td>Evaluate the <code>MultiArgs</code> list by calling <code>F</code> on each argument in
+<tr class="tab"><td class="tab"><a href="#pmap-3">pmap/3</a></td><td class="tab">Evaluate the <code>MultiArgs</code> list by calling <code>F</code> on each argument in
        the list concurrently.</td></tr>
-<tr><td valign="top"><a href="#reply-2">reply/2</a></td><td>Send a reply back to sender.</td></tr>
-<tr><td valign="top"><a href="#test-0">test/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#test1-0">test1/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#test2-0">test2/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#test3-0">test3/0</a></td><td></td></tr>
+<tr class="tab"><td class="tab"><a href="#reply-2">reply/2</a></td><td class="tab">Send a reply back to sender.</td></tr>
+<tr class="tab"><td class="tab"><a href="#test-0">test/0</a></td><td class="tab"></td></tr>
+<tr class="tab"><td class="tab"><a href="#test1-0">test1/0</a></td><td class="tab"></td></tr>
+<tr class="tab"><td class="tab"><a href="#test2-0">test2/0</a></td><td class="tab"></td></tr>
+<tr class="tab"><td class="tab"><a href="#test3-0">test3/0</a></td><td class="tab"></td></tr>
 </table>
 
-<h2><a name="functions">Function Details</a></h2>
+<h2><a href="#" name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="multicall-2">multicall/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="multicall-2">multicall/2</a></h3>
 <div class="spec">
 <p><pre>multicall(PidMsgs :: [{pid(), term()}], Timeout :: timeout()) -&gt;
              {[OkReply :: term()], [ErrorReply :: term()]}</pre></p>
@@ -45,7 +45,7 @@
        replies into <code>Success</code> and <code>Error</code> lists. The error list is in the
        form: <code>{Pid, ErrorReason}</code>.</p>
 
-<h3 class="function"><a name="pmap-2">pmap/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pmap-2">pmap/2</a></h3>
 <div class="spec">
 <p><pre>pmap(F :: fun(() -&gt; term()), List :: [Args :: term()]) -&gt;
         [Reply :: term()]</pre></p>
@@ -54,7 +54,7 @@
        the list concurrently.</p>
 <p><b>See also:</b> <a href="#pmap-3">pmap/3</a>.</p>
 
-<h3 class="function"><a name="pmap-3">pmap/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pmap-3">pmap/3</a></h3>
 <div class="spec">
 <p><pre>pmap(F :: fun((term()) -&gt; term()),
      Args :: [term()],
@@ -64,38 +64,36 @@
 </div><p>Evaluate the <code>MultiArgs</code> list by calling <code>F</code> on each argument in
        the list concurrently.  Same as pmap/2 but has a <code>Timeout</code> option.</p>
 
-<h3 class="function"><a name="reply-2">reply/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="reply-2">reply/2</a></h3>
 <div class="spec">
 <p><pre>reply(X1 :: {pid(), reference()}, Reply :: term()) -&gt; ok</pre></p>
 <p> </p>
 </div><p>Send a reply back to sender.</p>
 
-<h3 class="function"><a name="test-0">test/0</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="test-0">test/0</a></h3>
 <div class="spec">
 <p><tt>test() -&gt; any()</tt></p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="test1-0">test1/0</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="test1-0">test1/0</a></h3>
 <div class="spec">
 <p><tt>test1() -&gt; any()</tt></p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="test2-0">test2/0</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="test2-0">test2/0</a></h3>
 <div class="spec">
 <p><tt>test2() -&gt; any()</tt></p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="test3-0">test3/0</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="test3-0">test3/0</a></h3>
 <div class="spec">
 <p><tt>test3() -&gt; any()</tt></p>
 <p> </p>
 </div>
 <hr>
 
-<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc</i></p>
 </body>
 </html>

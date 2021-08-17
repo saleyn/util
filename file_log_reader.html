@@ -5,8 +5,8 @@
 <title>Module file_log_reader</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
-<body bgcolor="white">
-<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<body class="src">
+<a name="top"></a>
 <hr>
 
 <h1>Module file_log_reader</h1>
@@ -16,7 +16,7 @@
 <p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
 <p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
 
-<h2><a name="description">Description</a></h2><p>Periodically read an append-only log file and parse newly added data.</p>
+<h2><a href="#" name="description">Description</a></h2><p>Periodically read an append-only log file and parse newly added data.</p>
   
    <p>The user controls the interval in msec how often to check for file   
 modifications. When new data is appended to file it triggers invocation of   
@@ -26,7 +26,7 @@ is delivered to the consumer by calling the consumer callback function.</p>
    The log reader can be started as a <code>gen_server</code> or can be controlled
    synchronously by using <code>init/3</code>, <code>run/1</code>, and <code>close/1</code> methods.
   
-<h2><a name="types">Data Types</a></h2>
+<h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-consumer">consumer()</a></h3>
 <p><pre>consumer() = 
@@ -109,31 +109,31 @@ is delivered to the consumer by calling the consumer callback function.</p>
         <code>update_pstate/3</code></dd>
   </dl></p>
 
-<h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#close-1">close/1</a></td><td>Close file processor (use this method when not using gen_server).</td></tr>
-<tr><td valign="top"><a href="#init-3">init/3</a></td><td>When using file processor without gen_server, use this function to
+<h2><a href="#" name="index">Function Index</a></h2>
+<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#close-1">close/1</a></td><td class="tab">Close file processor (use this method when not using gen_server).</td></tr>
+<tr class="tab"><td class="tab"><a href="#init-3">init/3</a></td><td class="tab">When using file processor without gen_server, use this function to
        initialize the state, and then call run/1.</td></tr>
-<tr><td valign="top"><a href="#position-1">position/1</a></td><td>Report last processed file position/size.</td></tr>
-<tr><td valign="top"><a href="#pstate-1">pstate/1</a></td><td>Return current parser state (<code>{pstate, any()}</code> initialization option).</td></tr>
-<tr><td valign="top"><a href="#run-1">run/1</a></td><td>Process file from given position <code>Pos</code> to <code>EndPos</code> (or <code>eof</code>).</td></tr>
-<tr><td valign="top"><a href="#start-3">start/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#start-4">start/4</a></td><td>Start the server outside of supervision tree.</td></tr>
-<tr><td valign="top"><a href="#start_link-3">start_link/3</a></td><td>Process <code>File</code> by calling <code>Consumer</code> callback on every delimited
+<tr class="tab"><td class="tab"><a href="#position-1">position/1</a></td><td class="tab">Report last processed file position/size.</td></tr>
+<tr class="tab"><td class="tab"><a href="#pstate-1">pstate/1</a></td><td class="tab">Return current parser state (<code>{pstate, any()}</code> initialization option).</td></tr>
+<tr class="tab"><td class="tab"><a href="#run-1">run/1</a></td><td class="tab">Process file from given position <code>Pos</code> to <code>EndPos</code> (or <code>eof</code>).</td></tr>
+<tr class="tab"><td class="tab"><a href="#start-3">start/3</a></td><td class="tab"></td></tr>
+<tr class="tab"><td class="tab"><a href="#start-4">start/4</a></td><td class="tab">Start the server outside of supervision tree.</td></tr>
+<tr class="tab"><td class="tab"><a href="#start_link-3">start_link/3</a></td><td class="tab">Process <code>File</code> by calling <code>Consumer</code> callback on every delimited
        message.</td></tr>
-<tr><td valign="top"><a href="#start_link-4">start_link/4</a></td><td>To be called by the supervisor in order to start the server.</td></tr>
-<tr><td valign="top"><a href="#stop-1">stop/1</a></td><td>Stop the server.</td></tr>
-<tr><td valign="top"><a href="#update_pstate-3">update_pstate/3</a></td><td>Update parser state.</td></tr>
+<tr class="tab"><td class="tab"><a href="#start_link-4">start_link/4</a></td><td class="tab">To be called by the supervisor in order to start the server.</td></tr>
+<tr class="tab"><td class="tab"><a href="#stop-1">stop/1</a></td><td class="tab">Stop the server.</td></tr>
+<tr class="tab"><td class="tab"><a href="#update_pstate-3">update_pstate/3</a></td><td class="tab">Update parser state.</td></tr>
 </table>
 
-<h2><a name="functions">Function Details</a></h2>
+<h2><a href="#" name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="close-1">close/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="close-1">close/1</a></h3>
 <div class="spec">
 <p><tt>close(State) -&gt; any()</tt></p>
 <p> </p>
 </div><p>Close file processor (use this method when not using gen_server)</p>
 
-<h3 class="function"><a name="init-3">init/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="init-3">init/3</a></h3>
 <div class="spec">
 <p><pre>init(File :: string(),
      Consumer :: <a href="#type-consumer">consumer()</a>,
@@ -164,19 +164,19 @@ is delivered to the consumer by calling the consumer callback function.</p>
 </div><p>When using file processor without gen_server, use this function to
        initialize the state, and then call run/1.</p>
 
-<h3 class="function"><a name="position-1">position/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="position-1">position/1</a></h3>
 <div class="spec">
 <p><pre>position(Pid :: pid() | atom()) -&gt; {ok, Position :: integer()}</pre></p>
 <p> </p>
 </div><p>Report last processed file position/size.</p>
 
-<h3 class="function"><a name="pstate-1">pstate/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pstate-1">pstate/1</a></h3>
 <div class="spec">
 <p><pre>pstate(Pid :: pid() | atom()) -&gt; {ok, any()}</pre></p>
 <p> </p>
 </div><p>Return current parser state (<code>{pstate, any()}</code> initialization option).</p>
 
-<h3 class="function"><a name="run-1">run/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="run-1">run/1</a></h3>
 <div class="spec">
 <p><pre>run(State ::
         #state{consumer = <a href="#type-consumer">consumer()</a>,
@@ -224,7 +224,7 @@ is delivered to the consumer by calling the consumer callback function.</p>
 <p> </p>
 </div><p>Process file from given position <code>Pos</code> to <code>EndPos</code> (or <code>eof</code>).</p>
 
-<h3 class="function"><a name="start-3">start/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start-3">start/3</a></h3>
 <div class="spec">
 <p><pre>start(File :: string(),
       Consumer :: <a href="#type-consumer">consumer()</a>,
@@ -233,7 +233,7 @@ is delivered to the consumer by calling the consumer callback function.</p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="start-4">start/4</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start-4">start/4</a></h3>
 <div class="spec">
 <p><pre>start(RegName :: atom(),
       File :: string(),
@@ -243,7 +243,7 @@ is delivered to the consumer by calling the consumer callback function.</p>
 <p> </p>
 </div><p>Start the server outside of supervision tree.</p>
 
-<h3 class="function"><a name="start_link-3">start_link/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start_link-3">start_link/3</a></h3>
 <div class="spec">
 <p><pre>start_link(File :: string(),
            Consumer :: <a href="#type-consumer">consumer()</a>,
@@ -267,7 +267,7 @@ is delivered to the consumer by calling the consumer callback function.</p>
        <code>Consumer</code> can end processing normally without reaching the end
        of file by throwing <code>{eof, PState}</code> exception.</p>
 
-<h3 class="function"><a name="start_link-4">start_link/4</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start_link-4">start_link/4</a></h3>
 <div class="spec">
 <p><pre>start_link(RegName :: atom(),
            File :: string(),
@@ -282,13 +282,13 @@ is delivered to the consumer by calling the consumer callback function.</p>
        respectively.</p>
 <p><b>See also:</b> <a href="#start_link-3">start_link/3</a>.</p>
 
-<h3 class="function"><a name="stop-1">stop/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="stop-1">stop/1</a></h3>
 <div class="spec">
 <p><pre>stop(Pid :: pid() | atom()) -&gt; ok</pre></p>
 <p> </p>
 </div><p>Stop the server.</p>
 
-<h3 class="function"><a name="update_pstate-3">update_pstate/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="update_pstate-3">update_pstate/3</a></h3>
 <div class="spec">
 <p><pre>update_pstate(Pid :: pid(), Option :: atom(), Value :: any()) -&gt;
                  {ok, State :: any()}</pre></p>
@@ -296,7 +296,5 @@ is delivered to the consumer by calling the consumer callback function.</p>
 </div><p>Update parser state.</p>
 <hr>
 
-<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc</i></p>
 </body>
 </html>

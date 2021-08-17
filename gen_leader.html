@@ -5,8 +5,8 @@
 <title>Module gen_leader</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
-<body bgcolor="white">
-<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<body class="src">
+<a name="top"></a>
 <hr>
 
 <h1>Module gen_leader</h1>
@@ -15,7 +15,7 @@
 <p><b>This module defines the <tt>gen_leader</tt> behaviour.</b><br> Required callback functions: <tt>init/1</tt>, <tt>elected/3</tt>, <tt>surrendered/3</tt>, <tt>handle_leader_call/4</tt>, <tt>handle_leader_cast/3</tt>, <tt>from_leader/3</tt>, <tt>handle_call/4</tt>, <tt>handle_cast/3</tt>, <tt>handle_DOWN/3</tt>, <tt>handle_info/2</tt>, <tt>terminate/2</tt>, <tt>code_change/4</tt>.</p>
 <p><b>Authors:</b> Hans Svensson (<a href="mailto:hanssv@chalmers.se"><tt>hanssv@chalmers.se</tt></a>), Thomas Arts (<a href="mailto:thomas.arts@ituniv.se"><tt>thomas.arts@ituniv.se</tt></a>), Ulf Wiger (<a href="mailto:ulf.wiger@ericsson.com"><tt>ulf.wiger@ericsson.com</tt></a>), (contributor: Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
 
-<h2><a name="description">Description</a></h2>Leader election behavior.
+<h2><a href="#" name="description">Description</a></h2>Leader election behavior.
    <p>This application implements a leader election behavior modeled after
    gen_server. This behavior intends to make it reasonably
    straightforward to implement a fully distributed server with
@@ -49,7 +49,7 @@
        looping on the timer timeout event when all candidates are connected.</li>
    </ol>
    </p>
-<h2><a name="types">Data Types</a></h2>
+<h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-bcast_type">bcast_type()</a></h3>
 <p><pre>bcast_type() = all | sender</pre></p>
@@ -110,35 +110,35 @@
     norm</pre></p>
 
 
-<h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#alive-1">alive/1</a></td><td>Returns list of alive nodes.</td></tr>
-<tr><td valign="top"><a href="#behaviour_info-1">behaviour_info/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#broadcast-3">broadcast/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#call-2">call/2</a></td><td>Equivalent to <code>gen_server:call/2</code>, but with a slightly
+<h2><a href="#" name="index">Function Index</a></h2>
+<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#alive-1">alive/1</a></td><td class="tab">Returns list of alive nodes.</td></tr>
+<tr class="tab"><td class="tab"><a href="#behaviour_info-1">behaviour_info/1</a></td><td class="tab"></td></tr>
+<tr class="tab"><td class="tab"><a href="#broadcast-3">broadcast/3</a></td><td class="tab"></td></tr>
+<tr class="tab"><td class="tab"><a href="#call-2">call/2</a></td><td class="tab">Equivalent to <code>gen_server:call/2</code>, but with a slightly
   different exit reason if something goes wrong.</td></tr>
-<tr><td valign="top"><a href="#call-3">call/3</a></td><td>Equivalent to <code>gen_server:call/3</code>, but with a slightly
+<tr class="tab"><td class="tab"><a href="#call-3">call/3</a></td><td class="tab">Equivalent to <code>gen_server:call/3</code>, but with a slightly
   different exit reason if something goes wrong.</td></tr>
-<tr><td valign="top"><a href="#candidates-1">candidates/1</a></td><td>Returns a list of known candidates.</td></tr>
-<tr><td valign="top"><a href="#cast-2">cast/2</a></td><td>Equivalent to <tt>gen_server:cast / 2</tt>.
+<tr class="tab"><td class="tab"><a href="#candidates-1">candidates/1</a></td><td class="tab">Returns a list of known candidates.</td></tr>
+<tr class="tab"><td class="tab"><a href="#cast-2">cast/2</a></td><td class="tab">Equivalent to <tt>gen_server:cast / 2</tt>.
 </td></tr>
-<tr><td valign="top"><a href="#down-1">down/1</a></td><td>Returns list of down nodes.</td></tr>
-<tr><td valign="top"><a href="#leader_call-2">leader_call/2</a></td><td>Makes a call (similar to <code>gen_server:call/2</code>) to the
+<tr class="tab"><td class="tab"><a href="#down-1">down/1</a></td><td class="tab">Returns list of down nodes.</td></tr>
+<tr class="tab"><td class="tab"><a href="#leader_call-2">leader_call/2</a></td><td class="tab">Makes a call (similar to <code>gen_server:call/2</code>) to the
   leader.</td></tr>
-<tr><td valign="top"><a href="#leader_call-3">leader_call/3</a></td><td>Makes a call (similar to <code>gen_server:call/3</code>) to the
+<tr class="tab"><td class="tab"><a href="#leader_call-3">leader_call/3</a></td><td class="tab">Makes a call (similar to <code>gen_server:call/3</code>) to the
   leader.</td></tr>
-<tr><td valign="top"><a href="#leader_cast-2">leader_cast/2</a></td><td>Similar to <code>gen_server:cast/2</code> but will be forwarded to
+<tr class="tab"><td class="tab"><a href="#leader_cast-2">leader_cast/2</a></td><td class="tab">Similar to <code>gen_server:cast/2</code> but will be forwarded to
   the leader via the local gen_leader instance.</td></tr>
-<tr><td valign="top"><a href="#leader_node-1">leader_node/1</a></td><td>Returns the current leader node.</td></tr>
-<tr><td valign="top"><a href="#reply-2">reply/2</a></td><td>Equivalent to <tt>gen_server:reply / 2</tt>.
+<tr class="tab"><td class="tab"><a href="#leader_node-1">leader_node/1</a></td><td class="tab">Returns the current leader node.</td></tr>
+<tr class="tab"><td class="tab"><a href="#reply-2">reply/2</a></td><td class="tab">Equivalent to <tt>gen_server:reply / 2</tt>.
 </td></tr>
-<tr><td valign="top"><a href="#start-6">start/6</a></td><td>Starts a gen_leader process without linking to the parent.</td></tr>
-<tr><td valign="top"><a href="#start_link-6">start_link/6</a></td><td>Starts a gen_leader process.</td></tr>
-<tr><td valign="top"><a href="#workers-1">workers/1</a></td><td>Returns a list of known workers.</td></tr>
+<tr class="tab"><td class="tab"><a href="#start-6">start/6</a></td><td class="tab">Starts a gen_leader process without linking to the parent.</td></tr>
+<tr class="tab"><td class="tab"><a href="#start_link-6">start_link/6</a></td><td class="tab">Starts a gen_leader process.</td></tr>
+<tr class="tab"><td class="tab"><a href="#workers-1">workers/1</a></td><td class="tab">Returns a list of known workers.</td></tr>
 </table>
 
-<h2><a name="functions">Function Details</a></h2>
+<h2><a href="#" name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="alive-1">alive/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="alive-1">alive/1</a></h3>
 <div class="spec">
 <p><pre>alive(Election ::
           #election{leader = none | pid(),
@@ -165,19 +165,19 @@
 <p> </p>
 </div><p>Returns list of alive nodes.</p>
 
-<h3 class="function"><a name="behaviour_info-1">behaviour_info/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="behaviour_info-1">behaviour_info/1</a></h3>
 <div class="spec">
 <p><pre>behaviour_info(Other :: atom()) -&gt; undefined | [{atom(), arity()}]</pre></p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="broadcast-3">broadcast/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="broadcast-3">broadcast/3</a></h3>
 <div class="spec">
 <p><tt>broadcast(X1, ToNodes, E) -&gt; any()</tt></p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="call-2">call/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="call-2">call/2</a></h3>
 <div class="spec">
 <p><pre>call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</pre></p>
 <p> </p>
@@ -186,7 +186,7 @@
   the <code>gen_leader</code> process exactly as if it were a gen_server
   (which, for practical purposes, it is.)</p>
 
-<h3 class="function"><a name="call-3">call/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="call-3">call/3</a></h3>
 <div class="spec">
 <p><pre>call(Name :: <a href="#type-server_ref">server_ref()</a>,
      Request :: term(),
@@ -198,7 +198,7 @@
   the <code>gen_leader</code> process exactly as if it were a gen_server
   (which, for practical purposes, it is.)</p>
 
-<h3 class="function"><a name="candidates-1">candidates/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="candidates-1">candidates/1</a></h3>
 <div class="spec">
 <p><pre>candidates(Election ::
                #election{leader = none | pid(),
@@ -225,14 +225,14 @@
 <p> </p>
 </div><p>Returns a list of known candidates.</p>
 
-<h3 class="function"><a name="cast-2">cast/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="cast-2">cast/2</a></h3>
 <div class="spec">
 <p><pre>cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</pre></p>
 <p> </p>
 </div><p>Equivalent to <tt>gen_server:cast / 2</tt>.</p>
 
 
-<h3 class="function"><a name="down-1">down/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="down-1">down/1</a></h3>
 <div class="spec">
 <p><pre>down(Election ::
          #election{leader = none | pid(),
@@ -259,7 +259,7 @@
 <p> </p>
 </div><p>Returns list of down nodes.</p>
 
-<h3 class="function"><a name="leader_call-2">leader_call/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_call-2">leader_call/2</a></h3>
 <div class="spec">
 <p><pre>leader_call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</pre></p>
 <p> </p>
@@ -270,7 +270,7 @@
   <p>This function uses <code>gen:call/3</code>, and is subject to the
   same default timeout as e.g. <code>gen_server:call/2</code>.</p></p>
 
-<h3 class="function"><a name="leader_call-3">leader_call/3</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_call-3">leader_call/3</a></h3>
 <div class="spec">
 <p><pre>leader_call(Name :: <a href="#type-server_ref">server_ref()</a>,
             Request :: term(),
@@ -282,14 +282,14 @@
   that one isn't actually the leader. The client will exit if the
   leader dies while the request is outstanding.</p>
 
-<h3 class="function"><a name="leader_cast-2">leader_cast/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_cast-2">leader_cast/2</a></h3>
 <div class="spec">
 <p><pre>leader_cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</pre></p>
 <p> </p>
 </div><p>Similar to <code>gen_server:cast/2</code> but will be forwarded to
   the leader via the local gen_leader instance.</p>
 
-<h3 class="function"><a name="leader_node-1">leader_node/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_node-1">leader_node/1</a></h3>
 <div class="spec">
 <p><pre>leader_node(Election ::
                 #election{leader = none | pid(),
@@ -317,14 +317,14 @@
 <p> </p>
 </div><p>Returns the current leader node.</p>
 
-<h3 class="function"><a name="reply-2">reply/2</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="reply-2">reply/2</a></h3>
 <div class="spec">
 <p><pre>reply(From :: <a href="#type-caller_ref">caller_ref()</a>, Reply :: term()) -&gt; term()</pre></p>
 <p> </p>
 </div><p>Equivalent to <tt>gen_server:reply / 2</tt>.</p>
 
 
-<h3 class="function"><a name="start-6">start/6</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start-6">start/6</a></h3>
 <div class="spec">
 <p><pre>start(Name :: atom(),
       CandidateNodes :: [node()],
@@ -337,7 +337,7 @@
 </div><p>Starts a gen_leader process without linking to the parent.</p>
 <p><b>See also:</b> <a href="#start_link-6">start_link/6</a>.</p>
 
-<h3 class="function"><a name="start_link-6">start_link/6</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start_link-6">start_link/6</a></h3>
 <div class="spec">
 <p><pre>start_link(Name :: atom(),
            CandidateNodes :: [node()],
@@ -349,11 +349,11 @@
 <p> </p>
 </div><p>Starts a gen_leader process.
   <table>
-   <tr><td>Name</td><td>The locally registered name of the process</td></tr>
-   <tr><td>CandidateNodes</td><td>The names of nodes capable of assuming
+   <tr class="tab"><td class="tab">Name</td><td class="tab">The locally registered name of the process</td></tr>
+   <tr class="tab"><td class="tab">CandidateNodes</td><td class="tab">The names of nodes capable of assuming
       a leadership role</td></tr>
-   <tr><td valign="top">OptArgs</td>
-       <td>Optional arguments given to <code>gen_leader</code>.
+   <tr class="tab"><td class="tab">OptArgs</td>
+       <td class="tab">Optional arguments given to <code>gen_leader</code>.
            <du>
            <dl>{workers, Workers}</dl>
            <dd>The names of nodes that will be part of the "cluster",
@@ -373,16 +373,16 @@
                candidate nodes.</dd>
            </du>
        </td></tr>
-   <tr><td>Mod</td><td>The name of the callback module</td></tr>
-   <tr><td>Arg</td><td>Argument passed on to <code>Mod:init/1</code></td></tr>
-   <tr><td>Options</td><td>Same as gen_server's Options</td></tr>
+   <tr class="tab"><td class="tab">Mod</td><td class="tab">The name of the callback module</td></tr>
+   <tr class="tab"><td class="tab">Arg</td><td class="tab">Argument passed on to <code>Mod:init/1</code></td></tr>
+   <tr class="tab"><td class="tab">Options</td><td class="tab">Same as gen_server's Options</td></tr>
   </table>
  
   <p>The list of candidates needs to be known from the start. Workers
   could potentially be added at runtime, but no functionality to do
   this is provided by this version.</p></p>
 
-<h3 class="function"><a name="workers-1">workers/1</a></h3>
+<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="workers-1">workers/1</a></h3>
 <div class="spec">
 <p><pre>workers(Election ::
             #election{leader = none | pid(),
@@ -410,7 +410,5 @@
 </div><p>Returns a list of known workers.</p>
 <hr>
 
-<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc</i></p>
 </body>
 </html>
