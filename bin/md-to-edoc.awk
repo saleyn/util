@@ -107,26 +107,20 @@ BEGIN {
 # close unordered list
 in_list_unordered {
   if (match($0, /^ *[-*] /) && RSTART+RLENGTH == li_offset) {
-    print_saved()
     printf "%*s</li>\n", li_offset, " "
-  #} else if ((match($0, /^ *[-*] /) || match($0, /^\s+/) || match($0, /^$/)) && RSTART+RLENGTH < li_offset) {
   } else if ((match($0, /^ *[-*] /) || match($0, /^\s+/) || match($0, /^[^\s]/)) && RSTART+RLENGTH < li_offset) {
-    print_saved()
     printf "%*s</li>\n", li_offset, " "
-    old_offset = list_pop()
+    list_pop()
   }
 }
 
 # close ordered list
 in_list_ordered {
   if (match($0,/^ *[0-9]+\. /) && RSTART+RLENGTH == li_offset) {
-    print_saved()
     printf "%*s</li>\n", li_offset, " "
-  #} else if ((match($0,/^ *[0-9]+\. /) || match($0, /^ +/) || match($0, /^$/)) && RSTART+RLENGTH < li_offset) {
   } else if ((match($0,/^ *[0-9]+\. /) || match($0, /^ +/) || match($0, /^[^\s]/)) && RSTART+RLENGTH < li_offset) {
-    print_saved()
     printf "%*s</li>\n", li_offset, " "
-    old_offset = list_pop()
+    list_pop()
   }
 }
 
@@ -149,12 +143,10 @@ in_list_ordered {
 }
 !in_code && /\| *-+ *\|/ {
   # Skip separators
-  print_saved()
   next
 }
 !in_code && /\|[^\|]+\|/ && !/\| *-+ *\|/ {
   # Print rows
-  print_saved()
   delim = in_table ? "</td><td>" : "</th><th>"
   if (!in_table) {
     print("<table>\n")
@@ -168,24 +160,24 @@ in_list_ordered {
 }
 
 {
+  n = -1
+
   # display unordered lists
   if(match($0,/^ *[-\*] /)) {
     n  = RSTART+RLENGTH
     $0 = substr($0, n)
-    print_saved()
     if (n > li_offset) {
       # New unordered list
       list_push(n, "ul")
       printf "%*s<ul>\n", n-2, " "
     }
     printf "%*s<li>", n, " "
-      
+
   # display ordered lists
   } else if(match($0,/^ *[0-9]+\. /)) {
     match($0, /[0-9]+\. /)
     n  = RSTART+RLENGTH
     $0 = substr($0, n)
-    print_saved()
     if (n > li_offset) {
       # New ordered list
       list_push(n, "ol")
@@ -214,16 +206,16 @@ in_list_ordered {
 }
 
 END {
-  if      (in_code3) print_line("'''")
-  else if (in_code2) print_line("''")
-  else if (in_code1) print_line("'")
+  if      (in_code3) print  "'''"
+  else if (in_code2) printf "''"
+  else if (in_code1) printf "'"
 
-  if      (in_table) print_line("</table>")
+  if      (in_table) print  "</table>"
 
   pop_all_lists()
 
   if(in_paragraph)
-    printf "\n"    # "</p>"
+    printf "\n"
 }
 
 function list_push(offset, type) {
@@ -249,7 +241,6 @@ function list_pop()  {
   return offset
 }
 function pop_all_lists() {
-  print_saved()
   type = list_type()
   while (type != "") {
     list_pop()
@@ -259,13 +250,6 @@ function pop_all_lists() {
 
 function list_offset()    { return list_pos ? list_offsets[list_pos-1] :  0 }
 function list_type()      { return list_pos ? list_types[list_pos-1]   : "" }
-function print_line(line) {
-  #saved_lines[n_saved++] = line
-  printf "%s", line
-}
-function print_saved()    {
-  #for (i=1; i <= n_saved; ++i) printf(saved_lines[i]); delete saved_lines; n_saved=0;
-}
 # An optional additional argument is the separator to use when joining the strings
 # back together. If the caller supplies a nonempty value, join() uses it; if it is not
 # supplied, it has a null value. In this case, join() uses a single space as a default

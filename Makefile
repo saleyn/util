@@ -24,6 +24,8 @@ all:
 test eunit:
 	@$(REBAR) eunit
 
+include bin/gh-addon.mk
+
 # This is just an example of using make instead of rebar to do fast compilation
 all-fast: $(patsubst src/%.app.src,ebin/%.app,$(wildcard src/*.app.src))
 
@@ -36,10 +38,6 @@ ebin/%.app: src/%.app.src $(wildcard src/*.erl)
 clean:
 	@$(REBAR) clean
 	@rm -fr ebin doc
-
-docs: doc ebin clean-docs
-	@gawk -f bin/md-edoc.awk version=$(shell git describe --abbrev=1 --tags) README.md > src/overview.edoc
-	@$(REBAR) doc skip_deps=true
 
 doc ebin:
 	mkdir -p $@
@@ -54,31 +52,6 @@ set-version:
 
 publish:
 	$(REBAR) hex publish --replace
-
-github-docs gh-pages:
-	@if git branch | grep -q gh-pages ; then \
-		git checkout gh-pages; \
-	else \
-		git checkout -b gh-pages; \
-	fi
-	rm -f rebar.lock
-	git checkout master -- src include
-	git checkout master -- Makefile rebar.*
-	make docs
-	mv doc/*.* .
-	make clean
-	rm -fr src c_src include Makefile erl_crash.dump priv rebar.* README*
-	@FILES=`git status -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
-	for f in $$FILES ; do \
-		echo "Adding $$f"; git add $$f; \
-	done
-	@sh -c "ret=0; set +e; \
-		if   git commit -a --amend -m 'Documentation updated'; \
-		then git push origin +gh-pages; echo 'Pushed gh-pages to origin'; \
-		else ret=1; git reset --hard; \
-		fi; \
-		set -e; git checkout master && echo 'Switched to master'; exit $$ret"
-
 
 tar:
 	@rm -f $(TARBALL).tgz; \
