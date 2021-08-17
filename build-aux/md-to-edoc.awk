@@ -187,7 +187,7 @@ in_list_ordered {
   # Close paragraph if curr line is empty
   if(length($0) == 0 && in_paragraph == 1 && in_code == 0) {
     in_paragraph=0
-    printf "\n"
+    paragraph++
   }
   # Still in a paragraph
   if(length($0) != 0 && in_paragraph == 1) {
@@ -200,6 +200,11 @@ in_list_ordered {
   }
   prev_line = $0
 }
+
+!in_list_unordered && !in_list_ordered && paragraph {
+  print_paragraph()
+}
+
 
 END {
   if      (in_code3) print  "'''"
@@ -246,6 +251,10 @@ function pop_all_lists() {
     type = list_type()
   }
 }
+function print_paragraph() {
+  for(; paragraph > 0; --paragraph)
+    printf "\n"
+}
 
 function list_offset()    { return list_pos ? list_offsets[list_pos-1] :  0 }
 function list_type()      { return list_pos ? list_types[list_pos-1]   : "" }
@@ -253,6 +262,7 @@ function list_li_close()  {
   if (!list_pos) return
   printf("%*s</li>\n", list_offsets[list_pos-1], " ")
   list_closed[list_pos-1] = false
+  print_paragraph()
 }
 # An optional additional argument is the separator to use when joining the strings
 # back together. If the caller supplies a nonempty value, join() uses it; if it is not
