@@ -26,4 +26,8 @@
 
 ## Documentation
 
-See project documentation: http://saleyn.github.io/util
+* See [project documentation](https://saleyn.github.io/util)
+
+## Download
+
+* [GitHub](http://saleyn.github.io/util)
