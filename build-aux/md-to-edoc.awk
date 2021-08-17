@@ -16,12 +16,12 @@ BEGIN {
   # Emails
   if (match($0, /<([^@.>" ]+\(at\)[^.>" ]+\.[^>" ]+)>/)) {
     $0 = gensub(/<([^@.>" ]+\(at\)[^.>" ]+\.[^>" ]+)>/,
-                "<li class=\"ref email\">\\&lt;\\1\\&gt;</li>", "g")
+                "\\&lt;\\1\\&gt;", "g")
   }
   # Emails
   else if (match($0, /<([^@.>" ]+@[^.>" ]+\.[^>" ]+)>/)) {
     $0 = gensub(/<([^@.>" ]+@[^.>" ]+\.[^>" ]+)>/,
-                "<li class=\"ref email\">\\&lt;<a href=\"mailto:\\1\">\\1</a>\\&gt;</li>", "g")
+                "\\&lt;<a href=\"mailto:\\1\">\\1</a>\\&gt;", "g")
   }
   # URLs
   else if (match($0, /\[[^\[]*?\]\(.+\.svg\)\]\( *([^\)]+)\)/)) {

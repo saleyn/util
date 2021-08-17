@@ -2,6 +2,10 @@
 
 [![build](https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg)](https://github.com/saleyn/util/actions/workflows/erlang.yml)
 
+## Author
+
+Serge Aleynikov <serge(at)gmail.com>
+
 ## Content:
 
 | Module                | Description                                                                          |
