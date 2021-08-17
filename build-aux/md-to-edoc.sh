@@ -5,7 +5,4 @@
 SCRIPT=$(readlink -f $0)
 AWK=${SCRIPT%.sh}.awk
 
-echo "SCRIPT=${SCRIPT}"
-echo "AWK=${AWK}"
-
 gawk -f ${AWK} vsn=$(git describe --abbrev=1 --tags) "$1"
