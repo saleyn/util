@@ -29,7 +29,7 @@ github-docs gh-pages:
 	git checkout master -- Makefile rebar.* README.md
 	$(prep-docs)
 	@# Create google verification file if one exists in the master
-	[ -n "$(GVER)" ] && git show master:$(GVER) 2>/dev/null > $(LOCAL_GVER) || true
+	[ -n "$(GVER)" ] && git show master:$(GVER) 2>/dev/null > "$(LOCAL_GVER)" || true
 	make docs
 	mv doc/*.* .
 	make clean
