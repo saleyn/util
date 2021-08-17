@@ -8,4 +8,4 @@ AWK=${SCRIPT%.sh}.awk
 echo "SCRIPT=${SCRIPT}"
 echo "AWK=${AWK}"
 
-awk -f ${AWK} vsn=$(git describe --abbrev=1 --tags) "$1"
+gawk -f ${AWK} vsn=$(git describe --abbrev=1 --tags) "$1"
