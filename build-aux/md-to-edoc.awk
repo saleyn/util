@@ -52,10 +52,9 @@ BEGIN {
   title = gensub(/^# */, "", "g")
   #out   = sprintf("@title %s\n@doc %s\n@version %s\n", title, title, vsn)
   #gsub(/^# */, out)
-  print "  ",title, "\n"
   print "@version", vsn
   print "@doc",title,"\n"
-  print "=",title,"=\n"
+  print "=",title, "=\n"
   main_title=1
   next
 }
