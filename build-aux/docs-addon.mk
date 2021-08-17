@@ -24,12 +24,13 @@ github-docs gh-pages:
 	git checkout master -- build-aux/docs-addon.mk || \
 		curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk
 	@# Create google verification file if one exists in the master
-	git show master:build-aux/google*.html 2>/dev/null > google.html && mv google.html $$(awk '{print $$2; exit}' google.html) || true
+	GOOG=$$(git ls-tree --name-only master build-aux/google*.html)
+	[ -n "$$GOOG" ] && git show master:$${GOOG} 2>/dev/null > $$(basename $${GOOG}) || true
 	git checkout master -- build-aux/google*.html || true
 	make docs
 	mv doc/*.* .
 	make clean
-	rm -fr src c_src include Makefile erl_crash.dump priv rebar.* README* .github .travis* .gitignore
+	rm -fr src c_src include Makefile erl_crash.dump priv rebar.* README* .github .travis* .gitignore _build
 	@FILES=`git status -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
 	for f in $$FILES ; do \
 		echo "Adding $$f"; git add $$f; \
