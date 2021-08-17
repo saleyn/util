@@ -33,7 +33,7 @@ github-docs gh-pages:
 	make docs
 	mv doc/*.* .
 	make clean
-	rm -fr src c_src include Makefile erl_crash.dump priv rebar.* \
+	rm -fr src test c_src include Makefile erl_crash.dump priv rebar.* \
 		     README* .github .travis* .gitignore _build build-aux
 	@FILES=`git status -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
 	for f in $$FILES ; do \
