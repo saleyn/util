@@ -208,6 +208,7 @@ END {
   else if (in_code2) printf "''"
   else if (in_code1) printf "'"
 
+  if      (in_list_unordered || in_list_ordered) printf("%*s</li>\n", li_offset, " ")
   if      (in_table) print  "</table>"
 
   pop_all_lists()
@@ -234,7 +235,7 @@ function list_pop()  {
   delete list_types[list_pos]
   type              = list_type()
   in_list_unordered = type == "ul"
-  in_list_unordered = type == "ol"
+  in_list_ordered   = type == "ol"
   li_offset         = list_offset()
   return offset
 }
