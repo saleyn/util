@@ -23,6 +23,9 @@ github-docs gh-pages:
 	git checkout master -- Makefile rebar.* README.md
 	git checkout master -- build-aux/docs-addon.mk || \
 		curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk
+	@# Create google verification file if one exists in the master
+	git show master:build-aux/google*.html 2>/dev/null > google.html && mv google.html $$(awk '{print $$2; exit}') || true
+	git checkout master -- build-aux/google*.html || true
 	make docs
 	mv doc/*.* .
 	make clean
