@@ -1,5 +1,5 @@
 docs: doc ebin clean-docs
-	@bin/md-to-edoc.sh README.md > src/overview.edoc
+	@build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
 ifeq ($(REBAR),rebar3)
 	@$(REBAR) edoc
 else

@@ -55,6 +55,7 @@ BEGIN {
   print "  ",title, "\n"
   print "@version", vsn
   print "@doc",title,"\n"
+  print "#",title,"#\n"
   main_title=1
   next
 }
