@@ -91,6 +91,10 @@ table td + td {
   border-left: 1px solid gray;
 }
 
+td.tab {
+  padding: 6px;
+}
+
 /* table alternative row coloring */
 tr:nth-child(even) {
   background-color: #e6e4e4;
