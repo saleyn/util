@@ -30,7 +30,6 @@ github-docs gh-pages:
 	$(prep-docs)
 	@# Create google verification file if one exists in the master
 	[ -n "$(GVER)" ] && git show master:$(GVER) 2>/dev/null > $(LOCAL_GVER) || true
-	git checkout master -- build-aux/google*.html || true
 	make docs
 	mv doc/*.* .
 	make clean
