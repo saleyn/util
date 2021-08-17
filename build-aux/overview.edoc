@@ -1,10 +1,14 @@
-@version 0.1-258-g9a2900b
+@version 0.1-265-ga60d4db
 @doc
 
 == Erlang Utility Modules ==
 
 
 <a href="https://github.com/saleyn/util/actions/workflows/erlang.yml"><img src="https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg"/></a>
+
+== Author ==
+
+Serge Aleynikov <li class="ref email">&lt;serge(at)gmail.com&gt;</li>
 
 == Content: ==
 
@@ -32,5 +36,14 @@
 
 == Documentation ==
 
-See project documentation: http://saleyn.github.io/util
+ <ul>
+   <li>See [project documentation](https://saleyn.github.io/util)
+
+   </li>
+ </ul>
+== Download ==
+
+ <ul>
+   <li>[GitHub](http://saleyn.github.io/util)
+ </ul>
 
