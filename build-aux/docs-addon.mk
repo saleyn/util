@@ -4,10 +4,12 @@ docs:
     [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
    done
 	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
-ifneq (,$(filter $(REBAR),rebar3))
+ifeq (rebar3,$(REBAR))
 	@$(REBAR) edoc
-else
+else ifeq (rebar,$(REBAR))
 	@$(REBAR) doc skip_deps=true
+else
+	rebar3 edoc
 endif
 
 github-docs gh-pages:
