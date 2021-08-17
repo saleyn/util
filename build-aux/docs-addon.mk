@@ -28,7 +28,10 @@ github-docs gh-pages:
 	$(prep-docs)
 	@# Create google verification file if one exists in the master
 	GOOG=$$(git ls-tree --name-only master build-aux/google*.html)
-	[ -n "$$GOOG" ] && git show master:$${GOOG} 2>/dev/null > $$(basename $${GOOG}) || true
+	LOCAL_GOOG=$$(basename $${GOOG})
+	echo "GOOG=$${GOOG}"
+	echo "LocalGOOG=$${LOCAL_GOOG}"
+	[ -n "$$GOOG" ] && git show master:$${GOOG} 2>/dev/null > $${LOCAL_GOOG} || true
 	git checkout master -- build-aux/google*.html || true
 	make docs
 	mv doc/*.* .
