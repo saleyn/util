@@ -147,14 +147,14 @@ in_list_ordered {
 }
 !in_code && /\|[^\|]+\|/ && !/\| *-+ *\|/ {
   # Print rows
-  delim = in_table ? "</td><td>" : "</th><th>"
+  delim = in_table ? "</td><td class=\"tab\">" : "</th><th class=\"tab\">"
   if (!in_table) {
     print("<table>\n")
     in_table=1
   }
   gsub(/ *\| */, delim)
-  sub(/<\/t[dh]>/, "<tr>") # Remove first occurance of </td> with <tr>
-  sub(/<t[dh]>$/, "</tr>") # Replace last occrance of <td> with </tr>
+  sub(/<\/t[dh]>/,     "<tr>")  # Remove first occurance of </td> with <tr>
+  sub(/<t[dh][^>]+>$/, "</tr>") # Replace last occrance of <td> with </tr>
   print
   next
 }
