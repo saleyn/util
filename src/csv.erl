@@ -34,7 +34,7 @@
 %%       `replace' will do an insert by using `REPLACE INTO' statement. `ignore_dups'
 %%       will use `INSERT IGNORE INTO' statement to ignore records with duplicate keys.
 %%       `update_dups' will do an `INSERT INTO' and `ON DUPLICATE KEY UPDATE', so that
-%%       the old records are updated and the new ones are inserted.</li>
+%%       the old records are updated and the new ones are inserted.</dd>
 %% <dt>{batch_size, Size}</dt>
 %%   <dd>Number of records per SQL insert/update/replace call</dd>
 %% <dt>{blob_size, Size}</dt>
