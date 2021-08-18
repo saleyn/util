@@ -15,18 +15,19 @@
 -export([max_field_lengths/2, guess_data_types/2, guess_data_type/1, load_to_mysql/4]).
 
 -type load_options() ::
-  [{load_type,  recreate|replace|ignore_dups|update_dups}|
-   {col_types,  #{binary() => ColType::atom() | {ColType::atom(), ColLen::integer()}}}|
-   {batch_size, integer()}|
-   {blob_size,  integer()}|
+  [{load_type,        recreate|replace|ignore_dups|update_dups}|
+   {col_types,        #{binary() => ColType::atom() | {ColType::atom(), ColLen::integer()}}}|
+   {batch_size,       integer()}|
+   {blob_size,        integer()}|
+   {create_table,     boolean()}|
    {save_create_sql_to_file, string()}|
-   {guess_types,boolean()}|
+   {guess_types,      boolean()}|
    {guess_limit_rows, integer()}|
-   {max_nulls_pcnt, float()}|
-   {primary_key,PKColumns::binary()|[binary()|list()]}|
-   {drop_temp_table, boolean()}|
-   {encoding,   string()|atom()}|
-   {verbose,    boolean()|integer()}].
+   {max_nulls_pcnt,   float()}|
+   {primary_key,      PKColumns::binary()|[binary()|list()]}|
+   {drop_temp_table,  boolean()}|
+   {encoding,    string()|atom()}|
+   {verbose,     boolean()|integer()}].
 %% Options for loading data to a database.
 %% <dl>
 %% <dt>{load_type, Type}</dt>
@@ -36,6 +37,8 @@
 %%       will use `INSERT IGNORE INTO' statement to ignore records with duplicate keys.
 %%       `update_dups' will do an `INSERT INTO' and `ON DUPLICATE KEY UPDATE', so that
 %%       the old records are updated and the new ones are inserted.</dd>
+%% <dt>{create_table, Allow}</dt>
+%%   <dd>Allow to create a table if it doesn't exist</dd>
 %% <dt>{col_types, Map}</dt>
 %%   <dd>Types of data for all or some columens. The Map is in the format:
 %%       `ColName::binary() => ColInfo`, where
@@ -367,6 +370,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
     when is_list(File), is_list(Tab), is_pid(MySqlPid), is_list(Opts) ->
   BatSz  = proplists:get_value(batch_size,  Opts, 100), % Insert this many records per call
   BlobSz = proplists:get_value(blob_size,   Opts, 1000),% Length at which VARCHAR becomes BLOB
+  Create = proplists:get_value(create_table,Opts, true),% Allow to create table
   Types  = proplists:get_value(col_types,   Opts, #{}), % Column types
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   Verbose= case proplists:get_value(verbose,     Opts, 0) of
@@ -414,7 +418,9 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
         {Merge(Heads, max_field_lengths(true, CSV1)), CSV1}
     end,
   Verbose > 0 andalso
-    io:format(standard_error, "Columns:\n  ~p\n", [ColNmTpMxLens]),
+    io:format(standard_error,
+              "LoadType: ~p\n"
+              "Columns:\n  ~p\n", [LoadTp, ColNmTpMxLens]),
   Exists = case mysql:query(MySqlPid, "SELECT count(*) as a\n"
                                       "  FROM information_schema.tables\n"
                                       " WHERE table_schema=database() AND\n"
@@ -429,9 +435,16 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
   OldTab = Tab ++ "_OLD",
   CrTab  = lists:flatten([
              "DROP TABLE IF EXISTS `", TmpTab, "`;\n",
-             case Exists andalso lists:member(LoadTp, [replace, update_dups, ignore_dups]) of
-               true ->
+             case Exists of
+               true when LoadTp==replace
+                        ; LoadTp==update_dups 
+                        ; LoadTp==ignore_dups
+                        ;(LoadTp==recreate andalso not Create) ->
                  ["CREATE TABLE `", TmpTab, "` AS SELECT * FROM `", Tab, "` where false;\n"];
+               true when not Create ->
+                 throw("Table "++Tab++" doesn't exist and creation not allowed!");
+               true ->
+                 throw({invalid_load_type, LoadTp});
                false ->
                  ["CREATE TABLE `", TmpTab, "` (",
                    string:join(
@@ -473,7 +486,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
     SQLF when is_list(SQLF) ->
       ok    = file:write_file(SQLF, CrTab)
   end,
- 
+
   Verbose > 0 andalso io:format(standard_error, "SQL:\n====\n~s\n", [CrTab]),
 
   case mysql:query(MySqlPid, CrTab) of
