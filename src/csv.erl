@@ -15,17 +15,26 @@
 -export([max_field_lengths/2, guess_data_types/2, guess_data_type/1, load_to_mysql/4]).
 
 -type load_options() ::
-  [{batch_size, integer()}|
+  [{load_type,  recreate|replace|ignore_dups|update_dups}|
+   {batch_size, integer()}|
    {blob_size,  integer()}|
    {save_create_sql_to_file, string()}|
    {guess_types,boolean()}|
    {guess_limit_rows, integer()}|
    {max_nulls_pcnt, float()}|
    {primary_key,PKColumns::binary()|[binary()|list()]}|
+   {drop_temp_table, boolean()}|
    {encoding,   string()|atom()}|
-   {verbose,    boolean()}].
+   {verbose,    boolean()|integer()}].
 %% Options for loading data to a database.
 %% <dl>
+%% <dt>{load_type, Type}</dt>
+%%   <dd>Type of loading to perform. `recreate' will replace the table by atomically
+%%       dropping the old one, creating/loading the new one, and replacing the table.
+%%       `replace' will do an insert by using `REPLACE INTO' statement. `ignore_dups'
+%%       will use `INSERT IGNORE INTO' statement to ignore records with duplicate keys.
+%%       `update_dups' will do an `INSERT INTO' and `ON DUPLICATE KEY UPDATE', so that
+%%       the old records are updated and the new ones are inserted.</li>
 %% <dt>{batch_size, Size}</dt>
 %%   <dd>Number of records per SQL insert/update/replace call</dd>
 %% <dt>{blob_size, Size}</dt>
@@ -43,6 +52,8 @@
 %%       the column data type is forced to be treated as `string'</dd>
 %% <dt>{primary_key, Fields}</dt>
 %%   <dd>Names of primary key fields in the created table</dd>
+%% <dt>{drop_temp_table, boolean()}</dt>
+%%   <dd>When true (default), temp table is dropped.</dd>
 %% <dt>{encoding, Encoding}</dt>
 %%   <dd>The name of the encoding to use for storing data. For the list of permissible
 %%       values [see this
@@ -324,25 +335,42 @@ scan_mlt2([], Acc) ->
 %% @doc Load CSV data from a `File' to a `MySQL' database.
 %% `Tab' is the name of a table where to load data.  `MySqlPid' is the pid of a
 %% MySQL database connection returned by `mysql:start_link/1'.
-%% The data from the file is loaded atomically - i.e. either the whole file
-%% loading succeeds or fails.  This is accomplished by first loading data to a
-%% temporary table, and then using the database's ACID properties to replace the
-%% target table with the temporary table.
-%%
-%% Presently the table is entirely replaced with the data from file.
+%% The data in the table is replaced according to `{import_type, Type}':
+%% <ul>
+%% <li>`recreate' - The data from the file is loaded atomically - i.e. either
+%% the whole file loading succeeds or fails.  This is accomplished by first
+%% loading data to a temporary table, and then using the database's ACID
+%% properties to replace the target table with the temporary table.
+%% The table is entirely replaced with the data from file.</li>
+%% <li>`replace'     - Use "REPLACE INTO" instead of "INSERT INTO" existing
+%% table</li>
+%% <li>`ignore_dups' - The insert in the existing table is performed and the
+%% records with duplicate keys are ignored</li>
+%% <li>`update_dups' - The insert in the existing table is performed and the
+%% records with duplicate keys are updated</li>
+%% </ul>
 %%
 %% NOTE: this function requires [https://github.com/mysql-otp/mysql-otp.git]
 %% @end
 %%------------------------------------------------------------------------------
 -spec load_to_mysql(File::string(), Tab::string(),
                     MySqlPid::pid(), Opts::load_options()) ->
-        {Columns::list(), RecCount::integer()}.
+        {Columns::list(), AffectedCount::integer(), RecCount::integer()}.
 load_to_mysql(File, Tab, MySqlPid, Opts)
     when is_list(File), is_list(Tab), is_pid(MySqlPid), is_list(Opts) ->
-  BatSz  = proplists:get_value(batch_size, Opts, 100), % Insert this many records per call
-  BlobSz = proplists:get_value(blob_size,  Opts, 1000),% Length at which VARCHAR becomes BLOB
+  BatSz  = proplists:get_value(batch_size,  Opts, 100), % Insert this many records per call
+  BlobSz = proplists:get_value(blob_size,   Opts, 1000),% Length at which VARCHAR becomes BLOB
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
-  Verbose= proplists:get_value(verbose,    Opts, false),
+  Verbose= case proplists:get_value(verbose,     Opts, 0) of
+             true  -> 1;
+             false -> 0;
+             _I when is_integer(_I) -> _I
+           end,
+  SaveSQL= proplists:get_value(save_create_sql_to_file, Opts, false),
+  LoadTp = proplists:get_value(load_type,   Opts, recreate),
+           lists:member(LoadTp,[recreate, replace, ignore_dups, update_dups])
+             orelse throw({badarg, {load_type, LoadTp}}),
+  Drop   = proplists:get_value(drop_temp_table, Opts, true),
   PKey   = case proplists:get_value(primary_key,  Opts, undefined) of
              K when is_binary(K) ->
                [K];
@@ -377,25 +405,46 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
       false ->
         {Merge(Heads, max_field_lengths(true, CSV1)), CSV1}
     end,
-  Verbose andalso
+  Verbose > 0 andalso
     io:format(standard_error, "Columns:\n  ~p\n", [ColNmTpMxLens]),
+  Exists = case mysql:query(MySqlPid, "SELECT count(*) as a\n"
+                                      "  FROM information_schema.tables\n"
+                                      " WHERE table_schema=database() AND\n"
+                                      "       table_name='" ++ Tab ++ "';\n")
+           of
+             {ok,_,[[N]]} ->
+               N > 0;
+             {error, {Code01, _, Msg01}} ->
+               throw({error_checking_if_table_exists, Code01, binary_to_list(Msg01), Tab})
+           end,
   TmpTab = Tab ++ "_tmp",
   OldTab = Tab ++ "_OLD",
-  CrTab  =  lists:flatten([
-              "DROP TABLE IF EXISTS `", TmpTab, "`;\n",
-              "CREATE TABLE `", TmpTab, "` (",
-                string:join([case T of
-                               _ when I > BlobSz -> io_lib:format("`~s` BLOB",     [to_string(S)]);
-                               date              -> io_lib:format("`~s` DATE",     [to_string(S)]);
-                               datetime          -> io_lib:format("`~s` DATETIME", [to_string(S)]);
-                               integer           -> io_lib:format("`~s` BIGINT",   [to_string(S)]);
-                               float             -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
-                               number            -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
-                               _                 -> io_lib:format("`~s` VARCHAR(~w)", [to_string(S),I])
-                             end || {S,T,I,_} <- ColNmTpMxLens], ","),
-              ");\n"]),
+  CrTab  = lists:flatten([
+             "DROP TABLE IF EXISTS `", TmpTab, "`;\n",
+             case Exists andalso lists:member(LoadTp, [replace, update_dups, ignore_dups]) of
+               true ->
+                 ["CREATE TABLE `", TmpTab, "` AS SELECT * FROM `", Tab, "` where false;\n"];
+               false ->
+                 ["CREATE TABLE `", TmpTab, "` (",
+                   string:join([case T of
+                                  _ when I > BlobSz -> io_lib:format("`~s` BLOB",     [to_string(S)]);
+                                  date              -> io_lib:format("`~s` DATE",     [to_string(S)]);
+                                  datetime          -> io_lib:format("`~s` DATETIME", [to_string(S)]);
+                                  integer           -> io_lib:format("`~s` BIGINT",   [to_string(S)]);
+                                  float             -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
+                                  number            -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
+                                  _                 -> io_lib:format("`~s` VARCHAR(~w)", [to_string(S),I])
+                                end || {S,T,I,_} <- ColNmTpMxLens], ","),
+                 ");\n"]
+             end,
+             %% Add primary key
+             case PKey of
+               [] -> "";
+               _  -> SS = string:join(["`"++binary_to_list(S)++"`" || S <- PKey], ","),
+                     io_lib:format("ALTER TABLE `~s` ADD PRIMARY KEY (~s);\n", [TmpTab, SS])
+             end]),
 
-  case proplists:get_value(save_create_sql_to_file, Opts, false) of
+  case SaveSQL of
     false ->
       ok;
     true ->
@@ -405,12 +454,30 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
       ok    = file:write_file(SQLF, CrTab)
   end,
  
-  Verbose andalso io:format(standard_error, "SQL:\n====\n~s\n", [CrTab]),
+  Verbose > 0 andalso io:format(standard_error, "SQL:\n====\n~s\n", [CrTab]),
 
   case mysql:query(MySqlPid, CrTab) of
     ok -> ok;
     {error, {Code, _, Msg}} ->
       throw({error_creating_table, Code, binary_to_list(Msg), CrTab})
+  end,
+
+  %% Remove NOT NULL constraints from all columnts
+  if Exists, LoadTp == update_dups ->
+    {ok, _, NullCols} =
+      mysql:query(MySqlPid,
+                  "select column_name,column_type,collation_name,column_default,extra "
+                    "from information_schema.columns "
+                   "where table_schema=database() AND table_name='"++Tab++"' "
+                     "and IS_NULLABLE='NO' and COLUMN_KEY!='PRI';"),
+    NotNullSQL = lists:flatten(
+                   [["ALTER TABLE `",TmpTab,"` MODIFY `",cc(C),"` ",cc(Tp)," NULL",
+                     cc("COLLATE",CN),cc("DEFAULT",CD),cc(EXT),";\n"]
+                    || [C,Tp,CN,CD,EXT] <- NullCols]),
+    Verbose > 0 andalso io:format(standard_error, "Replacing NULL columns:\n  ~p\n", [NotNullSQL]),
+    ok = mysql:query(MySqlPid, NotNullSQL);
+  true ->
+    ok
   end,
 
   [HD|Rows] = CSV,
@@ -421,14 +488,17 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   FstBatLen = length(hd(BatchRows)),
   if Enc   /= [] ->
-    Verbose andalso io:format(standard_error, "SQL:\n====\n~s\n", [Enc]),
+    Verbose > 0 andalso io:format(standard_error, "SQL:\n====\n~s\n", [Enc]),
     ok      = mysql:query(MySqlPid, Enc);
   true ->
     ok
   end,
-  PfxSQL    = lists:append(["INSERT INTO ", TmpTab, " (", HHHs, ") VALUES "]),
+
+  %% Insert data to the temp table
+  
+  PfxSQL    = lists:append(["INSERT INTO `", TmpTab, "` (", HHHs, ") VALUES "]),
   [_|SfxSQL]= string:copies(QQQs, FstBatLen),
-  Verbose andalso io:format(standard_error, "SQL:\n====\n~s~s\n", [PfxSQL, tl(QQQs)]),
+  Verbose > 0 andalso io:format(standard_error, "SQL:\n====\n~s~s\n", [PfxSQL, tl(QQQs)]),
   {ok,Ref}  = mysql:prepare(MySqlPid, PfxSQL++SfxSQL),
 
   lists:foldl(fun(Batch, I) ->
@@ -441,7 +511,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
         {ok,R}   = mysql:prepare(MySqlPid, PfxSQL++Sfx2),
         {R, true}
       end,
-    Row = lists:append(Batch),
+    Row = [if B == <<>> -> null; true -> B end || B <- lists:append(Batch)],
+    Verbose > 1 andalso io:format(standard_error, "Inserting: ~p\n", [Row]),
     Res = mysql:execute(MySqlPid, SqlRef, Row),
     Unprepare andalso mysql:unprepare(MySqlPid, SqlRef),
     case Res of
@@ -467,39 +538,59 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
 
   mysql:unprepare(MySqlPid, Ref),
 
-  PKSql = case PKey of
-            [] -> "";
-            _  -> SS = string:join(["`"++binary_to_list(S)++"`" || S <- PKey], ","),
-                  io_lib:format("ALTER TABLE `~s` ADD PRIMARY KEY (~s);\n", [TmpTab, SS])
-          end,
+  %% Now the temp table is populated - update the actual table
   SQL = lists:flatten(
-          io_lib:format("DROP TABLE IF EXISTS `~s`;\n"
-                        "~s"
-                        "-- Check if the real prod table exists\n"
-                        "SELECT count(*) INTO @exists\n"
-                        "  FROM information_schema.tables\n"
-                        " WHERE table_schema=database() AND\n"
-                        "       table_name='~s';\n"
-                        "-- If so, atomically rename it to another table,\n"
-                        "-- rename temp table to prod table, and drop the old table\n"
-                        "-- Otherwise, just atomically rename the temp table into prod\n"
-                        "SET @query = IF(@exists>0,\n"
-                        "  'RENAME TABLE `~s` TO `~s`, `~s` TO `~s`',\n"
-                        "  'RENAME TABLE `~s` TO `~s`');\n"
-                        "PREPARE stmt FROM @query;\n"
-                        "EXECUTE stmt;\n"
-                        "DEALLOCATE PREPARE stmt;\n"
-                        "DROP TABLE IF EXISTS `~s`;\n",
-                        [OldTab, PKSql,  Tab,
-                         Tab, OldTab, TmpTab, Tab,
-                         TmpTab, Tab,
-                         OldTab])),
+    case LoadTp of
+      recreate ->
+        %% Rename the actual table X to X_OLD, and the tmp table T to X, and drop X_OLD
+        %% in one transaction:
+        ["DROP TABLE IF EXISTS `", OldTab, "`;\n"
+         "-- Check if the real prod table exists\n"
+         "SELECT count(*) INTO @exists\n"
+         "  FROM information_schema.tables\n"
+         " WHERE table_schema=database() AND\n"
+         "       table_name='", Tab, "';\n"
+         "-- If so, atomically rename it to another table,\n"
+         "-- rename temp table to prod table, and drop the old table\n"
+         "-- Otherwise, just atomically rename the temp table into prod\n"
+         "SELECT count(*) from `", TmpTab, "` INTO @cnt\n"
+         "SET @query = IF(@exists>0,\n"
+         "  'RENAME TABLE `", Tab,    "` TO `", OldTab, "`, `", TmpTab, "` TO `", Tab, "`',\n"
+         "  'RENAME TABLE `", TmpTab, "` TO `", Tab,    "`');\n"
+         "PREPARE stmt FROM @query;\n"
+         "EXECUTE stmt;\n"
+         "DEALLOCATE PREPARE stmt;\n"
+         "DROP TABLE IF EXISTS `", OldTab, "`;\n"
+         "SELECT @cnt,@cnt;\n"];
+      replace ->
+        ["REPLACE INTO `", Tab, "` (",HHHs,") SELECT ",HHHs," FROM `", TmpTab, "`;\n"
+         "SELECT ROW_COUNT(),FOUND_ROWS();\n"];
+      ignore_dups ->
+        ["INSERT IGNORE INTO `", Tab, "` (",HHHs,") SELECT ",HHHs," FROM `", TmpTab, "`;\n"
+         "SELECT ROW_COUNT(),FOUND_ROWS();\n"];
+      update_dups ->
+        ["INSERT INTO `", Tab, "` (",HHHs,") SELECT ",HHHs," FROM `", TmpTab, "`\n",
+         "ON DUPLICATE KEY UPDATE ",
+         string:join([begin LL=binary_to_list(S), ["`",LL,"`=IFNULL(VALUES(",LL,"),`",Tab,"`.`",LL,"`)"] end
+                      || S <- HD, not lists:member(S, PKey)], ","), ";\n"
+         "SELECT ROW_COUNT(),FOUND_ROWS();\n"]
+    end),
 
-  Verbose andalso io:format(standard_error, "SQL:\n====\n~s\n", [SQL]),
+  Verbose > 0 andalso io:format(standard_error, "SQL:\n====\n~s\n", [SQL]),
 
-  ok = mysql:query(MySqlPid, SQL),
+  case mysql:query(MySqlPid, SQL) of
+    {ok, _, [[Changed,SelectedRows]]} ->
+      if Drop ->
+        ok = mysql:query(MySqlPid, lists:flatten(["DROP TABLE IF EXISTS `", TmpTab, "`;"]));
+      true ->
+        ok
+      end,
 
-  {HD, length(CSV)-1}.
+      Selected = if SelectedRows < 0 -> 0; true -> SelectedRows end,
+      {HD, Changed, Selected};
+    {error, {Code3, _, Msg3}} ->
+      throw({error_inserting_records, Code3, binary_to_list(Msg3), SQL})
+  end.
 
 encoding(undefined) -> [];
 encoding(A) when is_atom(A) -> encoding2(atom_to_list(A));
@@ -516,6 +607,11 @@ to_string(L) when is_list(L)   -> L.
 
 to_binary(I) when is_binary(I) -> I;
 to_binary(L) when is_list(L)   -> list_to_binary(L).
+
+cc(null)                       -> "";
+cc(B)        when is_binary(B) -> binary_to_list(B).
+cc(L,null)   when is_list(L)   -> "";
+cc(L,B)      when is_binary(B) -> " "++L++" "++binary_to_list(B).
 
 cleanup_header([$ |T]) -> [$_|cleanup_header(T)];
 cleanup_header([C|T]) when (C >= $a andalso C =< $z);
