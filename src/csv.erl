@@ -16,6 +16,7 @@
 
 -type load_options() ::
   [{load_type,  recreate|replace|ignore_dups|update_dups}|
+   {col_types,  #{binary() => ColType::atom() | {ColType::atom(), ColLen::integer()}}}|
    {batch_size, integer()}|
    {blob_size,  integer()}|
    {save_create_sql_to_file, string()}|
@@ -35,6 +36,12 @@
 %%       will use `INSERT IGNORE INTO' statement to ignore records with duplicate keys.
 %%       `update_dups' will do an `INSERT INTO' and `ON DUPLICATE KEY UPDATE', so that
 %%       the old records are updated and the new ones are inserted.</dd>
+%% <dt>{col_types, Map}</dt>
+%%   <dd>Types of data for all or some columens. The Map is in the format:
+%%       `ColName::binary() => ColInfo`, where
+%%       ColInfo is `ColType | {ColType, ColLen::integer()}', and `ColType' is:
+%%       `date | datetime | integer | float | blob | number'.
+%%       </dd>
 %% <dt>{batch_size, Size}</dt>
 %%   <dd>Number of records per SQL insert/update/replace call</dd>
 %% <dt>{blob_size, Size}</dt>
@@ -360,6 +367,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
     when is_list(File), is_list(Tab), is_pid(MySqlPid), is_list(Opts) ->
   BatSz  = proplists:get_value(batch_size,  Opts, 100), % Insert this many records per call
   BlobSz = proplists:get_value(blob_size,   Opts, 1000),% Length at which VARCHAR becomes BLOB
+  Types  = proplists:get_value(col_types,   Opts, #{}), % Column types
   Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
   Verbose= case proplists:get_value(verbose,     Opts, 0) of
              true  -> 1;
@@ -426,15 +434,27 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                  ["CREATE TABLE `", TmpTab, "` AS SELECT * FROM `", Tab, "` where false;\n"];
                false ->
                  ["CREATE TABLE `", TmpTab, "` (",
-                   string:join([case T of
-                                  _ when I > BlobSz -> io_lib:format("`~s` BLOB",     [to_string(S)]);
-                                  date              -> io_lib:format("`~s` DATE",     [to_string(S)]);
-                                  datetime          -> io_lib:format("`~s` DATETIME", [to_string(S)]);
-                                  integer           -> io_lib:format("`~s` BIGINT",   [to_string(S)]);
-                                  float             -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
-                                  number            -> io_lib:format("`~s` DOUBLE",   [to_string(S)]);
-                                  _                 -> io_lib:format("`~s` VARCHAR(~w)", [to_string(S),I])
-                                end || {S,T,I,_} <- ColNmTpMxLens], ","),
+                   string:join(
+                     [
+                      begin
+                        {CTp, I} =
+                          case maps:get(S, Types, T) of
+                            CA when is_atom(CA) ->
+                              {CA, CLen};
+                            {CA, CLen1} ->
+                              {CA, CLen1}
+                          end,
+                        case CTp of
+                          blob              -> io_lib:format("`~s` BLOB",       [to_string(S)]);
+                          _ when I > BlobSz -> io_lib:format("`~s` BLOB",       [to_string(S)]);
+                          date              -> io_lib:format("`~s` DATE",       [to_string(S)]);
+                          datetime          -> io_lib:format("`~s` DATETIME",   [to_string(S)]);
+                          integer           -> io_lib:format("`~s` BIGINT",     [to_string(S)]);
+                          float             -> io_lib:format("`~s` DOUBLE",     [to_string(S)]);
+                          number            -> io_lib:format("`~s` DOUBLE",     [to_string(S)]);
+                          _                 -> io_lib:format("`~s` VARCHAR(~w)",[to_string(S),I])
+                        end
+                      end || {S,T,CLen,_} <- ColNmTpMxLens], ","),
                  ");\n"]
              end,
              %% Add primary key
