@@ -553,7 +553,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
          "-- If so, atomically rename it to another table,\n"
          "-- rename temp table to prod table, and drop the old table\n"
          "-- Otherwise, just atomically rename the temp table into prod\n"
-         "SELECT count(*) from `", TmpTab, "` INTO @cnt\n"
+         "SELECT count(*) from `", TmpTab, "` INTO @cnt;\n"
          "SET @query = IF(@exists>0,\n"
          "  'RENAME TABLE `", Tab,    "` TO `", OldTab, "`, `", TmpTab, "` TO `", Tab, "`',\n"
          "  'RENAME TABLE `", TmpTab, "` TO `", Tab,    "`');\n"
