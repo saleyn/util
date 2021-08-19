@@ -453,11 +453,13 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                        ; LoadTp==ignore_dups
                        ;(LoadTp==recreate andalso not Create) ->
                  ["CREATE TABLE `", TmpTab, "` AS SELECT * FROM `", Tab, "` where false;\n"];
-               true when not Create ->
-                 throw("Table "++Tab++" doesn't exist and creation not allowed!");
-               true when LoadTp /= upsert ->
+               true when LoadTp /= upsert
+                       , LoadTp /= recreate ->
                  throw({invalid_load_type, LoadTp});
-               false ->
+               false when not Create
+                        , LoadTp /= recreate ->
+                 throw("Table "++Tab++" doesn't exist and creation not allowed!");
+               _ ->
                  ["CREATE TABLE `", TmpTab, "` (",
                    string:join(
                      [
