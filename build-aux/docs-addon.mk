@@ -35,8 +35,8 @@ endif
 clean-docs::
 	rm -f doc/*.{css,html,png} doc/edoc-info
 
-get-version set-version: APPFILE=$(shell find -name $(PROJECT).app.src)
-get-version set-version: PROJECT=$(if $(PROJECT),$(PROJECT),$(notdir $(PWD)))
+get-version set-version: APPFILE:=$(shell find -name $(PROJECT).app.src)
+get-version set-version: PROJECT:=$(if $(PROJECT),$(PROJECT),$(notdir $(PWD)))
 get-version:
 	@printf "%-20s: %s\n" "$(notdir $(APPFILE))" "$$(sed -n 's/.*{vsn, \"\([0-9]\+\)\(\(\.[0-9]\+\)\+\)\"}.*/\1\2/p' $(APPFILE))"
 	@printf "%-20s: %s\n" "rebar.config" "$$(sed -n 's/.*{$(PROJECT), *\"\([0-9]\+\)\(\(\.[0-9]\+\)\+\)\"}.*/\1\2/p' rebar.config)"
