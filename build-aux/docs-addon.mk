@@ -35,6 +35,10 @@ endif
 github-docs gh-pages: GVER=$(shell git ls-tree --name-only -r master build-aux | grep 'google.*\.html')
 github-docs gh-pages: LOCAL_GVER=$(notdir $(GVER))
 github-docs gh-pages:
+	@# The git config params must be set when this target is executed by a GitHub workflow
+	@[ -z "$(git config user.name)" ] && \
+		git config user.name  github-actions
+		git config user.email github-actions@github.com
 	@if git branch | grep -q gh-pages ; then \
 		git checkout gh-pages; \
 	else \
