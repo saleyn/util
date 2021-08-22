@@ -2,9 +2,7 @@
 
 [![build](https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg)](https://github.com/saleyn/util/actions/workflows/erlang.yml)
 
-## Author
-
-Serge Aleynikov <serge(at)gmail.com>
+**Author** Serge Aleynikov <serge(at)gmail.com>
 
 ## Content:
 
@@ -32,6 +30,28 @@ Serge Aleynikov <serge(at)gmail.com>
 ## Documentation
 
 * See [project documentation](https://saleyn.github.io/util)
+
+This project implements an extension of `EDoc` documentation by using the color scheme similar
+to `GitHub`, and generate the `overview.edoc` from the `README.md`.
+
+In order to use this feature, modify your `Makefile` to include:
+```
+-include build-aux/docs-addon.mk
+
+build-aux/docs-addon.mk:
+	@echo "Fetching build-aux/docs-addon.mk" && \
+		mkdir -p build-aux && \
+		curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk
+```
+
+This will add the following targets to your `Makefile`:
+
+- `docs` - Make documentation from source code
+- `gh-pages` - Create GitHub pages for the current project
+- `get-version` - Show application release version from the `*.app.src` and `rebar.config`
+- `set-version` - Set the version number for the above `(make set-version version=X.Y.Z)`
+- `clean-docs`  - Remove the generated files in the `doc` directory
+
 
 ## Download
 
