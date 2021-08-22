@@ -42,14 +42,6 @@ clean:
 doc ebin:
 	mkdir -p $@
 
-clean-docs:
-	rm -f doc/*.{css,html,png} doc/edoc-info
-
-set-version:
-	@[ -z $(version) ] && echo "Missing version=X.Y.Z!" && exit 1 || true
-	@sed -i "s/{$(PROJECT), \"[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\"}/{$(PROJECT), \"$(version)\"}/" rebar.config
-	@sed -i "s/{vsn, \"[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\"}/{vsn, \"$(version)\"}/" src/$(PROJECT).app.src
-
 publish:
 	$(REBAR) hex publish $(if $(replace),--replace)
 
