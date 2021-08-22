@@ -1,9 +1,12 @@
 docs::
 	@mkdir -p build-aux
 	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh; do \
-    [ ! -f build-aux/$$f ] && \
+    if [ -f build-aux/$$f ]; then \
+	    true; \
+		else \
 		  echo "Fetching $$f from github.com/saleyn/util" && \
       curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
+		fi; \
    done
 	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
 docs:: BG=$(shell sed -n '/background-color:/{s/[^#]\+#\([^;]\+\);.*/\1/p;q}' build-aux/edoc.css)
