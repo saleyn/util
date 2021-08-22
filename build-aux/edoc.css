@@ -1,42 +1,87 @@
-/* Baseline rhythm */
+html {
+  --scrollbarBG: #CFD8DC;
+  --thumbBG: #90A4AE;
+}
+
 body {
   font-size: 16px;
-  font-family: Helvetica, sans-serif;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
   margin: 8px;
+  background-color: #0d1117;
+  color: #d8cebf;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+
+frameset {
+  background-color: #0d1117;
+  bordercolor:     #0d1117;
+}
+
+element.style {
+  word-wrap: break-word;
+}
+
+pre {
+  background-color: var(--color-bg-tertiary);
+  background-color: #161b22;
+  border-radius: 6px;
+  font-size: 85%;
+  line-height: 1.45;
+  overflow: auto;
+  padding: 16px;
+  word-wrap: normal;
+  white-space: pre;
+  margin: 1em 0px;
 }
 
 p {
-  font-size: 1em; /* 16px */
-  line-height: 1.5em; /* 24px */
-  margin: 0 0 1.5em 0;
+  font-size: 16px;
+  line-height: 1.5em;
+  /*margin: 0 0 1.5em 0;*/
+  display: block;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
 }
 
 h1 {
-  font-size: 1.5em; /* 24px */
-  line-height: 1em; /* 24px */
-  margin-top: 1em;
-  margin-bottom: 0em;
+  display: block;
 }
 
-h2 {
-  font-size: 1.375em; /* 22px */
-  line-height: 1.0909em; /* 24px */
-  margin-top: 1.0909em;
-  margin-bottom: 0em;
+h1, h2 {
+  border-bottom: 1px solid var(--color-border-secondary);
+  padding-bottom: .3em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 16px;
 }
 
-h3 {
-  font-size: 1.25em; /* 20px */
-  line-height: 1.2em; /* 24px */
-  margin-top: 1.2em;
-  margin-bottom: 0em;
+table {
+  display: block;
+  max-width: 100%;
+  overflow: auto;
+  width: 100%;
+  width: -webkit-max-content;
+  width: -moz-max-content;
+  width: max-content;
+  border-spacing: 0;
+  margin-left: 0;
 }
 
-h4 {
-  font-size: 1.125em; /* 18px */
-  line-height: 1.3333em; /* 24px */
-  margin-top: 1.3333em;
-  margin-bottom: 0em;
+code, pre, tt {
+  font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+  font-size: 12px;
+}
+
+blockquote, details, ul, dl, ol, p, pre {
+  margin-bottom: 1.7143em;
+  margin-top: 0;
+  margin-left: 1em;
 }
 
 .class-for-16px {
@@ -58,19 +103,14 @@ ul {
   list-style-position: outside;
 }
 
-/* Customizations */
-body {
-  color: #333;
-}
-
 tt, code, pre { font-size: 0.875em }
 
 pre {
-  font-size: 0.875em; /* 14px */
+  font-size: 12px;
   line-height: 1.7143em; /* 24px */
   margin: 0 1em 1.7143em;
   padding: 0 1em;
-  background: #E0F0FF;
+  background: #161b22;
 }
 
 .navbar img, hr {
@@ -78,30 +118,53 @@ pre {
 }
 
 .navbar, table th, h1, h2.indextitle {
-  background-color: #85C2FF;
+  /*background-color: #85C2FF;*/
 }
 
-table.tab {
+table.frame {
+  padding: 0;
+}
+
+table.tab, table.index {
   border-collapse: collapse;
   border: 1px solid gray;
 }
 
 /* Column separators excluding the border */
-table.tab td.tab + td.tab {
+table.tab   td.tab + td.tab,
+table.index td.index + td.index,
+{
   border-left: 1px solid gray;
 }
 
-td.tab {
-  padding: 6px;
+table.tab th.tab {
+  border-bottom: 1px solid gray;
+}
+
+table.tab   td,
+table.tab   th,
+table.index td,
+table.tab   th,
+dd {
+  padding: 8px;
+}
+
+table td {
+  vertical-align: top;
+}
+
+.frame table td,
+.frame table th {
+  padding: 0px;
 }
 
 /* table alternative row coloring */
 tr.tab:nth-child(even) {
-  background-color: #e6e4e4;
+  background-color: #161b22;
 }
 
 h1 {
-  border-left: 0.5em solid #85C2FF;
+  /*border-left: 0.5em solid #85C2FF; */
   padding-left: 0.5em;
 }
 
@@ -114,17 +177,14 @@ h2.indextitle {
 
 ul.index {
   list-style: none;
-  margin-left: 0em;
-  padding-left: 0;
+  /* padding-left: 0; */
 }
 
-ul.index li {
+ul.index li,
+ol.index li,
+dl.index li {
   display: inline;
-  padding-right: 0.75em
-}
-
-ul.definitions {
-  background-color: #E0F0FF;
+  padding-right: 0.5em
 }
 
 dt {
@@ -134,19 +194,16 @@ dt {
 div.spec p {
   margin-bottom: 0;
   padding-left: 1.25em;
-  background-color: #E0F0FF;
 }
 
 h3.function {
-  border-left: 0.5em solid #85C2FF;
+  /*border-left: 0.5em solid #85C2FF;*/
   padding-left: 0.5em;
-  background-color: #BECFE0;
+  /*background-color: #BECFE0;*/
 }
-a, a:visited, a:hover, a:active { color: #06C }
-h2 a, h3 a { color: #333 }
-
-h3.typedecl {
-  background-color: #BECFE0;
+a, a:visited, a:hover, a:active {
+  color: #58a6ff;
+  text-decoration: none;
 }
 
 i {

@@ -1,5 +1,10 @@
+docs: BG=$(shell sed -n '/background-color:/{s/[^#]\+#\([^;]\+\);.*/\1/p;q}' build-aux/edoc.css)
 docs:
-	$(prep-docs)
+	@mkdir -p build-aux
+	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh; do \
+    [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
+   done
+	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
 ifeq (rebar3,$(REBAR))
 	@$(REBAR) edoc
 else ifeq (rebar,$(REBAR))
@@ -7,14 +12,16 @@ else ifeq (rebar,$(REBAR))
 else
 	rebar3 edoc
 endif
-
-define prep-docs =
-	@mkdir -p build-aux
-	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh; do \
-    [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
-   done
-	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
-endef
+	@sed -i 's/\(<frameset\)[^>]\+>/\1 cols="180,90\%" bordercolor="$(BG)">/' doc/index.html
+	@sed -i 's/<body bgcolor="[^"]\+">/<body>/' doc/*.html
+	@sed -i '/^<table/s/^<table *\(class=[^"]\+"\)\?\(.*\)/<table class="frame" \2/' doc/modules-frame.html
+	@sed -i '/<td/s/<td[^>]*>\(.*\)/<td class="frame">\1/' doc/modules-frame.html
+	@sed -i -e '/navbar/!s/ cellspacing="[^"]\+"/ class="index"/g' \
+		      -e '/navbar/!s/ cellpadding=\"[^"]\+"//g' \
+					-e '/navbar/!s/ border="1"//' \
+	        -e '/^<table/s/^<table *\(class=[^"]\+"\)\?\(.*\)/<table class="index" \2/' \
+		      -e '/<td/s/<td[^>]*>\(.*\)/<td class="index">\1/' \
+			$$(ls -1 doc/*.html | egrep -v '(modules-frame|overview-summary|index)\.html')
 
 github-docs gh-pages: GVER=$(shell git ls-tree --name-only -r master build-aux | grep 'google.*\.html')
 github-docs gh-pages: LOCAL_GVER=$(notdir $(GVER))
@@ -27,7 +34,6 @@ github-docs gh-pages:
 	rm -f rebar.lock
 	git checkout master -- src $(shell [ -d include ] && echo include)
 	git checkout master -- Makefile rebar.* README.md
-	$(prep-docs)
 	@# Create google verification file if one exists in the master
 	[ -n "$(GVER)" ] && git show master:$(GVER) 2>/dev/null > "$(LOCAL_GVER)" || true
 	make docs
