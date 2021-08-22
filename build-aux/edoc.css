@@ -65,7 +65,7 @@ h1, h2 {
 }
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
-  /*line-height: 1.25; */
+  /*line-height: 1.25;*/
   margin-bottom: 16px;
   margin-left: 0;
 }
@@ -216,10 +216,40 @@ a[href]:hover {
   text-decoration: underline;
 }
 
+a.function {
+  padding-left: 5px;
+}
+
 i {
   font-size: 0.875em; /* 14px */
   /*line-height: 24px */
   margin-top: 1.7143em;
   margin-bottom: 0em;
   font-style: normal;
+}
+
+/* Right/Left/Up/Down arrows */
+/* See: https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_arrows */
+.arrow {
+  border: solid #4f4c56;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+.right {
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+.left {
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
+}
+.up {
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+
+.down {
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
 }
