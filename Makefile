@@ -24,7 +24,7 @@ all:
 test eunit:
 	@$(REBAR) eunit
 
-include build-aux/docs-addon.mk
+-include build-aux/docs-addon.mk
 
 # This is just an example of using make instead of rebar to do fast compilation
 all-fast: $(patsubst src/%.app.src,ebin/%.app,$(wildcard src/*.app.src))
@@ -60,5 +60,8 @@ tar:
 		--exclude="Makefile" --exclude="rebar.*" --exclude="*.mk" \
 		--exclude="*.o" --exclude=".git*" * && \
 		echo "Created $(TARBALL).tgz"
+
+build-aux/docs-addon.mk:
+	git co master build-aux/docs-addon.mk
 
 .PHONY: test
