@@ -1,10 +1,11 @@
-docs:: BG=$(shell sed -n '/background-color:/{s/[^#]\+#\([^;]\+\);.*/\1/p;q}' build-aux/edoc.css)
 docs::
 	@mkdir -p build-aux
-	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh; do \
+	for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh; do \
     [ -f build-aux/$$f ] || curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
    done
 	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
+docs:: BG=$(shell sed -n '/background-color:/{s/[^#]\+#\([^;]\+\);.*/\1/p;q}' build-aux/edoc.css)
+docs::
 ifeq (rebar3,$(REBAR))
 	@$(REBAR) edoc
 else ifeq (rebar,$(REBAR))
