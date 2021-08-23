@@ -81,36 +81,14 @@ BEGIN {
 
 # Display code words
 /``/ && !in_code3 {
-  gsub(/'/, "@@@>>>")
-  delete arr
-  n = split($0, arr, "``")
-  i = 2
-  for(; i <= n; ++i) {
-    in_code2 = !in_code2
-    arr[i] = sprintf("%s%s%s", (in_code2 ? "``" : ""), arr[i], (in_code2 && i < n) ? "''" : "")
-  }
-
+  in_code3 = replace_code("``", "''", in_code3)
   in_code  = in_code1 || in_code2 || in_code3
-  $0 = join(a, 1, n)
-  gsub(/@@@>>>/, "\\&#x22;") # Replace single quotes
-  delete arr
 }
     
 # Display code words
 /`[^`']/ && !in_code3 && !in_code2 {
-  sub(/ +$/, "")
-  gsub(/'/, "@@@>>>")
-  delete arr
-  n = split($0, arr, "`")
-  i = 2
-  for(; i <= n; ++i) {
-    in_code1 = !in_code1
-    arr[i] = sprintf("%s%s%s", (in_code1 ? "`" : ""), arr[i], (in_code1 && i < n) ? "'" : "")
-  }
-
+  in_code2 = replace_code("`", "'", in_code3)
   in_code  = in_code1 || in_code2 || in_code3
-  $0 = join(a, 1, n)
-  gsub(/@@@>>>/, "\\&#x22;") # Replace single quotes
 }
 
 # close unordered list
@@ -148,22 +126,20 @@ in_list_ordered {
 !in_code && in_table && ! /^\|/ {
   print "</table>"
   in_table = 0
+  lastrow  = ""
 }
-!in_code && /\| *-+ *\|/ {
-  # Skip separators
-  next
-}
-!in_code && /\|[^\|]+\|/ && !/\| *-+ *\|/ {
-  # Print rows
-  delim = in_table ? "</td><td class=\"tab\">" : "</th><th class=\"tab\">"
+!in_code && /\|[^\|]+\|/ {
   if (!in_table) {
     print("<table class=\"tab\">\n")
     in_table=1
+    lastrow = $0
+    next
+  } else if (in_table++ == 1 && match($0, /\| *-+ *\|/)) {
+    print_table_row("h", lastrow)
+    lastrow = ""
+    next
   }
-  gsub(/ *\| */, delim)
-  sub(/<\/t[dh]>/,     "<tr class=\"tab\">")  # Remove first occurance of </td> with <tr>
-  sub(/<t[dh][^>]+>$/, "</tr>")               # Replace last occrance of <td> with </tr>
-  print
+  print_table_row("d", $0)
   next
 }
 
@@ -267,7 +243,37 @@ function print_paragraph() {
   for(; paragraph > 0; --paragraph)
     printf "\n"
 }
+# Replace code words delimited by open_qq
+# (e.g. open_qq = "``" or "`"). close_qq is "''" or "'".
+function replace_code(open_qq, close_qq, in_code_var) {
+  sub(/ +$/, "")
+  gsub(/'/, "@@@>>>")
+  delete arr
+  n = split($0, arr, open_qq)
+  i = 2
+  for(; i <= n; ++i) {
+    in_code_var = !in_code_var
+    if (in_code_var && i < n) {
+      # Replace "|" symbol to eliminate confusion for tables
+      gsub(/\|/, "\\&#124;", arr[i])
+      arr[i] = arr[i] close_qq
+    }
+    arr[i] = sprintf("%s%s", (in_code_var ? open_qq : ""), arr[i])
+  }
 
+  $0 = join(arr, 1, n)
+  gsub(/@@@>>>/, "\\&#x22;") # Replace single quotes
+  delete arr
+  return in_code_var
+}
+function print_table_row(type, str) {
+  # Print rows
+  delim = sprintf("</t%s><t%s class=\"tab\">", type, type)
+  gsub(/ *\| */, delim, str)
+  sub(/<\/t[dh]>/,     "<tr class=\"tab\">", str)  # Remove first occurance of </td> with <tr>
+  sub(/<t[dh][^>]+>$/, "</tr>",              str)  # Replace last occrance of <td> with </tr>
+  print str
+}
 function list_offset()    { return list_pos ? list_offsets[list_pos-1] :  0 }
 function list_type()      { return list_pos ? list_types[list_pos-1]   : "" }
 function list_li_close()  {
