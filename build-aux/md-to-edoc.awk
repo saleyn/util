@@ -47,8 +47,8 @@ BEGIN {
 
 {
   # copyright
-  gsub(/\(c\)/, "\\&#169;")
-  gsub(/\(C\)/, "\\&#169;")
+  gsub(/\(c\)/, "&copy;")
+  gsub(/\(C\)/, "&copy;")
   gsub(/\(R\)/, "\\&#174;")
   gsub(/\(r\)/, "\\&#174;")
   gsub(/\(tm\)/,"\\&#153;")
@@ -244,14 +244,14 @@ function print_paragraph() {
     printf "\n"
 }
 function print_line() {
-  gsub(/&#124;/, "|")
+  gsub(/&#124;/, "|")   # Substitute the pipe symbol back to original
   print
 }
 # Replace code words delimited by open_qq
 # (e.g. open_qq = "``" or "`"). close_qq is "''" or "'".
 function replace_code(open_qq, close_qq, in_code_var) {
   sub(/ +$/, "")
-  gsub(/'/, "@@@>>>")
+  gsub(/'/, "\\&apos;")
   delete arr
   n = split($0, arr, open_qq)
   i = 2
@@ -266,7 +266,7 @@ function replace_code(open_qq, close_qq, in_code_var) {
   }
 
   $0 = join(arr, 1, n)
-  gsub(/@@@>>>/, "\\&#x22;") # Replace single quotes
+  #gsub(/@@@>>>/, "\\&#x22;") # Replace single quotes
   delete arr
   return in_code_var
 }
