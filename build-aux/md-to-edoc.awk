@@ -133,13 +133,14 @@ in_list_ordered {
 
 # Print titles
 /^#/ {
-  gsub(/#/, "=")
-  match($0, /^=+/)
-  n = RLENGTH < 2 ? 2 : RLENGTH
-  if (!match($0, /=$/)) {
-    s = sprintf(" %s", substr("====", 1, n))
-    gsub(/$/, s)
-  }
+  match($0, /^#+/)
+  n = RLENGTH
+
+  gsub(/^#+/, "")
+  gsub(/#+$/, "")
+
+  $0 = sprintf("<h%d>%s</h%d>", n, $0, n)
+
   pop_all_lists()
 }
 
