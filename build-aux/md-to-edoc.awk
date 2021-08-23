@@ -179,12 +179,12 @@ in_list_ordered {
   }
   # Still in a paragraph
   if(length($0) != 0 && in_paragraph == 1) {
-    print
+    print_line()
   }
   # Open a paragraph if the prev line is empty
   if(length(prev_line)==0 && in_paragraph==0) {
     in_paragraph=1
-    print
+    print_line()
   }
   prev_line = $0
 }
@@ -242,6 +242,10 @@ function pop_all_lists() {
 function print_paragraph() {
   for(; paragraph > 0; --paragraph)
     printf "\n"
+}
+function print_line() {
+  gsub(/&#124;/, "|")
+  print
 }
 # Replace code words delimited by open_qq
 # (e.g. open_qq = "``" or "`"). close_qq is "''" or "'".
