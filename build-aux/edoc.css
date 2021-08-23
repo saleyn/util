@@ -31,6 +31,10 @@ code {
   padding: 2px;
 }
 
+pre code {
+  padding: 10px;
+}
+
 pre {
   background-color: var(--color-bg-tertiary);
   background-color: #161b22;
@@ -38,10 +42,10 @@ pre {
   font-size: 85%;
   line-height: 1.5em;
   overflow: auto;
-  padding: 8px;
+  padding: 0px;
   word-wrap: normal;
   white-space: pre;
-  margin: 1em 0px;
+  margin: 0px;
 }
 
 p {
