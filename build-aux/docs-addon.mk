@@ -19,8 +19,10 @@ else ifeq (rebar,$(REBAR))
 else
 	rebar3 edoc
 endif
-	@sed -i 's/\(<frameset\)[^>]\+>/\1 cols="180,90\%" bordercolor="$(BG)">/' doc/index.html
-	@sed -i 's/<body bgcolor="[^"]\+">/<body>\n<a name="top"><\/a>/' doc/*.html
+	@sed -i -e 's/\(<frameset\)[^>]\+>/\1 cols="180,90\%" bordercolor="gray" border="1">/' \
+		      -e 's/^\(<frame src="modules[^>]\+\)/& frameborder="1" scrolling="no"/' \
+			doc/index.html
+	@sed -i -e 's/<body bgcolor="[^"]\+">/<body>\n<a name="top"><\/a>/' doc/*.html
 	@sed -i -e '/^<table/s/^<table *\(class=[^"]\+"\)\?\(.*\)/<table class="frame" \2/' \
           -e '/<table/ a <tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td></tr>\n<tr><td>&nbsp;</td></tr>\n' \
 	        -e '/<t[rd]/s/<t\([rd]\)[^>]*>\(.*\)/<t\1 class="frame">\2/' \

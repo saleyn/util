@@ -1,6 +1,6 @@
 html {
-  --scrollbarBG: #CFD8DC;
-  --thumbBG: #90A4AE;
+  --scrollbarBG: #44565f;
+  --thumbBG: #5d7079;
 }
 
 body {
@@ -9,10 +9,11 @@ body {
   margin: 15px 10px;
   background-color: #0d1117;
   color: #d8cebf;
-  margin: 0;
+  margin: 15px 0 0 0;
   line-height: 1.5em;
   scrollbar-width: thin;
-  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+  /*scrollbar-color: var(--thumbBG) var(--scrollbarBG);*/
+  scrollbar-color: auto;
 }
 
 body.src {
@@ -91,10 +92,12 @@ code, pre, tt {
   font-size: 12px;
 }
 
+/*
 blockquote, details, ul, dl, ol, p, pre {
-  margin-bottom: 1.7143em;
+  margin-bottom: 15px;
   margin-top: 0;
 }
+*/
 
 .class-for-16px {
   font-size: 1em; /* 16px */
@@ -115,7 +118,9 @@ ul {
   list-style-position: outside;
 }
 
-/* tt, code, pre { font-size:  } */
+p tt {
+  padding: 5px;
+}
 
 tt, code, pre {
   font-size: 0.875em;
