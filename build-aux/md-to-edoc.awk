@@ -33,6 +33,16 @@ BEGIN {
     #$0 = gensub(/\[\\!\[[^\]]+\]\(?([^)]+)\)?\]\( *([^\)]+)\)/, "<a href=\"\\2\">\\1</a>", "g")
     $0 = gensub(/\[([^\]]+)\]\( *([^\)]+)\)/, "<a href=\"\\2\">\\1</a>", "g")
   }
+  else {
+    tmp = $0
+    b = ""
+    while (match(tmp, /(https?|s?ftp):\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(\/\S*)?/, res)) {
+      b = b substr(tmp, 1, RSTART-1) "[" res[0] "]"
+      tmp = substr(tmp, RSTART+RLENGTH)
+    }
+    if (length(b) > 0) $0 = b
+    delete res
+  }
 }
 
 {
@@ -71,31 +81,31 @@ BEGIN {
 
 # Display code words
 /``/ && !in_code3 {
-  delete a
   gsub(/'/, "@@@>>>")
-  n = split($0, a, "``")
+  delete arr
+  n = split($0, arr, "``")
   i = 2
   for(; i <= n; ++i) {
     in_code2 = !in_code2
-    a[i] = sprintf("%s%s%s", (in_code2 ? "``" : ""), a[i], (in_code2 && i < n) ? "''" : "")
+    arr[i] = sprintf("%s%s%s", (in_code2 ? "``" : ""), arr[i], (in_code2 && i < n) ? "''" : "")
   }
 
   in_code  = in_code1 || in_code2 || in_code3
   $0 = join(a, 1, n)
   gsub(/@@@>>>/, "\\&#x22;") # Replace single quotes
+  delete arr
 }
     
 # Display code words
 /`[^`']/ && !in_code3 && !in_code2 {
-  delete a
   sub(/ +$/, "")
   gsub(/'/, "@@@>>>")
-  n = split($0, a, "`")
+  delete arr
+  n = split($0, arr, "`")
   i = 2
-
   for(; i <= n; ++i) {
     in_code1 = !in_code1
-    a[i] = sprintf("%s%s%s", (in_code1 ? "`" : ""), a[i], (in_code1 && i < n) ? "'" : "")
+    arr[i] = sprintf("%s%s%s", (in_code1 ? "`" : ""), arr[i], (in_code1 && i < n) ? "'" : "")
   }
 
   in_code  = in_code1 || in_code2 || in_code3
