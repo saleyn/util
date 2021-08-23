@@ -47,13 +47,13 @@ BEGIN {
 
 {
   # copyright
-  gsub(/\(c\)/, "&copy;")
-  gsub(/\(C\)/, "&copy;")
-  gsub(/\(R\)/, "\\&#174;")
-  gsub(/\(r\)/, "\\&#174;")
-  gsub(/\(tm\)/,"\\&#153;")
-  gsub(/\(TM\)/,"\\&#153;")
-  gsub(/@/,     "\\&#174;")
+  gsub(/\(c\)/, "\\&copy;")
+  gsub(/\(C\)/, "\\&copy;")
+  gsub(/\(R\)/, "\\&reg;")
+  gsub(/\(r\)/, "\\&reg;")
+  gsub(/@/,     "\\&commat;")
+  gsub(/\(tm\)/,"\\&trade;")
+  gsub(/\(TM\)/,"\\&trade;")
   # Match ** (\52 = '*')
   $0 = gensub(/\*\*([^\*]+)\*\*/, "<strong>\\1</strong>", "g")
 }
