@@ -43,6 +43,12 @@ build-aux/docs-addon.mk:
 		mkdir -p build-aux && \
 		curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk
 ```
+Also in your `rebar.config` add:
+```
+{edoc_opts, [{overview,        "build-aux/overview.edoc"},
+             {stylesheet_file, "build-aux/edoc.css"},
+             ...]}.
+```
 
 This will add the following targets to your `Makefile`:
 

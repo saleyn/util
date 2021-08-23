@@ -47,14 +47,15 @@ BEGIN {
 
 {
   # copyright
-  gsub(/\(c\)/, "\\&copy;")
-  gsub(/\(C\)/, "\\&copy;")
-  gsub(/\(R\)/, "\\&reg;")
-  gsub(/\(r\)/, "\\&reg;")
+  gsub(/Copyright \+\([cC]\)/, "@copyright")
+  gsub(/\([Cc]\)/, "\\&copy;")
+  gsub(/\([rR]\)/, "\\&reg;")
   gsub(/@/,     "\\&commat;")
   gsub(/\(tm\)/,"\\&trade;")
   gsub(/\(TM\)/,"\\&trade;")
   # Match ** (\52 = '*')
+  $0 = gensub(/\*\*([Aa]uthors?)\*\*/, "@author", "g")
+  $0 = gensub(/\*\*([Vv]ersion)\*\*/,  "@version {@vsn}", "g")
   $0 = gensub(/\*\*([^\*]+)\*\*/, "<strong>\\1</strong>", "g")
 }
 
@@ -81,13 +82,13 @@ BEGIN {
 
 # Display code words
 /``/ && !in_code3 {
-  in_code3 = replace_code("``", "''", in_code3)
+  in_code2 = replace_code("``", "''", in_code2)
   in_code  = in_code1 || in_code2 || in_code3
 }
     
 # Display code words
 /`[^`']/ && !in_code3 && !in_code2 {
-  in_code2 = replace_code("`", "'", in_code3)
+  in_code1 = replace_code("`", "'", in_code1)
   in_code  = in_code1 || in_code2 || in_code3
 }
 
