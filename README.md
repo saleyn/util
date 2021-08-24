@@ -35,6 +35,7 @@ This project implements an extension of `EDoc` documentation by using the color 
 to `GitHub`, and generate the `overview.edoc` from the `README.md`.
 
 In order to use this feature, modify your `Makefile` to include:
+
 ```
 -include build-aux/docs-addon.mk
 

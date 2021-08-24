@@ -57,3 +57,4 @@ build-aux/docs-addon.mk:
 	git co master build-aux/docs-addon.mk
 
 .PHONY: test
+.SUFFIX:

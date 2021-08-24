@@ -75,13 +75,20 @@ BEGIN {
 
 # Display code blocks
 /```/ {
+  par = paragraph
   pop_all_lists()
+  if (!par && !in_code3)
+    print "\n"
 
   gsub(/```[^ ]*/, "```")
   in_code3 = !in_code3
   in_code = in_code1 || in_code2 || in_code3
   if (!in_code3)
     sub(/```/, "'''")
+
+  print_paragraph()
+  if (!par && !in_code3)
+    print "\n"
 
   print
   next
@@ -132,12 +139,14 @@ in_list_ordered {
 
 # Display tables
 !/^\|/ && !in_code && in_table {
+  print_paragraph()
   print "</table>"
   in_table = 0
   lastrow  = ""
 }
 /\|[^\|]+\|/ && !in_code {
   if (!in_table) {
+    print_paragraph()
     print("<table class=\"tab\">\n")
     in_table=1
     lastrow = $0
@@ -210,9 +219,6 @@ END {
   if      (in_table) print  "</table>"
 
   pop_all_lists()
-
-  if(in_paragraph)
-    printf "\n"
 }
 
 function list_push(offset, type) {
@@ -246,6 +252,7 @@ function pop_all_lists() {
     list_pop()
     type = list_type()
   }
+  print_paragraph()
 }
 function print_paragraph() {
   for(; paragraph > 0; --paragraph)

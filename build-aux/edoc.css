@@ -5,11 +5,9 @@ html {
 
 body {
   font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
-  margin: 15px 10px;
+  margin: 0;
   background-color: #0d1117;
   color: #d8cebf;
-  margin: 15px 0 0 0;
-  line-height: 1.5em;
   scrollbar-width: thin;
   /*scrollbar-color: var(--thumbBG) var(--scrollbarBG);*/
   scrollbar-color: auto;
@@ -17,10 +15,6 @@ body {
 
 body.src {
   margin-left: 10px;
-}
-
-frameset {
-  background-color: #0d1117;
 }
 
 element.style {
@@ -261,3 +255,109 @@ i {
   transform: rotate(45deg);
   -webkit-transform: rotate(45deg);
 }
+
+/* NAVIGATION */
+
+.anchor {
+  top: -30px;  /* Position the anchor links with the offset so that clicking on them doesn't go off screen */
+}
+
+.navcontainer {
+  position: fixed;
+  top: 0;     /* Position the navbar at the top of the page */ 
+  width: 100%;
+  left: 0;
+}
+
+.navbar {
+  overflow: hidden;
+  background-color: #2e2e2f;
+  width: 100%;
+}
+
+/* Dropdown button */
+.dropdown .dropbtn {
+  border: none;
+  outline: none;
+  color: #f2f2f2;
+  padding: 14px 16px;
+  margin: 0; /* Important for vertical align on mobile phones */
+}
+
+.navbar i {
+  margin-top: 0px;
+}
+
+.navbar a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.navbar a:link,
+.navbar a:visited,
+.navbar a:active {
+  color: #f2f2f2;
+  text-decoration: none;
+}
+
+.navbar a:hover {
+  background: #ddd;
+  color: black;
+}
+
+.main {
+  padding: 16px;
+  margin-top: 30px;
+  /* height: 1500px; */ /* Example to enable scrolling */
+}
+
+/* Dropdown Menu */
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  float: left;
+  overflow: hidden;
+  display:inline-block;
+}
+
+.dropdown-content {
+  float: left;
+  display: none;
+  position: absolute;
+  background-color: #3a3a3c;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index:1;
+}
+
+.dropdown-content a {
+  padding: 12px 16px;
+  margin-left: 0px;
+  float: none;
+}
+
+.dropdown-content a.mod {
+  float: none;
+  /*color: black; */
+  padding: 2px 10px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+.dropdon-content a.overview {
+  color
+}
+
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+.dropdown:hover .dropdown-content {display:block; } 
+
+
