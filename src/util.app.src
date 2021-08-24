@@ -1,0 +1,12 @@
+{application, util,
+  [{description,"Miscellaneous utility modules"},
+   {vsn, "1.0.0"},
+   {modules,[]},
+   {registered,[]},
+   {applications,[kernel,stdlib]},
+   {env,[]},
+   {maintainers,["Serge Aleynikov"]},
+   {licenses,["BSD"]},
+   {links,[{"Github","https://github.com/saleyn/util"}]}
+  ]
+}.
