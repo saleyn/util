@@ -62,7 +62,7 @@ BEGIN {
 }
 
 # Print main title
-/^#[^#]/ && !main_title {
+/^#[^#]/ && !main_title && !in_code {
   title = gensub(/^# */, "", "g")
   print "@version", vsn
   if (author)
@@ -88,13 +88,13 @@ BEGIN {
 }
 
 # Display code words
-/``/ && !in_code3 {
+/``/ && !in_code {
   in_code2 = replace_code("``", "''", in_code2)
   in_code  = in_code1 || in_code2 || in_code3
 }
     
 # Display code words
-/`[^`']/ && !in_code3 && !in_code2 {
+/`[^`']/ && !in_code {
   in_code1 = replace_code("`", "'", in_code1)
   in_code  = in_code1 || in_code2 || in_code3
 }
@@ -118,7 +118,7 @@ in_list_ordered {
 }
 
 # Print titles
-/^#/ {
+/^#/ && !in_code {
   match($0, /^#+/)
   n = RLENGTH
 
@@ -131,12 +131,12 @@ in_list_ordered {
 }
 
 # Display tables
-!in_code && in_table && ! /^\|/ {
+!/^\|/ && !in_code && in_table {
   print "</table>"
   in_table = 0
   lastrow  = ""
 }
-!in_code && /\|[^\|]+\|/ {
+/\|[^\|]+\|/ && !in_code {
   if (!in_table) {
     print("<table class=\"tab\">\n")
     in_table=1
