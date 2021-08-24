@@ -80,8 +80,8 @@ github-docs gh-pages:
 	make docs
 	mv doc/*.* .
 	make clean
-	rm -fr src test c_src include Makefile erl_crash.dump priv rebar.* \
-		     README* .github .travis* .gitignore _build build-aux
+	find . -maxdepth 1 -type d -not -name ".git" -a -not -name "." -exec rm -fr {} \;
+	find . -maxdepth 1 -type f -not -name ".git" -a -not -name "*.html" -a -not -name "*.css" -a -not -name "*.js" -a -not -name "*.png" -exec rm -f {} \;
 	@FILES=`git status -uall --porcelain | sed -n '/^?? [A-Za-z0-9]/{s/?? //p}'`; \
 	for f in $$FILES ; do \
 		echo "Adding $$f"; git add $$f; \
