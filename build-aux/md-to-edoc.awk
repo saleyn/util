@@ -54,8 +54,11 @@ BEGIN {
   gsub(/\(tm\)/,"\\&trade;")
   gsub(/\(TM\)/,"\\&trade;")
   # Match ** (\52 = '*')
-  $0 = gensub(/\*\*([Aa]uthors?)\*\*/, "@author", "g")
-  $0 = gensub(/\*\*([Vv]ersion)\*\*/,  "@version {@vsn}", "g")
+
+  # The author is printed in front of the @doc
+  if (match($0, /\*\*[Aa]uthors?\*\*.*$/))
+    next
+
   $0 = gensub(/\*\*([^\*]+)\*\*/, "<strong>\\1</strong>", "g")
 }
 
@@ -63,6 +66,8 @@ BEGIN {
 /^#[^#]/ && !main_title {
   title = gensub(/^# */, "", "g")
   print "@version", vsn
+  if (author)
+    print "@author", author
   print "@doc\n"
   print "==",title,"==\n"
   main_title=1

@@ -5,4 +5,7 @@
 SCRIPT=$(readlink -f $0)
 AWK=${SCRIPT%.sh}.awk
 
-gawk -f ${AWK} vsn=$(git describe master --always --tags) "$1"
+AUTHOR="$(sed -n '/\*\*Author\*\*/s/\*\*Author\*\* *//p' $1)"
+VSN="$(git describe master --always --tags)"
+
+gawk -f ${AWK} vsn=${VSN} author="$AUTHOR" "$1"
