@@ -50,7 +50,7 @@ BEGIN {
   gsub(/Copyright \+\([cC]\)/, "@copyright")
   gsub(/\([Cc]\)/, "@copyright")
   gsub(/\([rR]\)/, "\\&reg;")
-  gsub(/@/,     "\\&commat;")
+  #gsub(/@/,     "\\&commat;")
   gsub(/\(tm\)/,"\\&trade;")
   gsub(/\(TM\)/,"\\&trade;")
   # Match ** (\52 = '*')
