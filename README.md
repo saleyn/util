@@ -4,6 +4,8 @@
 
 **Author** Serge Aleynikov <serge(at)gmail.com>
 
+Copyright (c) 2021 Serge Aleynikov
+
 ## Content:
 
 | Module                    | Description                                                                          |
