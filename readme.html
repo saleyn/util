@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
+
+    <title>Overview — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-XN2TSG4M.js"></script>
+
+
+  </head>
+  <body data-type="extras" class="page-extra">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/README.md#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span>Erlang Utility Modules</span>
+</h1>
+
+<p><a href="https://github.com/saleyn/util/actions/workflows/erlang.yml"><img src="https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg" alt="build"/></a></p><p><strong>Author</strong> Serge Aleynikov &lt;serge(at)gmail.com&gt;</p><h2 id="installation" class="section-heading">
+  <a href="#installation" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">installation</p>
+  </a>
+  Installation
+</h2>
+<ul><li>Add dependency in <code class="inline">rebar.config</code>:<pre><code class="makeup erlang" translate="no"><span class="p" data-group-id="1703021244-1">{</span><span class="ss">deps</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="1703021244-2">[</span><span class="c1">% ...</span><span class="w">
+  </span><span class="p" data-group-id="1703021244-3">{</span><span class="ss">util</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;~&gt; 1.0&quot;</span><span class="p" data-group-id="1703021244-3">}</span><span class="w">
+ </span><span class="p" data-group-id="1703021244-2">]</span><span class="p" data-group-id="1703021244-1">}</span><span class="p">.</span></code></pre></li></ul><h2 id="content" class="section-heading">
+  <a href="#content" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">content</p>
+  </a>
+  Content
+</h2>
+<table><thead><tr><th style="text-align: left;">Module</th><th style="text-align: left;">Description</th></tr></thead><tbody><tr><td style="text-align: left;">decompiler</td><td style="text-align: left;">decompiles modules and functions (useful for verifying accuracy of code generation)</td></tr><tr><td style="text-align: left;">csv</td><td style="text-align: left;">CSV parsing and loading data to MySQL</td></tr><tr><td style="text-align: left;">env</td><td style="text-align: left;">environment variables substitution, path normalization</td></tr><tr><td style="text-align: left;">file_log_reader</td><td style="text-align: left;">Periodically read an append-only log file and parse newly added data</td></tr><tr><td style="text-align: left;">iif</td><td style="text-align: left;">Ternery if function including <code class="inline">iif/3</code>, <code class="inline">iif/4</code>, <code class="inline">ife/3</code>, <code class="inline">ife/4</code> parse transforms</td></tr><tr><td style="text-align: left;">io_lib_pretty_limited</td><td style="text-align: left;">Print term to binary by constraining the output size</td></tr><tr><td style="text-align: left;">gin</td><td style="text-align: left;">Convenient parse transform for <code class="inline">in(Value, [A,B,C])</code> type of guards</td></tr><tr><td style="text-align: left;">hex</td><td style="text-align: left;">Hex to bin conversion</td></tr><tr><td style="text-align: left;">listx</td><td style="text-align: left;">Miscelaneous list handling functions</td></tr><tr><td style="text-align: left;">osx</td><td style="text-align: left;">Execution of os commands with returned stdout and exit status</td></tr><tr><td style="text-align: left;">pcap</td><td style="text-align: left;">reader/writer of packet capture files (tcpdump, wireshark)</td></tr><tr><td style="text-align: left;">restrict_remsh_mod</td><td style="text-align: left;">to be used for remote shells to restrict <code class="inline">q()</code>, <code class="inline">init:stop()</code>, <code class="inline">erlang:halt()</code>, etc.</td></tr><tr><td style="text-align: left;">smtp</td><td style="text-align: left;">SMTP client supporting tcp and ssl protocols</td></tr><tr><td style="text-align: left;">sntp</td><td style="text-align: left;">simple SNTP client</td></tr><tr><td style="text-align: left;">str</td><td style="text-align: left;">stringification functions including <code class="inline">str/1</code> and <code class="inline">str/2</code> parse transforms</td></tr><tr><td style="text-align: left;">stringx</td><td style="text-align: left;">miscelaneous string functions</td></tr><tr><td style="text-align: left;">throttle</td><td style="text-align: left;">implements a rate limitting algorithm</td></tr><tr><td style="text-align: left;">user_default</td><td style="text-align: left;">extending shell with useful debugging and profiling commands</td></tr><tr><td style="text-align: left;">build-aux/md-to-edoc.awk</td><td style="text-align: left;">AWK script for converting <code class="inline">README.md</code> files to <code class="inline">overview.edoc</code></td></tr></tbody></table><p>Additionally, the following Elixir modules are included:</p><table><thead><tr><th style="text-align: left;">Module</th><th style="text-align: left;">File</th><th style="text-align: left;">Description</th></tr></thead><tbody><tr><td style="text-align: left;">CompileTime</td><td style="text-align: left;">compile_time.ex</td><td style="text-align: left;">Evaluate lambdas at compile time</td></tr></tbody></table><h2 id="documentation" class="section-heading">
+  <a href="#documentation" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">documentation</p>
+  </a>
+  Documentation
+</h2>
+<ul><li>See <a href="https://saleyn.github.io/util">project documentation</a></li></ul><p>This project implements an extension of <code class="inline">EDoc</code> documentation by using the color scheme similar
+to <code class="inline">GitHub</code>, and generate the <code class="inline">overview.edoc</code> from the <code class="inline">README.md</code>.</p><p>In order to use this feature, modify your <code class="inline">Makefile</code> to include:</p><pre><code class="makeup elixir" translate="no"><span class="o">-</span><span class="n">include</span><span class="w"> </span><span class="n">build</span><span class="o">-</span><span class="n">aux</span><span class="o">/</span><span class="n">docs</span><span class="o">-</span><span class="n">addon</span><span class="o">.</span><span class="n">mk</span><span class="w">
+
+</span><span class="n">build</span><span class="o">-</span><span class="n">aux</span><span class="o">/</span><span class="n">docs</span><span class="o">-</span><span class="n">addon</span><span class="o">.</span><span class="ss">mk</span><span class="p">:</span><span class="w">
+</span><span class="err">	</span><span class="na">@echo</span><span class="w"> </span><span class="s">&quot;Fetching build-aux/docs-addon.mk&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="err">\</span><span class="w">
+</span><span class="err">	</span><span class="err">	</span><span class="n">mkdir</span><span class="w"> </span><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="n">build</span><span class="o">-</span><span class="n">aux</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="err">\</span><span class="w">
+</span><span class="err">	</span><span class="err">	</span><span class="n">curl</span><span class="w"> </span><span class="o">-</span><span class="n">s</span><span class="w"> </span><span class="o">-</span><span class="n">o</span><span class="w"> </span><span class="n">build</span><span class="o">-</span><span class="n">aux</span><span class="o">/</span><span class="n">docs</span><span class="o">-</span><span class="n">addon</span><span class="o">.</span><span class="n">mk</span><span class="w"> </span><span class="n">https</span><span class="ss">://</span><span class="n">raw</span><span class="o">.</span><span class="n">githubusercontent</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">saleyn</span><span class="o">/</span><span class="n">util</span><span class="o">/</span><span class="n">master</span><span class="o">/</span><span class="n">build</span><span class="o">-</span><span class="n">aux</span><span class="o">/</span><span class="n">docs</span><span class="o">-</span><span class="n">addon</span><span class="o">.</span><span class="n">mk</span></code></pre><p>Also in your <code class="inline">rebar.config</code> add:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3677426963-1">{</span><span class="n">edoc_opts</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3677426963-2">[</span><span class="p" data-group-id="3677426963-3">{</span><span class="n">overview</span><span class="p">,</span><span class="w">        </span><span class="s">&quot;build-aux/overview.edoc&quot;</span><span class="p" data-group-id="3677426963-3">}</span><span class="p">,</span><span class="w">
+             </span><span class="p" data-group-id="3677426963-4">{</span><span class="n">stylesheet_file</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;build-aux/edoc.css&quot;</span><span class="p" data-group-id="3677426963-4">}</span><span class="p">,</span><span class="w">
+             </span><span class="p" data-group-id="3677426963-5">{</span><span class="n">title</span><span class="p">,</span><span class="w">           </span><span class="s">&quot;Project title used by rebar and also inserted as title to the index.html&quot;</span><span class="p" data-group-id="3677426963-5">}</span><span class="p">,</span><span class="w">
+             </span><span class="p" data-group-id="3677426963-6">{</span><span class="n">keywords</span><span class="p">,</span><span class="w">        </span><span class="s">&quot;HTML meta keywords (comma-delimited) for search engine crawlers&quot;</span><span class="p" data-group-id="3677426963-6">}</span><span class="p">,</span><span class="w"> 
+             </span><span class="n">...</span><span class="p" data-group-id="3677426963-2">]</span><span class="p" data-group-id="3677426963-1">}</span><span class="o">.</span></code></pre><p>NOTE: the <code class="inline">keywords</code> option is not specific to <code class="inline">EDoc</code> but used by the HTML reformatting make
+file <code class="inline">docs-addon.mk</code>.</p><p>This will add the following targets to your <code class="inline">Makefile</code>:</p><ul><li><code class="inline">docs</code> - Make documentation from source code</li><li><code class="inline">gh-pages</code> - Create GitHub pages for the current project</li><li><code class="inline">get-version</code> - Show application release version from the <code class="inline">*.app.src</code> and <code class="inline">rebar.config</code></li><li><code class="inline">set-version</code> - Set the version number for the above <code class="inline">(make set-version version=X.Y.Z)</code></li><li><code class="inline">clean-docs</code>  - Remove the generated files in the <code class="inline">doc</code> directory</li></ul><h2 id="elixir" class="section-heading">
+  <a href="#elixir" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">elixir</p>
+  </a>
+  Elixir
+</h2>
+<p>To add functions from <code class="inline">user_default.erl</code> to Elixir's <code class="inline">iex</code> shell, add <code class="inline">~/.iex.exs</code> file
+containing:</p><pre><code class="makeup elixir" translate="no"><span class="kn">import</span><span class="w"> </span><span class="ss">:user_default</span></code></pre><h2 id="download" class="section-heading">
+  <a href="#download" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">download</p>
+  </a>
+  Download
+</h2>
+<ul><li><a href="http://saleyn.github.io/util">GitHub</a></li></ul>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="api-reference.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+API Reference
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="license.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+License
+        </span>
+      </a>
+
+  </div>
+</div>
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/README.md">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>

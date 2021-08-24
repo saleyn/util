@@ -1,210 +1,565 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module csv</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>csv — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module csv</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>CSV file parsing functions.
-<p>Copyright © 2021 Serge Aleynikov</p>
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
 
-<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+      <script src="docs_config.js"></script>
 
-<h2><a href="#" name="description">Description</a></h2>CSV file parsing functions
-  
-<h2><a href="#" name="types">Data Types</a></h2>
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
-<h3 class="typedecl"><a name="type-load_options">load_options()</a></h3>
-<p><pre><code class="language-erlang">load_options() = 
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L11" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">csv</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+CSV file parsing functions
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:load_options/0" translate="no">load_options/0</a>
+
+        </div>
+
+          <div class="summary-synopsis">Options for loading data to a database.<dl><dt>{load_type, Type}</dt><dd>Type of loading to perform. <code>recreate</code> will replace the table by atomically dropping the old one, creating/loading the new one, and replacing the table. <code>replace</code> will do an insert by using <code>REPLACE INTO</code> statement. <code>ignore_dups</code> will use <code>INSERT IGNORE INTO</code> statement to ignore records with duplicate keys. <code>update_dups</code> will do an <code>INSERT INTO</code> and <code>ON DUPLICATE KEY UPDATE</code>, so that the old records are updated and the new ones are inserted.</dd><dt>{create_table, Allow}</dt><dd>Allow to create a table if it doesn't exist</dd><dt>{col_types, Map}</dt><dd>Types of data for all or some columens. The Map is in the format: <code>ColName::binary() =&gt; ColInfo</code>, where ColInfo is <code>ColType | {ColType, ColLen::integer()}</code>, and <code>ColType</code> is: <code>date | datetime | integer | float | blob | number</code>.</dd><dt>{transforms, Map}</dt><dd>Value transformation function for columns. The Map is in the format: <code>ColName::binary() =&gt; fun((Value::term()) -&gt; term())</code>.</dd><dt>{batch_size, Size}</dt><dd>Number of records per SQL insert/update/replace call</dd><dt>{blob_size, Size}</dt><dd>Threshold in number of bytes at which a VARCHAR field is defined as BLOB</dd><dt>{save_create_sql_to_file, Filename::string()}</dt><dd>Save CREATE TABLE sql statement to a file</dd><dt>guess_types</dt><dd>When specified, the function will try to guess the type of data in columns instead of treating all data as string fields. The possible data typed guessed: integer, float, date, datetime, number, string</dd><dt>{guess_limit_rows, Limit}</dt><dd>Limit the number of rows for guessing the column data types</dd><dt>{max_nulls_pcnt, Percent}</dt><dd>A percentage threshold of permissible NULLs in a column (0-100), above which the column data type is forced to be treated as <code>string</code></dd><dt>{primary_key, Fields}</dt><dd>Names of primary key fields in the created table</dd><dt>{drop_temp_table, boolean()}</dt><dd>When true (default), temp table is dropped.</dd><dt>{encoding, Encoding}</dt><dd>The name of the encoding to use for storing data. For the list of permissible values [see this link](https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html)</dd><dt>verbose</dt><dd>Print additional details to stdout</dd></dl></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:parse_options/0" translate="no">parse_options/0</a>
+
+        </div>
+
+          <div class="summary-synopsis">CSV Parsing Options.<dl><dt>fix_lengths</dt><dd>if a record has a column count greater than what's found in the header row, those extra columns will be dropped, and if a row has fewer columns, empty columns will be added.</dd><dt>binary</dt><dd>Return fields as binaries (default)</dd><dt>list</dt><dd>Return fields as lists</dd><dt>{open, list()}</dt><dd>Options given to file:open/2</dd><dt>{columns, Names}</dt><dd>Return data only in given columns</dd><dt>{converters, [{Col, fun((ColName, Value) -&gt; NewValue)| {rex, RegEx, Replace}]}</dt><dd>Data format converter. If <code>Col</code> is <code>all</code>, the same converting function is used for all columns. If the converter is a <code>{rex, RegEx, Replace}</code> then the regular expression replacement will be run on a value in the requested column.</dd></dl></div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#guess_data_type/1" translate="no">guess_data_type(S)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Guess the type of data by its value</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#guess_data_types/2" translate="no">guess_data_types(HasHeaderRow, Rows)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Guess data types of fields in the given CSV list of rows obtained by parsing a CSV file with <code>parse(File,[fix_lengths])</code>. The function returns a list of tuples <code>{Type, MaxFieldLen, NumOfNulls}</code>, where the <code>Type</code> is a field type, <code>MaxFieldLen</code> is the max length of data in this column, and <code>NumOfNulls</code> is the number of rows with empty values in this column.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#load_to_mysql/4" translate="no">load_to_mysql(File, Tab, MySqlPid, Opts)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Load CSV data from a <code>File</code> to a <code>MySQL</code> database. <code>Tab</code> is the name of a table where to load data. <code>MySqlPid</code> is the pid of a MySQL database connection returned by <code>mysql:start_link/1</code>. The data in the table is replaced according to <code>{import_type, Type}</code>:<ul><li><code>recreate</code> - The table is entirely replaced with the data from file. The data from the file is loaded atomically - i.e. either the whole file loading succeeds or fails. This is accomplished by first loading data to a temporary table, and then using the database's ACID properties to replace the target table with the temporary table.</li><li><code>replace</code> - Use &quot;REPLACE INTO&quot; instead of &quot;INSERT INTO&quot; existing table</li><li><code>ignore_dups</code> - The insert in the existing table is performed and the records with duplicate keys are ignored</li><li><code>update_dups</code> - The insert in the existing table is performed and the records with duplicate keys are updated</li><li><code>upsert</code> - The insert/update in the existing table is performed without creating a temporary table</li></ul>NOTE: this function requires <a href="https://github.com/mysql-otp/mysql-otp.git" target="_top">https://github.com/mysql-otp/mysql-otp.git</a></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#max_field_lengths/2" translate="no">max_field_lengths(HasHeaderRow, Rows)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Get max field lengths for a list obtained by parsing a CSV file with <code>parse_csv_file(File,[fix_lengths])</code>.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#parse/1" translate="no">parse(File)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Parse a CSV file using default options.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#parse/2" translate="no">parse(File, Opts)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Parse a given CSV file.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#parse_line/1" translate="no">parse_line(Line)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Parse a CSV line</div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:load_options/0">
+
+  <div class="detail-header">
+    <a href="#t:load_options/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">load_options/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L17" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> load_options() ::
     [{load_type, recreate | replace | ignore_dups | update_dups} |
-     {col_types,
-      #{binary() =&gt;
-            ColType ::
-                atom() | {ColType :: atom(), ColLen :: integer()}}} |
+     {col_types, #{binary() => ColType :: atom() | {ColType :: atom(), ColLen :: integer()}}} |
      {batch_size, integer()} |
      {blob_size, integer()} |
      {create_table, boolean()} |
      {save_create_sql_to_file, string()} |
-     {transforms, #{binary() =&gt; fun((term()) -&gt; term())}} |
+     {transforms, #{binary() => fun((term()) -> term())}} |
      {guess_types, boolean()} |
      {guess_limit_rows, integer()} |
      {max_nulls_pcnt, float()} |
      {primary_key, PKColumns :: binary() | [binary() | list()]} |
      {drop_temp_table, boolean()} |
      {encoding, string() | atom()} |
-     {verbose, boolean() | integer()}]</code></pre></p>
-<p>  Options for loading data to a database.
-  <dl>
-  <dt>{load_type, Type}</dt>
-    <dd>Type of loading to perform. <code>recreate</code> will replace the table by atomically
-        dropping the old one, creating/loading the new one, and replacing the table.
-        <code>replace</code> will do an insert by using <code>REPLACE INTO</code> statement. <code>ignore_dups</code>
-        will use <code>INSERT IGNORE INTO</code> statement to ignore records with duplicate keys.
-        <code>update_dups</code> will do an <code>INSERT INTO</code> and <code>ON DUPLICATE KEY UPDATE</code>, so that
-        the old records are updated and the new ones are inserted.</dd>
-  <dt>{create_table, Allow}</dt>
-    <dd>Allow to create a table if it doesn't exist</dd>
-  <dt>{col_types, Map}</dt>
-    <dd>Types of data for all or some columens. The Map is in the format:
-        <code>ColName::binary() =&gt; ColInfo</code>, where
-        ColInfo is <code>ColType | {ColType, ColLen::integer()}</code>, and <code>ColType</code> is:
-        <code>date | datetime | integer | float | blob | number</code>.
-        </dd>
-  <dt>{transforms, Map}</dt>
-    <dd>Value transformation function for columns. The Map is in the format:
-        <code>ColName::binary() =&gt; fun((Value::term()) -&gt; term())</code>.</dd>
-  <dt>{batch_size, Size}</dt>
-    <dd>Number of records per SQL insert/update/replace call</dd>
-  <dt>{blob_size, Size}</dt>
-    <dd>Threshold in number of bytes at which a VARCHAR field is defined as BLOB</dd>
-  <dt>{save_create_sql_to_file, Filename::string()}</dt>
-    <dd>Save CREATE TABLE sql statement to a file</dd>
-  <dt>guess_types</dt>
-    <dd>When specified, the function will try to guess the type of data in columns
-        instead of treating all data as string fields. The possible data typed guessed:
-        integer, float, date, datetime, number, string</dd>
-  <dt>{guess_limit_rows, Limit}</dt>
-    <dd>Limit the number of rows for guessing the column data types</dd>
-  <dt>{max_nulls_pcnt, Percent}</dt>
-    <dd>A percentage threshold of permissible NULLs in a column (0-100), above which
-        the column data type is forced to be treated as <code>string</code></dd>
-  <dt>{primary_key, Fields}</dt>
-    <dd>Names of primary key fields in the created table</dd>
-  <dt>{drop_temp_table, boolean()}</dt>
-    <dd>When true (default), temp table is dropped.</dd>
-  <dt>{encoding, Encoding}</dt>
-    <dd>The name of the encoding to use for storing data. For the list of permissible
-        values [see this
-        link](https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html)</dd>
-  <dt>verbose</dt>
-    <dd>Print additional details to stdout</dd>
-  </dl></p>
+     {verbose, boolean() | integer()}].</pre>
 
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#guess_data_type-1">guess_data_type/1</a></td><td class="tab">Guess the type of data by its value.</td></tr>
-<tr class="tab"><td class="tab"><a href="#guess_data_types-2">guess_data_types/2</a></td><td class="tab">Guess data types of fields in the given CSV list of rows obtained by
-       parsing a CSV file with <code>parse(File,[fix_lengths])</code>.</td></tr>
-<tr class="tab"><td class="tab"><a href="#load_to_mysql-4">load_to_mysql/4</a></td><td class="tab">Load CSV data from a <code>File</code> to a <code>MySQL</code> database.</td></tr>
-<tr class="tab"><td class="tab"><a href="#max_field_lengths-2">max_field_lengths/2</a></td><td class="tab">Get max field lengths for a list obtained by parsing a CSV file with
-       <code>parse_csv_file(File,[fix_lengths])</code>.</td></tr>
-<tr class="tab"><td class="tab"><a href="#parse-1">parse/1</a></td><td class="tab">Parse a CSV file using default options.</td></tr>
-<tr class="tab"><td class="tab"><a href="#parse-2">parse/2</a></td><td class="tab">Parse a given CSV file.</td></tr>
-<tr class="tab"><td class="tab"><a href="#parse_line-1">parse_line/1</a></td><td class="tab">Parse a CSV line.</td></tr>
-</table>
+      </div>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
+Options for loading data to a database.<dl><dt>{load_type, Type}</dt><dd>Type of loading to perform. <code>recreate</code> will replace the table by atomically dropping the old one, creating/loading the new one, and replacing the table. <code>replace</code> will do an insert by using <code>REPLACE INTO</code> statement. <code>ignore_dups</code> will use <code>INSERT IGNORE INTO</code> statement to ignore records with duplicate keys. <code>update_dups</code> will do an <code>INSERT INTO</code> and <code>ON DUPLICATE KEY UPDATE</code>, so that the old records are updated and the new ones are inserted.</dd><dt>{create_table, Allow}</dt><dd>Allow to create a table if it doesn't exist</dd><dt>{col_types, Map}</dt><dd>Types of data for all or some columens. The Map is in the format: <code>ColName::binary() =&gt; ColInfo</code>, where ColInfo is <code>ColType | {ColType, ColLen::integer()}</code>, and <code>ColType</code> is: <code>date | datetime | integer | float | blob | number</code>.</dd><dt>{transforms, Map}</dt><dd>Value transformation function for columns. The Map is in the format: <code>ColName::binary() =&gt; fun((Value::term()) -&gt; term())</code>.</dd><dt>{batch_size, Size}</dt><dd>Number of records per SQL insert/update/replace call</dd><dt>{blob_size, Size}</dt><dd>Threshold in number of bytes at which a VARCHAR field is defined as BLOB</dd><dt>{save_create_sql_to_file, Filename::string()}</dt><dd>Save CREATE TABLE sql statement to a file</dd><dt>guess_types</dt><dd>When specified, the function will try to guess the type of data in columns instead of treating all data as string fields. The possible data typed guessed: integer, float, date, datetime, number, string</dd><dt>{guess_limit_rows, Limit}</dt><dd>Limit the number of rows for guessing the column data types</dd><dt>{max_nulls_pcnt, Percent}</dt><dd>A percentage threshold of permissible NULLs in a column (0-100), above which the column data type is forced to be treated as <code>string</code></dd><dt>{primary_key, Fields}</dt><dd>Names of primary key fields in the created table</dd><dt>{drop_temp_table, boolean()}</dt><dd>When true (default), temp table is dropped.</dd><dt>{encoding, Encoding}</dt><dd>The name of the encoding to use for storing data. For the list of permissible values [see this link](https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html)</dd><dt>verbose</dt><dd>Print additional details to stdout</dd></dl>
+  </section>
+</section>
+<section class="detail" id="t:parse_options/0">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="guess_data_type-1">guess_data_type/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">guess_data_type(S :: binary()) -&gt;
-                   {null | date | datetime | integer | float |
-                    string,
-                    term(),
-                    string()}</code></pre></p>
-<p> </p>
-</div><p>Guess the type of data by its value</p>
+  <div class="detail-header">
+    <a href="#t:parse_options/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">parse_options/0</h1>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="guess_data_types-2">guess_data_types/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">guess_data_types(HasHeaderRow :: boolean(),
-                 Rows :: [Fields :: [binary()]]) -&gt;
-                    {Type ::
-                         string | integer | number | float |
-                         date | datetime,
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L80" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> parse_options() ::
+    [fix_lengths | binary | list |
+     {open, list()} |
+     {columns, [binary() | string()]} |
+     {converters,
+      [{binary() | string() | all,
+        fun((binary(), binary()) -> binary()) | {rex, binary(), binary()}}]}].</pre>
+
+      </div>
+
+CSV Parsing Options.<dl><dt>fix_lengths</dt><dd>if a record has a column count greater than what's found in the header row, those extra columns will be dropped, and if a row has fewer columns, empty columns will be added.</dd><dt>binary</dt><dd>Return fields as binaries (default)</dd><dt>list</dt><dd>Return fields as lists</dd><dt>{open, list()}</dt><dd>Options given to file:open/2</dd><dt>{columns, Names}</dt><dd>Return data only in given columns</dd><dt>{converters, [{Col, fun((ColName, Value) -&gt; NewValue)| {rex, RegEx, Replace}]}</dt><dd>Data format converter. If <code>Col</code> is <code>all</code>, the same converting function is used for all columns. If the converter is a <code>{rex, RegEx, Replace}</code> then the regular expression replacement will be run on a value in the requested column.</dd></dl>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="guess_data_type/1">
+
+  <div class="detail-header">
+    <a href="#guess_data_type/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">guess_data_type(S)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L816" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> guess_data_type(binary()) -> {null | date | datetime | integer | float | string, term(), string()}.</pre>
+
+      </div>
+
+Guess the type of data by its value
+  </section>
+</section>
+<section class="detail" id="guess_data_types/2">
+
+  <div class="detail-header">
+    <a href="#guess_data_types/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">guess_data_types(HasHeaderRow, Rows)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L355" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> guess_data_types(HasHeaderRow :: boolean(), Rows :: [Fields :: [binary()]]) ->
+                    {Type :: string | integer | number | float | date | datetime,
                      MaxFieldLen :: integer(),
-                     NumOfNulls :: integer()}</code></pre></p>
-<p> </p>
-</div><p>Guess data types of fields in the given CSV list of rows obtained by
-       parsing a CSV file with <code>parse(File,[fix_lengths])</code>.
-       The function returns a list of tuples <code>{Type, MaxFieldLen, NumOfNulls}</code>,
-       where the <code>Type</code> is a field type, <code>MaxFieldLen</code> is the max length of
-       data in this column, and <code>NumOfNulls</code> is the number of rows with empty
-       values in this column.</p>
+                     NumOfNulls :: integer()}.</pre>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="load_to_mysql-4">load_to_mysql/4</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">load_to_mysql(File :: string(),
-              Tab :: string(),
-              MySqlPid :: pid(),
-              Opts :: <a href="#type-load_options">load_options()</a>) -&gt;
-                 {Columns :: list(),
-                  AffectedCount :: integer(),
-                  RecCount :: integer()}</code></pre></p>
-<p> </p>
-</div><p>Load CSV data from a <code>File</code> to a <code>MySQL</code> database.
-  <code>Tab</code> is the name of a table where to load data.  <code>MySqlPid</code> is the pid of a
-  MySQL database connection returned by <code>mysql:start_link/1</code>.
-  The data in the table is replaced according to <code>{import_type, Type}</code>:
-  <ul>
-  <li><code>recreate</code> - The data from the file is loaded atomically - i.e. either
-  the whole file loading succeeds or fails.  This is accomplished by first
-  loading data to a temporary table, and then using the database's ACID
-  properties to replace the target table with the temporary table.
-  The table is entirely replaced with the data from file.</li>
-  <li><code>replace</code>     - Use "REPLACE INTO" instead of "INSERT INTO" existing
-  table</li>
-  <li><code>ignore_dups</code> - The insert in the existing table is performed and the
-  records with duplicate keys are ignored</li>
-  <li><code>update_dups</code> - The insert in the existing table is performed and the
-  records with duplicate keys are updated</li>
-  <li><code>upsert</code>      - The insert/update in the existing table is performed
-  without creating a temporary table</li>
-  </ul>
- 
-  NOTE: this function requires <a href="https://github.com/mysql-otp/mysql-otp.git" target="_top"><tt>https://github.com/mysql-otp/mysql-otp.git</tt></a></p>
+      </div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="max_field_lengths-2">max_field_lengths/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">max_field_lengths(HasHeaderRow :: boolean(),
-                  Rows :: [Fields :: list()]) -&gt;
-                     [Len :: integer()]</code></pre></p>
-<p> </p>
-</div><p>Get max field lengths for a list obtained by parsing a CSV file with
-       <code>parse_csv_file(File,[fix_lengths])</code>.</p>
+Guess data types of fields in the given CSV list of rows obtained by parsing a CSV file with <code>parse(File,[fix_lengths])</code>. The function returns a list of tuples <code>{Type, MaxFieldLen, NumOfNulls}</code>, where the <code>Type</code> is a field type, <code>MaxFieldLen</code> is the max length of data in this column, and <code>NumOfNulls</code> is the number of rows with empty values in this column.
+  </section>
+</section>
+<section class="detail" id="load_to_mysql/4">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse-1">parse/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">parse(File :: string()) -&gt; [[binary()]]</code></pre></p>
-<p> </p>
-</div><p>Parse a CSV file using default options.</p>
+  <div class="detail-header">
+    <a href="#load_to_mysql/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">load_to_mysql(File, Tab, MySqlPid, Opts)</h1>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse-2">parse/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">parse(File :: binary() | string(),
-      Opts ::
-          [fix_lengths | binary | list | {open, Opts :: list()}]) -&gt;
-         [[string()]]</code></pre></p>
-<p> </p>
-</div><p>Parse a given CSV file.
-  Options:
-  <dl>
-    <dt>fix_lengths</dt><dd>if a record has a column count
-  greater than what's found in the header row, those extra columns will be
-  dropped, and if a row has fewer columns, empty columns will be added.</dd>
-    <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
-    <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
-    <dt>binary</dt><dd>Return fields as binaries (default)</dd>
-    <dt>list</dt><dd>Return fields as lists</dd>
-  </dl></p>
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L462" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse_line-1">parse_line/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">parse_line(Line :: binary()) -&gt; list()</code></pre></p>
-<p> </p>
-</div><p>Parse a CSV line</p>
-<hr>
 
-</body>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> load_to_mysql(File :: string(), Tab :: string(), MySqlPid :: pid(), Opts :: <a href="#t:load_options/0">load_options</a>()) ->
+                 {Columns :: list(), AffectedCount :: integer(), RecCount :: integer()}.</pre>
+
+      </div>
+
+Load CSV data from a <code>File</code> to a <code>MySQL</code> database. <code>Tab</code> is the name of a table where to load data. <code>MySqlPid</code> is the pid of a MySQL database connection returned by <code>mysql:start_link/1</code>. The data in the table is replaced according to <code>{import_type, Type}</code>:<ul><li><code>recreate</code> - The table is entirely replaced with the data from file. The data from the file is loaded atomically - i.e. either the whole file loading succeeds or fails. This is accomplished by first loading data to a temporary table, and then using the database's ACID properties to replace the target table with the temporary table.</li><li><code>replace</code> - Use &quot;REPLACE INTO&quot; instead of &quot;INSERT INTO&quot; existing table</li><li><code>ignore_dups</code> - The insert in the existing table is performed and the records with duplicate keys are ignored</li><li><code>update_dups</code> - The insert in the existing table is performed and the records with duplicate keys are updated</li><li><code>upsert</code> - The insert/update in the existing table is performed without creating a temporary table</li></ul>NOTE: this function requires <a href="https://github.com/mysql-otp/mysql-otp.git" target="_top">https://github.com/mysql-otp/mysql-otp.git</a>
+  </section>
+</section>
+<section class="detail" id="max_field_lengths/2">
+
+  <div class="detail-header">
+    <a href="#max_field_lengths/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">max_field_lengths(HasHeaderRow, Rows)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L324" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> max_field_lengths(HasHeaderRow :: boolean(), Rows :: [Fields :: list()]) -> [Len :: integer()].</pre>
+
+      </div>
+
+Get max field lengths for a list obtained by parsing a CSV file with <code>parse_csv_file(File,[fix_lengths])</code>.
+  </section>
+</section>
+<section class="detail" id="parse/1">
+
+  <div class="detail-header">
+    <a href="#parse/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">parse(File)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L113" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> parse(string()) -> [[binary()]].</pre>
+
+      </div>
+
+Parse a CSV file using default options.
+  </section>
+</section>
+<section class="detail" id="parse/2">
+
+  <div class="detail-header">
+    <a href="#parse/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">parse(File, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L121" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> parse(binary() | string(), <a href="#t:parse_options/0">parse_options</a>()) -> [[string()]].</pre>
+
+      </div>
+
+Parse a given CSV file.
+  </section>
+</section>
+<section class="detail" id="parse_line/1">
+
+  <div class="detail-header">
+    <a href="#parse_line/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">parse_line(Line)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/csv.erl#L249" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> parse_line(binary()) -> list().</pre>
+
+      </div>
+
+Parse a CSV line
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/csv.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
 </html>

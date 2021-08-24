@@ -1,421 +1,1491 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module gen_leader</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>gen_leader — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module gen_leader</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Leader election behavior.
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
 
-<p><b>This module defines the <tt>gen_leader</tt> behaviour.</b><br> Required callback functions: <tt>init/1</tt>, <tt>elected/3</tt>, <tt>surrendered/3</tt>, <tt>handle_leader_call/4</tt>, <tt>handle_leader_cast/3</tt>, <tt>from_leader/3</tt>, <tt>handle_call/4</tt>, <tt>handle_cast/3</tt>, <tt>handle_DOWN/3</tt>, <tt>handle_info/2</tt>, <tt>terminate/2</tt>, <tt>code_change/4</tt>.</p>
-<p><b>Authors:</b> Hans Svensson (<a href="mailto:hanssv@chalmers.se"><tt>hanssv@chalmers.se</tt></a>), Thomas Arts (<a href="mailto:thomas.arts@ituniv.se"><tt>thomas.arts@ituniv.se</tt></a>), Ulf Wiger (<a href="mailto:ulf.wiger@ericsson.com"><tt>ulf.wiger@ericsson.com</tt></a>), (contributor: Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+      <script src="docs_config.js"></script>
 
-<h2><a href="#" name="description">Description</a></h2>Leader election behavior.
-   <p>This application implements a leader election behavior modeled after
-   gen_server. This behavior intends to make it reasonably
-   straightforward to implement a fully distributed server with
-   master-slave semantics.</p>
-   <p>The gen_leader behavior supports nearly everything that gen_server
-   does (some functions, such as multicall() and the internal timeout,
-   have been removed), and adds a few callbacks and API functions to
-   support leader election etc.</p>
-   <p>Also included is an example program, a global dictionary, based
-   on the modules gen_leader and dict. The callback implementing the
-   global dictionary is called 'test_cb', for no particularly logical
-   reason.</p>
-   <p><b>New version:</b> The internal leader election algorithm was faulty
-   and has been replaced with a new version based on a different leader
-   election algorithm. As a consequence of this the query functions
-   <tt>alive</tt> and <tt>down</tt> can no longer be provided.
-   The new algorithm also make use of an incarnation parameter, by
-   default written to disk in the function <tt>incarnation</tt>. This
-   implies that only one <tt>gen_leader</tt> per node is permitted, if
-   used in a diskless environment, <tt>incarnation</tt> must be adapted.
-   </p>
-   <p>
-   Modifications contributed by Serge Aleynikov:
-   <ol>
-   <li>Added configurable startup options (see leader_options() type)</li>
-   <li>Implemented handle_DOWN/3 callback with propagation of the
-       leader's state via broadcast to all connected candidates.</li>
-   <li>Fixed population of the #election.down member so that down/1 query
-       can be used in the behavior's implementation</li>
-   <li>Rewrote implementation of the tau timer to prevent the leader
-       looping on the timer timeout event when all candidates are connected.</li>
-   </ol>
-   </p>
-<h2><a href="#" name="types">Data Types</a></h2>
-
-<h3 class="typedecl"><a name="type-bcast_type">bcast_type()</a></h3>
-<p><pre><code class="language-erlang">bcast_type() = all | sender</code></pre></p>
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
 
-<h3 class="typedecl"><a name="type-caller_ref">caller_ref()</a></h3>
-<p><pre><code class="language-erlang">caller_ref() = {pid(), reference()}</code></pre></p>
+  </head>
+  <body data-type="modules" class="page-behaviour">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
 
 
-<h3 class="typedecl"><a name="type-elid">elid()</a></h3>
-<p><pre><code class="language-erlang">elid() = {<a href="#type-priority">priority()</a>, <a href="#type-incarn">incarn()</a>, <a href="#type-lclock">lclock()</a>}</code></pre></p>
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
 
 
-<h3 class="typedecl"><a name="type-incarn">incarn()</a></h3>
-<p><pre><code class="language-erlang">incarn() = non_neg_integer()</code></pre></p>
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L61" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">gen_leader</span> <small>behaviour</small>
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
 
 
-<h3 class="typedecl"><a name="type-lclock">lclock()</a></h3>
-<p><pre><code class="language-erlang">lclock() = non_neg_integer()</code></pre></p>
+  <section id="moduledoc">
+Leader election behavior.<p>This application implements a leader election behavior modeled after gen_server. This behavior intends to make it reasonably straightforward to implement a fully distributed server with master-slave semantics.</p><p>The gen_leader behavior supports nearly everything that gen_server does (some functions, such as multicall() and the internal timeout, have been removed), and adds a few callbacks and API functions to support leader election etc.</p><p>Also included is an example program, a global dictionary, based on the modules gen_leader and dict. The callback implementing the global dictionary is called 'test_cb', for no particularly logical reason.</p><p><b>New version:</b> The internal leader election algorithm was faulty and has been replaced with a new version based on a different leader election algorithm. As a consequence of this the query functions alive and down can no longer be provided. The new algorithm also make use of an incarnation parameter, by default written to disk in the function incarnation. This implies that only one gen_leader per node is permitted, if used in a diskless environment, incarnation must be adapted.</p><p>Modifications contributed by Serge Aleynikov:<ol><li>Added configurable startup options (see leader_options() type)</li><li>Implemented handle_DOWN/3 callback with propagation of the leader's state via broadcast to all connected candidates.</li><li>Fixed population of the #election.down member so that down/1 query can be used in the behavior's implementation</li><li>Rewrote implementation of the tau timer to prevent the leader looping on the timer timeout event when all candidates are connected.</li></ol></p>
+  </section>
 
 
-<h3 class="typedecl"><a name="type-mon_ref">mon_ref()</a></h3>
-<p><pre><code class="language-erlang">mon_ref() = reference()</code></pre></p>
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:bcast_type/0" translate="no">bcast_type/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:caller_ref/0" translate="no">caller_ref/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:elid/0" translate="no">elid/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:incarn/0" translate="no">incarn/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:lclock/0" translate="no">lclock/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:mon_ref/0" translate="no">mon_ref/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:name/0" translate="no">name/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:option/0" translate="no">option/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:options/0" translate="no">options/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:priority/0" translate="no">priority/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:server_ref/0" translate="no">server_ref/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:start_ret/0" translate="no">start_ret/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:status/0" translate="no">status/0</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#alive/1" translate="no">alive(Election)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Returns list of alive nodes.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#behaviour_info/1" translate="no">behaviour_info(Other)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#broadcast/3" translate="no">broadcast(_, ToNodes, E)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#call/2" translate="no">call(Name, Request)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Equivalent to <code>gen_server:call/2</code>, but with a slightly different exit reason if something goes wrong. This function calls the <code>gen_leader</code> process exactly as if it were a gen_server (which, for practical purposes, it is.)</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#call/3" translate="no">call(Name, Request, Timeout)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Equivalent to <code>gen_server:call/3</code>, but with a slightly different exit reason if something goes wrong. This function calls the <code>gen_leader</code> process exactly as if it were a gen_server (which, for practical purposes, it is.)</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#candidates/1" translate="no">candidates(Election)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Returns a list of known candidates.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#cast/2" translate="no">cast(Name, Request)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Equivalent to gen_server:cast / 2.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#down/1" translate="no">down(Election)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Returns list of down nodes.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_status/2" translate="no">format_status(Opt, StatusData)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#init_it/6" translate="no">init_it(Starter, Parent, Name, Mod, _, Options)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#leader_call/2" translate="no">leader_call(Name, Request)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Makes a call (similar to <code>gen_server:call/2</code>) to the leader. The call is forwarded via the local gen_leader instance, if that one isn't actually the leader. The client will exit if the leader dies while the request is outstanding.<p>This function uses <code>gen:call/3</code>, and is subject to the same default timeout as e.g. <code>gen_server:call/2</code>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#leader_call/3" translate="no">leader_call(Name, Request, Timeout)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Makes a call (similar to <code>gen_server:call/3</code>) to the leader. The call is forwarded via the local gen_leader instance, if that one isn't actually the leader. The client will exit if the leader dies while the request is outstanding.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#leader_cast/2" translate="no">leader_cast(Name, Request)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Similar to <code>gen_server:cast/2</code> but will be forwarded to the leader via the local gen_leader instance.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#leader_node/1" translate="no">leader_node(Election)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Returns the current leader node.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#print_event/3" translate="no">print_event(Dev, Event, Name)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#reply/2" translate="no">reply(From, Reply)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Equivalent to gen_server:reply / 2.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#start/6" translate="no">start(Name, CandidateNodes, OptArgs, Mod, Arg, Options)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Starts a gen_leader process without linking to the parent.<p><em>See also: </em><a href="#start_link/6">start_link/6</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#start_link/6" translate="no">start_link(Name, CandidateNodes, OptArgs, Mod, Arg, Options)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Starts a gen_leader process. NameThe locally registered name of the processCandidateNodesThe names of nodes capable of assuming a leadership roleOptArgsOptional arguments given to <code>gen_leader</code>.<dl>{workers, Workers}</dl><dd>The names of nodes that will be part of the &quot;cluster&quot;, but cannot ever assume a leadership role. Default: [].</dd><dl>{vardir, Dir}</dl><dd>Directory name used to store candidate's incarnation cookie. Default: &quot;.&quot;</dd><dl>{bcast_type, Type}</dl><dd>When <code>Type</code> is 'all' each election event (when a new candidate becomes visible to the leader) will be broadcast to all live candidate nodes. Each candidate will get a from_leader/3 callback. When <code>Type</code> is <code>sender</code>, only the newly registered candidate will get the surrendered/3 callback. Default: <code>sender</code>.</dd><dl>{heartbeat, Seconds}</dl><dd>Heartbeat timeout value used to send ping messages to inactive candidate nodes.</dd>ModThe name of the callback moduleArgArgument passed on to <code>Mod:init/1</code>OptionsSame as gen_server's Options<p>The list of candidates needs to be known from the start. Workers could potentially be added at runtime, but no functionality to do this is provided by this version.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#system_code_change/4" translate="no">system_code_change(_, Module, OldVsn, Extra)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#system_continue/3" translate="no">system_continue(Parent, Debug, _)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#system_terminate/4" translate="no">system_terminate(Reason, Parent, Debug, _)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#worker_announce/2" translate="no">worker_announce(Name, Pid)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#workers/1" translate="no">workers(Election)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Returns a list of known workers.</div>
+
+      </div>
+
+  </div>
+
+  </section>
 
 
-<h3 class="typedecl"><a name="type-name">name()</a></h3>
-<p><pre><code class="language-erlang">name() = atom()</code></pre></p>
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:bcast_type/0">
+
+  <div class="detail-header">
+    <a href="#t:bcast_type/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">bcast_type/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L98" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
 
 
-<h3 class="typedecl"><a name="type-option">option()</a></h3>
-<p><pre><code class="language-erlang">option() = 
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> bcast_type() :: all | sender.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:caller_ref/0">
+
+  <div class="detail-header">
+    <a href="#t:caller_ref/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">caller_ref/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L131" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> caller_ref() :: {pid(), reference()}.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:elid/0">
+
+  <div class="detail-header">
+    <a href="#t:elid/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">elid/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L128" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> elid() :: {<a href="#t:priority/0">priority</a>(), <a href="#t:incarn/0">incarn</a>(), <a href="#t:lclock/0">lclock</a>()}.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:incarn/0">
+
+  <div class="detail-header">
+    <a href="#t:incarn/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">incarn/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L119" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> incarn() :: non_neg_integer().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:lclock/0">
+
+  <div class="detail-header">
+    <a href="#t:lclock/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">lclock/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L122" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> lclock() :: non_neg_integer().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:mon_ref/0">
+
+  <div class="detail-header">
+    <a href="#t:mon_ref/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">mon_ref/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L114" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> mon_ref() :: reference().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:name/0">
+
+  <div class="detail-header">
+    <a href="#t:name/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">name/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L111" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> name() :: atom().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:option/0">
+
+  <div class="detail-header">
+    <a href="#t:option/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">option/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L100" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> option() ::
     {workers, Workers :: [node()]} |
     {vardir, Dir :: string()} |
-    {bcast_type, Type :: <a href="#type-bcast_type">bcast_type()</a>} |
-    {heartbeat, Seconds :: integer()}</code></pre></p>
+    {bcast_type, Type :: <a href="#t:bcast_type/0">bcast_type</a>()} |
+    {heartbeat, Seconds :: integer()}.</pre>
+
+      </div>
 
 
-<h3 class="typedecl"><a name="type-options">options()</a></h3>
-<p><pre><code class="language-erlang">options() = [<a href="#type-option">option()</a>]</code></pre></p>
+  </section>
+</section>
+<section class="detail" id="t:options/0">
+
+  <div class="detail-header">
+    <a href="#t:options/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">options/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L105" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
 
 
-<h3 class="typedecl"><a name="type-priority">priority()</a></h3>
-<p><pre><code class="language-erlang">priority() = integer()</code></pre></p>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> options() :: [<a href="#t:option/0">option</a>()].</pre>
+
+      </div>
 
 
-<h3 class="typedecl"><a name="type-server_ref">server_ref()</a></h3>
-<p><pre><code class="language-erlang">server_ref() = 
-    <a href="#type-name">name()</a> | {<a href="#type-name">name()</a>, node()} | {global, <a href="#type-name">name()</a>} | pid()</code></pre></p>
+  </section>
+</section>
+<section class="detail" id="t:priority/0">
+
+  <div class="detail-header">
+    <a href="#t:priority/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">priority/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L125" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
 
 
-<h3 class="typedecl"><a name="type-start_ret">start_ret()</a></h3>
-<p><pre><code class="language-erlang">start_ret() = {ok, pid()} | {error, term()}</code></pre></p>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> priority() :: integer().</pre>
+
+      </div>
 
 
-<h3 class="typedecl"><a name="type-status">status()</a></h3>
-<p><pre><code class="language-erlang">status() = 
-    elec1 | elec2 | wait | joining | worker | waiting_worker |
-    norm</code></pre></p>
+  </section>
+</section>
+<section class="detail" id="t:server_ref/0">
+
+  <div class="detail-header">
+    <a href="#t:server_ref/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">server_ref/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L116" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
 
 
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#alive-1">alive/1</a></td><td class="tab">Returns list of alive nodes.</td></tr>
-<tr class="tab"><td class="tab"><a href="#behaviour_info-1">behaviour_info/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#broadcast-3">broadcast/3</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#call-2">call/2</a></td><td class="tab">Equivalent to <code>gen_server:call/2</code>, but with a slightly
-  different exit reason if something goes wrong.</td></tr>
-<tr class="tab"><td class="tab"><a href="#call-3">call/3</a></td><td class="tab">Equivalent to <code>gen_server:call/3</code>, but with a slightly
-  different exit reason if something goes wrong.</td></tr>
-<tr class="tab"><td class="tab"><a href="#candidates-1">candidates/1</a></td><td class="tab">Returns a list of known candidates.</td></tr>
-<tr class="tab"><td class="tab"><a href="#cast-2">cast/2</a></td><td class="tab">Equivalent to <tt>gen_server:cast / 2</tt>.
-</td></tr>
-<tr class="tab"><td class="tab"><a href="#down-1">down/1</a></td><td class="tab">Returns list of down nodes.</td></tr>
-<tr class="tab"><td class="tab"><a href="#leader_call-2">leader_call/2</a></td><td class="tab">Makes a call (similar to <code>gen_server:call/2</code>) to the
-  leader.</td></tr>
-<tr class="tab"><td class="tab"><a href="#leader_call-3">leader_call/3</a></td><td class="tab">Makes a call (similar to <code>gen_server:call/3</code>) to the
-  leader.</td></tr>
-<tr class="tab"><td class="tab"><a href="#leader_cast-2">leader_cast/2</a></td><td class="tab">Similar to <code>gen_server:cast/2</code> but will be forwarded to
-  the leader via the local gen_leader instance.</td></tr>
-<tr class="tab"><td class="tab"><a href="#leader_node-1">leader_node/1</a></td><td class="tab">Returns the current leader node.</td></tr>
-<tr class="tab"><td class="tab"><a href="#reply-2">reply/2</a></td><td class="tab">Equivalent to <tt>gen_server:reply / 2</tt>.
-</td></tr>
-<tr class="tab"><td class="tab"><a href="#start-6">start/6</a></td><td class="tab">Starts a gen_leader process without linking to the parent.</td></tr>
-<tr class="tab"><td class="tab"><a href="#start_link-6">start_link/6</a></td><td class="tab">Starts a gen_leader process.</td></tr>
-<tr class="tab"><td class="tab"><a href="#workers-1">workers/1</a></td><td class="tab">Returns a list of known workers.</td></tr>
-</table>
+  </div>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
+  <section class="docstring">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="alive-1">alive/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">alive(Election ::
-          #election{leader = none | pid(),
-                    previous_leader = none | pid(),
-                    name = <a href="#type-name">name()</a>,
-                    leadernode = node(),
-                    candidate_nodes = [node()],
-                    worker_nodes = [node()],
-                    down = [node()],
-                    monitored = [{<a href="#type-mon_ref">mon_ref()</a>, node()}],
-                    buffered = [{reference(), <a href="#type-caller_ref">caller_ref()</a>}],
-                    seed_node = none | node(),
-                    status = <a href="#type-status">status()</a>,
-                    elid = <a href="#type-elid">elid()</a>,
-                    acks = [node()],
-                    work_down = [node()],
-                    cand_timer_int = integer(),
-                    cand_timer = term(),
-                    pendack = node(),
-                    incarn = <a href="#type-incarn">incarn()</a>,
-                    nextel = integer(),
-                    bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-         [node()]</code></pre></p>
-<p> </p>
-</div><p>Returns list of alive nodes.</p>
+      <div class="specs">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="behaviour_info-1">behaviour_info/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">behaviour_info(Other :: atom()) -&gt; undefined | [{atom(), arity()}]</code></pre></p>
-<p> </p>
-</div>
+          <pre translate="no"><span class="attribute">-type</span> server_ref() :: <a href="#t:name/0">name</a>() | {<a href="#t:name/0">name</a>(), node()} | {global, <a href="#t:name/0">name</a>()} | pid().</pre>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="broadcast-3">broadcast/3</a></h3>
-<div class="spec">
-<p><tt>broadcast(X1, ToNodes, E) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="call-2">call/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</code></pre></p>
-<p> </p>
-</div><p>Equivalent to <code>gen_server:call/2</code>, but with a slightly
-  different exit reason if something goes wrong. This function calls
-  the <code>gen_leader</code> process exactly as if it were a gen_server
-  (which, for practical purposes, it is.)</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="call-3">call/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">call(Name :: <a href="#type-server_ref">server_ref()</a>,
-     Request :: term(),
-     Timeout :: integer()) -&gt;
-        term()</code></pre></p>
-<p> </p>
-</div><p>Equivalent to <code>gen_server:call/3</code>, but with a slightly
-  different exit reason if something goes wrong. This function calls
-  the <code>gen_leader</code> process exactly as if it were a gen_server
-  (which, for practical purposes, it is.)</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="candidates-1">candidates/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">candidates(Election ::
-               #election{leader = none | pid(),
-                         previous_leader = none | pid(),
-                         name = <a href="#type-name">name()</a>,
-                         leadernode = node(),
-                         candidate_nodes = [node()],
-                         worker_nodes = [node()],
-                         down = [node()],
-                         monitored = [{<a href="#type-mon_ref">mon_ref()</a>, node()}],
-                         buffered = [{reference(), <a href="#type-caller_ref">caller_ref()</a>}],
-                         seed_node = none | node(),
-                         status = <a href="#type-status">status()</a>,
-                         elid = <a href="#type-elid">elid()</a>,
-                         acks = [node()],
-                         work_down = [node()],
-                         cand_timer_int = integer(),
-                         cand_timer = term(),
-                         pendack = node(),
-                         incarn = <a href="#type-incarn">incarn()</a>,
-                         nextel = integer(),
-                         bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-              [node()]</code></pre></p>
-<p> </p>
-</div><p>Returns a list of known candidates.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="cast-2">cast/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</code></pre></p>
-<p> </p>
-</div><p>Equivalent to <tt>gen_server:cast / 2</tt>.</p>
+      </div>
 
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="down-1">down/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">down(Election ::
-         #election{leader = none | pid(),
-                   previous_leader = none | pid(),
-                   name = <a href="#type-name">name()</a>,
-                   leadernode = node(),
-                   candidate_nodes = [node()],
-                   worker_nodes = [node()],
-                   down = [node()],
-                   monitored = [{<a href="#type-mon_ref">mon_ref()</a>, node()}],
-                   buffered = [{reference(), <a href="#type-caller_ref">caller_ref()</a>}],
-                   seed_node = none | node(),
-                   status = <a href="#type-status">status()</a>,
-                   elid = <a href="#type-elid">elid()</a>,
-                   acks = [node()],
-                   work_down = [node()],
-                   cand_timer_int = integer(),
-                   cand_timer = term(),
-                   pendack = node(),
-                   incarn = <a href="#type-incarn">incarn()</a>,
-                   nextel = integer(),
-                   bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-        [node()]</code></pre></p>
-<p> </p>
-</div><p>Returns list of down nodes.</p>
+  </section>
+</section>
+<section class="detail" id="t:start_ret/0">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_call-2">leader_call/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">leader_call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</code></pre></p>
-<p> </p>
-</div><p>Makes a call (similar to <code>gen_server:call/2</code>) to the
-  leader. The call is forwarded via the local gen_leader instance, if
-  that one isn't actually the leader. The client will exit if the
-  leader dies while the request is outstanding.
-  <p>This function uses <code>gen:call/3</code>, and is subject to the
-  same default timeout as e.g. <code>gen_server:call/2</code>.</p></p>
+  <div class="detail-header">
+    <a href="#t:start_ret/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">start_ret/0</h1>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_call-3">leader_call/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">leader_call(Name :: <a href="#type-server_ref">server_ref()</a>,
-            Request :: term(),
-            Timeout :: integer()) -&gt;
-               term()</code></pre></p>
-<p> </p>
-</div><p>Makes a call (similar to <code>gen_server:call/3</code>) to the
-  leader. The call is forwarded via the local gen_leader instance, if
-  that one isn't actually the leader. The client will exit if the
-  leader dies while the request is outstanding.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_cast-2">leader_cast/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">leader_cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</code></pre></p>
-<p> </p>
-</div><p>Similar to <code>gen_server:cast/2</code> but will be forwarded to
-  the leader via the local gen_leader instance.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_node-1">leader_node/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">leader_node(Election ::
-                #election{leader = none | pid(),
-                          previous_leader = none | pid(),
-                          name = <a href="#type-name">name()</a>,
-                          leadernode = node(),
-                          candidate_nodes = [node()],
-                          worker_nodes = [node()],
-                          down = [node()],
-                          monitored = [{<a href="#type-mon_ref">mon_ref()</a>, node()}],
-                          buffered =
-                              [{reference(), <a href="#type-caller_ref">caller_ref()</a>}],
-                          seed_node = none | node(),
-                          status = <a href="#type-status">status()</a>,
-                          elid = <a href="#type-elid">elid()</a>,
-                          acks = [node()],
-                          work_down = [node()],
-                          cand_timer_int = integer(),
-                          cand_timer = term(),
-                          pendack = node(),
-                          incarn = <a href="#type-incarn">incarn()</a>,
-                          nextel = integer(),
-                          bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-               node() | none</code></pre></p>
-<p> </p>
-</div><p>Returns the current leader node.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="reply-2">reply/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">reply(From :: <a href="#type-caller_ref">caller_ref()</a>, Reply :: term()) -&gt; term()</code></pre></p>
-<p> </p>
-</div><p>Equivalent to <tt>gen_server:reply / 2</tt>.</p>
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L189" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
 
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start-6">start/6</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">start(Name :: atom(),
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> start_ret() :: {ok, pid()} | {error, term()}.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:status/0">
+
+  <div class="detail-header">
+    <a href="#t:status/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">status/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L107" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> status() :: elec1 | elec2 | wait | joining | worker | waiting_worker | norm.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="alive/1">
+
+  <div class="detail-header">
+    <a href="#alive/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">alive(Election)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L246" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> alive(#election{}) -> [node()].</pre>
+
+      </div>
+
+Returns list of alive nodes.
+  </section>
+</section>
+<section class="detail" id="behaviour_info/1">
+
+  <div class="detail-header">
+    <a href="#behaviour_info/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">behaviour_info(Other)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L173" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> behaviour_info(atom()) -> undefined | [{atom(), arity()}].</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="broadcast/3">
+
+  <div class="detail-header">
+    <a href="#broadcast/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">broadcast(_, ToNodes, E)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L1336" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="call/2">
+
+  <div class="detail-header">
+    <a href="#call/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">call(Name, Request)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L288" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> call(<a href="#t:server_ref/0">server_ref</a>(), term()) -> term().</pre>
+
+      </div>
+
+Equivalent to <code>gen_server:call/2</code>, but with a slightly different exit reason if something goes wrong. This function calls the <code>gen_leader</code> process exactly as if it were a gen_server (which, for practical purposes, it is.)
+  </section>
+</section>
+<section class="detail" id="call/3">
+
+  <div class="detail-header">
+    <a href="#call/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">call(Name, Request, Timeout)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L302" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> call(<a href="#t:server_ref/0">server_ref</a>(), term(), integer()) -> term().</pre>
+
+      </div>
+
+Equivalent to <code>gen_server:call/3</code>, but with a slightly different exit reason if something goes wrong. This function calls the <code>gen_leader</code> process exactly as if it were a gen_server (which, for practical purposes, it is.)
+  </section>
+</section>
+<section class="detail" id="candidates/1">
+
+  <div class="detail-header">
+    <a href="#candidates/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">candidates(Election)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L261" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> candidates(#election{}) -> [node()].</pre>
+
+      </div>
+
+Returns a list of known candidates.
+  </section>
+</section>
+<section class="detail" id="cast/2">
+
+  <div class="detail-header">
+    <a href="#cast/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">cast(Name, Request)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L348" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> cast(Name :: <a href="#t:name/0">name</a>() | pid(), Request :: term()) -> ok.</pre>
+
+      </div>
+
+<p>Equivalent to gen_server:cast / 2.</p>
+  </section>
+</section>
+<section class="detail" id="down/1">
+
+  <div class="detail-header">
+    <a href="#down/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">down(Election)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L251" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> down(#election{}) -> [node()].</pre>
+
+      </div>
+
+Returns list of down nodes.
+  </section>
+</section>
+<section class="detail" id="format_status/2">
+
+  <div class="detail-header">
+    <a href="#format_status/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_status(Opt, StatusData)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L1182" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="init_it/6">
+
+  <div class="detail-header">
+    <a href="#init_it/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">init_it(Starter, Parent, Name, Mod, _, Options)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L380" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="leader_call/2">
+
+  <div class="detail-header">
+    <a href="#leader_call/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">leader_call(Name, Request)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L319" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> leader_call(Name :: <a href="#t:server_ref/0">server_ref</a>(), Request :: term()) -> term().</pre>
+
+      </div>
+
+Makes a call (similar to <code>gen_server:call/2</code>) to the leader. The call is forwarded via the local gen_leader instance, if that one isn't actually the leader. The client will exit if the leader dies while the request is outstanding.<p>This function uses <code>gen:call/3</code>, and is subject to the same default timeout as e.g. <code>gen_server:call/2</code>.</p>
+  </section>
+</section>
+<section class="detail" id="leader_call/3">
+
+  <div class="detail-header">
+    <a href="#leader_call/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">leader_call(Name, Request, Timeout)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L337" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> leader_call(Name :: <a href="#t:server_ref/0">server_ref</a>(), Request :: term(), Timeout :: integer()) -> term().</pre>
+
+      </div>
+
+Makes a call (similar to <code>gen_server:call/3</code>) to the leader. The call is forwarded via the local gen_leader instance, if that one isn't actually the leader. The client will exit if the leader dies while the request is outstanding.
+  </section>
+</section>
+<section class="detail" id="leader_cast/2">
+
+  <div class="detail-header">
+    <a href="#leader_cast/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">leader_cast(Name, Request)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L355" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> leader_cast(Name :: <a href="#t:name/0">name</a>() | pid(), Request :: term()) -> ok.</pre>
+
+      </div>
+
+Similar to <code>gen_server:cast/2</code> but will be forwarded to the leader via the local gen_leader instance.
+  </section>
+</section>
+<section class="detail" id="leader_node/1">
+
+  <div class="detail-header">
+    <a href="#leader_node/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">leader_node(Election)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L256" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> leader_node(#election{}) -> node() | none.</pre>
+
+      </div>
+
+Returns the current leader node.
+  </section>
+</section>
+<section class="detail" id="print_event/3">
+
+  <div class="detail-header">
+    <a href="#print_event/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">print_event(Dev, Event, Name)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L950" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="reply/2">
+
+  <div class="detail-header">
+    <a href="#reply/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">reply(From, Reply)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L368" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> reply(From :: <a href="#t:caller_ref/0">caller_ref</a>(), Reply :: term()) -> term().</pre>
+
+      </div>
+
+<p>Equivalent to gen_server:reply / 2.</p>
+  </section>
+</section>
+<section class="detail" id="start/6">
+
+  <div class="detail-header">
+    <a href="#start/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start(Name, CandidateNodes, OptArgs, Mod, Arg, Options)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L195" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> start(Name :: atom(),
       CandidateNodes :: [node()],
-      OptArgs :: <a href="#type-options">options()</a>,
+      OptArgs :: <a href="#t:options/0">options</a>(),
       Mod :: module(),
       Arg :: term(),
-      Options :: list()) -&gt;
-         <a href="#type-start_ret">start_ret()</a></code></pre></p>
-<p> </p>
-</div><p>Starts a gen_leader process without linking to the parent.</p>
-<p><b>See also:</b> <a href="#start_link-6">start_link/6</a>.</p>
+      Options :: list()) ->
+         <a href="#t:start_ret/0">start_ret</a>().</pre>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start_link-6">start_link/6</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">start_link(Name :: atom(),
+      </div>
+
+Starts a gen_leader process without linking to the parent.<p><em>See also: </em><a href="#start_link/6">start_link/6</a>.</p>
+  </section>
+</section>
+<section class="detail" id="start_link/6">
+
+  <div class="detail-header">
+    <a href="#start_link/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start_link(Name, CandidateNodes, OptArgs, Mod, Arg, Options)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L237" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> start_link(Name :: atom(),
            CandidateNodes :: [node()],
-           OptArgs :: <a href="#type-options">options()</a>,
+           OptArgs :: <a href="#t:options/0">options</a>(),
            Mod :: module(),
            Arg :: term(),
-           Options :: list()) -&gt;
-              <a href="#type-start_ret">start_ret()</a></code></pre></p>
-<p> </p>
-</div><p>Starts a gen_leader process.
-  <table>
-   <tr class="tab"><td class="tab">Name</td><td class="tab">The locally registered name of the process</td></tr>
-   <tr class="tab"><td class="tab">CandidateNodes</td><td class="tab">The names of nodes capable of assuming
-      a leadership role</td></tr>
-   <tr class="tab"><td class="tab">OptArgs</td>
-       <td class="tab">Optional arguments given to <code>gen_leader</code>.
-           <du>
-           <dl>{workers, Workers}</dl>
-           <dd>The names of nodes that will be part of the "cluster",
-               but cannot ever assume a leadership role. Default: [].</dd>
-           <dl>{vardir, Dir}</dl>
-           <dd>Directory name used to store candidate's incarnation cookie.
-               Default: "."</dd>
-           <dl>{bcast_type, Type}</dl>
-           <dd>When <code>Type</code> is 'all' each election event (when a new
-               candidate becomes visible to the leader) will be broadcast
-               to all live candidate nodes.  Each candidate will get
-               a from_leader/3 callback. When <code>Type</code> is <code>sender</code>, only
-               the newly registered candidate will get the surrendered/3
-               callback. Default: <code>sender</code>.</dd>
-           <dl>{heartbeat, Seconds}</dl>
-           <dd>Heartbeat timeout value used to send ping messages to inactive
-               candidate nodes.</dd>
-           </du>
-       </td></tr>
-   <tr class="tab"><td class="tab">Mod</td><td class="tab">The name of the callback module</td></tr>
-   <tr class="tab"><td class="tab">Arg</td><td class="tab">Argument passed on to <code>Mod:init/1</code></td></tr>
-   <tr class="tab"><td class="tab">Options</td><td class="tab">Same as gen_server's Options</td></tr>
-  </table>
- 
-  <p>The list of candidates needs to be known from the start. Workers
-  could potentially be added at runtime, but no functionality to do
-  this is provided by this version.</p></p>
+           Options :: list()) ->
+              <a href="#t:start_ret/0">start_ret</a>().</pre>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="workers-1">workers/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">workers(Election ::
-            #election{leader = none | pid(),
-                      previous_leader = none | pid(),
-                      name = <a href="#type-name">name()</a>,
-                      leadernode = node(),
-                      candidate_nodes = [node()],
-                      worker_nodes = [node()],
-                      down = [node()],
-                      monitored = [{<a href="#type-mon_ref">mon_ref()</a>, node()}],
-                      buffered = [{reference(), <a href="#type-caller_ref">caller_ref()</a>}],
-                      seed_node = none | node(),
-                      status = <a href="#type-status">status()</a>,
-                      elid = <a href="#type-elid">elid()</a>,
-                      acks = [node()],
-                      work_down = [node()],
-                      cand_timer_int = integer(),
-                      cand_timer = term(),
-                      pendack = node(),
-                      incarn = <a href="#type-incarn">incarn()</a>,
-                      nextel = integer(),
-                      bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-           [node()]</code></pre></p>
-<p> </p>
-</div><p>Returns a list of known workers.</p>
-<hr>
+      </div>
 
-</body>
+Starts a gen_leader process. NameThe locally registered name of the processCandidateNodesThe names of nodes capable of assuming a leadership roleOptArgsOptional arguments given to <code>gen_leader</code>.<dl>{workers, Workers}</dl><dd>The names of nodes that will be part of the &quot;cluster&quot;, but cannot ever assume a leadership role. Default: [].</dd><dl>{vardir, Dir}</dl><dd>Directory name used to store candidate's incarnation cookie. Default: &quot;.&quot;</dd><dl>{bcast_type, Type}</dl><dd>When <code>Type</code> is 'all' each election event (when a new candidate becomes visible to the leader) will be broadcast to all live candidate nodes. Each candidate will get a from_leader/3 callback. When <code>Type</code> is <code>sender</code>, only the newly registered candidate will get the surrendered/3 callback. Default: <code>sender</code>.</dd><dl>{heartbeat, Seconds}</dl><dd>Heartbeat timeout value used to send ping messages to inactive candidate nodes.</dd>ModThe name of the callback moduleArgArgument passed on to <code>Mod:init/1</code>OptionsSame as gen_server's Options<p>The list of candidates needs to be known from the start. Workers could potentially be added at runtime, but no functionality to do this is provided by this version.</p>
+  </section>
+</section>
+<section class="detail" id="system_code_change/4">
+
+  <div class="detail-header">
+    <a href="#system_code_change/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">system_code_change(_, Module, OldVsn, Extra)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L933" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="system_continue/3">
+
+  <div class="detail-header">
+    <a href="#system_continue/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">system_continue(Parent, Debug, _)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L923" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="system_terminate/4">
+
+  <div class="detail-header">
+    <a href="#system_terminate/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">system_terminate(Reason, Parent, Debug, _)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L929" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="worker_announce/2">
+
+  <div class="detail-header">
+    <a href="#worker_announce/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">worker_announce(Name, Pid)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L271" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="workers/1">
+
+  <div class="detail-header">
+    <a href="#workers/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">workers(Election)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/gen_leader.erl#L266" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> workers(#election{}) -> [node()].</pre>
+
+      </div>
+
+Returns a list of known workers.
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/gen_leader.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
 </html>

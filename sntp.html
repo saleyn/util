@@ -1,80 +1,369 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module sntp</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>sntp — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module sntp</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Implements SNTP query logic.
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
 
-<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+      <script src="docs_config.js"></script>
 
-<h2><a href="#" name="description">Description</a></h2>Implements SNTP query logic.
-        SNTP - Simple Network Time Protocol (RFC-2030).
-  
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#avg_time-0">avg_time/0</a></td><td class="tab">Query NTP time sources from <code>"/etc/ntp.conf"</code> and return
-       min/max/avg offset of current host from given time sources.</td></tr>
-<tr class="tab"><td class="tab"><a href="#avg_time-1">avg_time/1</a></td><td class="tab">Query <code>ServerAddress</code> NTP time sources and return min/max/avg offset
-       of current host from given time sources.</td></tr>
-<tr class="tab"><td class="tab"><a href="#time-1">time/1</a></td><td class="tab">Query <code>ServerAddress</code> time source to find out server time and
-       current host's offset from time source.</td></tr>
-<tr class="tab"><td class="tab"><a href="#time_servers-0">time_servers/0</a></td><td class="tab">Return a list of default NTP time servers for this host.</td></tr>
-<tr class="tab"><td class="tab"><a href="#time_servers-1">time_servers/1</a></td><td class="tab">Return a list of default NTP time servers for this host.</td></tr>
-</table>
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="avg_time-0">avg_time/0</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">avg_time() -&gt;
-            {Min :: integer(), Max :: integer(), Avg :: integer()}</code></pre></p>
-<p> </p>
-</div><p>Query NTP time sources from <code>"/etc/ntp.conf"</code> and return
-       min/max/avg offset of current host from given time sources.</p>
-<p><b>See also:</b> <a href="#avg_time-1">avg_time/1</a>.</p>
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="avg_time-1">avg_time/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">avg_time(ServerAddresses :: [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]) -&gt;
-            {Min :: integer(), Max :: integer(), Avg :: integer()}</code></pre></p>
-<p> </p>
-</div><p>Query <code>ServerAddress</code> NTP time sources and return min/max/avg offset
-       of current host from given time sources.</p>
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="time-1">time/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">time(ServerAddress :: <a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>) -&gt; #sntp{}</code></pre></p>
-<p> </p>
-</div><p>Query <code>ServerAddress</code> time source to find out server time and
-       current host's offset from time source.</p>
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="time_servers-0">time_servers/0</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">time_servers() -&gt; [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]</code></pre></p>
-<p> </p>
-</div><p>Return a list of default NTP time servers for this host.</p>
+<div class="main">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="time_servers-1">time_servers/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">time_servers(Resolve :: boolean()) -&gt; [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]</code></pre></p>
-<p> </p>
-</div><p>Return a list of default NTP time servers for this host. If
-       <code>Resolve</code> is true, the list will contain IP addresses or else
-       host names.</p>
-<hr>
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
 
-</body>
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/sntp.erl#L10" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">sntp</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+Implements SNTP query logic. SNTP - Simple Network Time Protocol (RFC-2030).
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#avg_time/0" translate="no">avg_time()</a>
+
+        </div>
+
+          <div class="summary-synopsis">Query NTP time sources from <code>&quot;/etc/ntp.conf&quot;</code> and return min/max/avg offset of current host from given time sources.<p><em>See also: </em><a href="#avg_time/1">avg_time/1</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#avg_time/1" translate="no">avg_time(ServerAddresses)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Query <code>ServerAddress</code> NTP time sources and return min/max/avg offset of current host from given time sources.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#time/1" translate="no">time(ServerAddress)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Query <code>ServerAddress</code> time source to find out server time and current host's offset from time source.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#time_servers/0" translate="no">time_servers()</a>
+
+        </div>
+
+          <div class="summary-synopsis">Return a list of default NTP time servers for this host.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#time_servers/1" translate="no">time_servers(Resolve)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Return a list of default NTP time servers for this host. If <code>Resolve</code> is true, the list will contain IP addresses or else host names.</div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="avg_time/0">
+
+  <div class="detail-header">
+    <a href="#avg_time/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">avg_time()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/sntp.erl#L57" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> avg_time() -> {Min :: integer(), Max :: integer(), Avg :: integer()}.</pre>
+
+      </div>
+
+Query NTP time sources from <code>&quot;/etc/ntp.conf&quot;</code> and return min/max/avg offset of current host from given time sources.<p><em>See also: </em><a href="#avg_time/1">avg_time/1</a>.</p>
+  </section>
+</section>
+<section class="detail" id="avg_time/1">
+
+  <div class="detail-header">
+    <a href="#avg_time/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">avg_time(ServerAddresses)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/sntp.erl#L66" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> avg_time([<a href="https://www.erlang.org/doc/man/inet.html#type-ip_address">inet:ip_address</a>()]) -> {Min :: integer(), Max :: integer(), Avg :: integer()}.</pre>
+
+      </div>
+
+Query <code>ServerAddress</code> NTP time sources and return min/max/avg offset of current host from given time sources.
+  </section>
+</section>
+<section class="detail" id="time/1">
+
+  <div class="detail-header">
+    <a href="#time/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">time(ServerAddress)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/sntp.erl#L86" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> time(ServerAddress :: <a href="https://www.erlang.org/doc/man/inet.html#type-ip_address">inet:ip_address</a>()) -> #sntp{}.</pre>
+
+      </div>
+
+Query <code>ServerAddress</code> time source to find out server time and current host's offset from time source.
+  </section>
+</section>
+<section class="detail" id="time_servers/0">
+
+  <div class="detail-header">
+    <a href="#time_servers/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">time_servers()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/sntp.erl#L28" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> time_servers() -> [<a href="https://www.erlang.org/doc/man/inet.html#type-ip_address">inet:ip_address</a>()].</pre>
+
+      </div>
+
+Return a list of default NTP time servers for this host.
+  </section>
+</section>
+<section class="detail" id="time_servers/1">
+
+  <div class="detail-header">
+    <a href="#time_servers/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">time_servers(Resolve)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/sntp.erl#L38" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> time_servers(boolean()) -> [<a href="https://www.erlang.org/doc/man/inet.html#type-ip_address">inet:ip_address</a>()].</pre>
+
+      </div>
+
+Return a list of default NTP time servers for this host. If <code>Resolve</code> is true, the list will contain IP addresses or else host names.
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/sntp.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
 </html>

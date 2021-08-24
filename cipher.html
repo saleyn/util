@@ -1,80 +1,393 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module cipher</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>cipher — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module cipher</h1>
-<ul class="index"><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
 
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#decrypt-2">decrypt/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#decrypt_base64-2">decrypt_base64/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#encrypt-2">encrypt/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#encrypt_base64-2">encrypt_base64/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#gpg_key_decode-1">gpg_key_decode/1</a></td><td class="tab">Decode PGP public key.</td></tr>
-<tr class="tab"><td class="tab"><a href="#make_key-1">make_key/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#make_key_base64-1">make_key_base64/1</a></td><td class="tab"></td></tr>
-</table>
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="decrypt-2">decrypt/2</a></h3>
-<div class="spec">
-<p><tt>decrypt(Encrypted, Key) -&gt; any()</tt></p>
-<p> </p>
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">cipher</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
+
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#decrypt/2" translate="no">decrypt(Encrypted, Key)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#decrypt_base64/2" translate="no">decrypt_base64(EncryptedBase64, KeyBase64)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#encrypt/2" translate="no">encrypt(Text, KeyPlainText)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#encrypt_base64/2" translate="no">encrypt_base64(Text, KeyBase64)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#gpg_key_decode/1" translate="no">gpg_key_decode(File)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Decode PGP public key</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#make_key/1" translate="no">make_key(PlainKey)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#make_key_base64/1" translate="no">make_key_base64(PlainKey)</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="decrypt/2">
+
+  <div class="detail-header">
+    <a href="#decrypt/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">decrypt(Encrypted, Key)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L19" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="decrypt_base64/2">
+
+  <div class="detail-header">
+    <a href="#decrypt_base64/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">decrypt_base64(EncryptedBase64, KeyBase64)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L31" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="encrypt/2">
+
+  <div class="detail-header">
+    <a href="#encrypt/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">encrypt(Text, KeyPlainText)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L9" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="encrypt_base64/2">
+
+  <div class="detail-header">
+    <a href="#encrypt_base64/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">encrypt_base64(Text, KeyBase64)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L28" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="gpg_key_decode/1">
+
+  <div class="detail-header">
+    <a href="#gpg_key_decode/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">gpg_key_decode(File)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L41" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> gpg_key_decode(string() | binary()) -> [<a href="https://www.erlang.org/doc/man/public_key.html#type-pem_entry">public_key:pem_entry</a>()].</pre>
+
+      </div>
+
+Decode PGP public key
+  </section>
+</section>
+<section class="detail" id="make_key/1">
+
+  <div class="detail-header">
+    <a href="#make_key/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">make_key(PlainKey)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L24" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="make_key_base64/1">
+
+  <div class="detail-header">
+    <a href="#make_key_base64/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">make_key_base64(PlainKey)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/cipher.erl#L36" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/cipher.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
 </div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="decrypt_base64-2">decrypt_base64/2</a></h3>
-<div class="spec">
-<p><tt>decrypt_base64(EncryptedBase64, KeyBase64) -&gt; any()</tt></p>
-<p> </p>
-</div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="encrypt-2">encrypt/2</a></h3>
-<div class="spec">
-<p><tt>encrypt(Text, KeyPlainText) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="encrypt_base64-2">encrypt_base64/2</a></h3>
-<div class="spec">
-<p><tt>encrypt_base64(Text, KeyBase64) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="gpg_key_decode-1">gpg_key_decode/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">gpg_key_decode(File :: string() | binary()) -&gt;
-                  [<a href="http://www.erlang.org/doc/man/public_key/doc/public_key.html#type-pem_entry">public_key:pem_entry()</a>]</code></pre></p>
-<p> </p>
-</div><p>Decode PGP public key</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="make_key-1">make_key/1</a></h3>
-<div class="spec">
-<p><tt>make_key(PlainKey) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="make_key_base64-1">make_key_base64/1</a></h3>
-<div class="spec">
-<p><tt>make_key_base64(PlainKey) -&gt; any()</tt></p>
-<p> </p>
-</div>
-<hr>
-
-</body>
+  </body>
 </html>

@@ -1,62 +1,273 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module smtp</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>smtp — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module smtp</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>SMTP mail client.
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
 
-<p><b>Authors:</b> Johan Bevemyr, Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+      <script src="docs_config.js"></script>
 
-<h2><a href="#" name="description">Description</a></h2><p>SMTP mail client.  This module can sent emails to one or more        
-recipients, using primary/backup SMTP servers.  Messages can        
-contain attachments.</p>
+    <script async src="dist/html-XN2TSG4M.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/smtp.erl#L37" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">smtp</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>SMTP mail client. This module can sent emails to one or more recipients, using primary/backup SMTP servers. Messages can contain attachments.</p><pre><code class="makeup erlang" translate="no"><span class="w">   </span><span class="n">Example</span><span class="p">:</span><span class="w">
+       </span><span class="c1">% Send a message to two recipients with a file attachment using</span><span class="w">
+       </span><span class="c1">% SSL protocol at mail server &quot;mail.bevemyr.com&quot;:</span><span class="w">
+       </span><span class="nc">smtp</span><span class="p">:</span><span class="nf">send</span><span class="p" data-group-id="5191482122-1">(</span><span class="ss">ssl</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alex &lt;jb@bevemyr.com&gt;&quot;</span><span class="p">,</span><span class="w">
+                 </span><span class="p" data-group-id="5191482122-2">[</span><span class="s">&quot;katrin@bevemyr.com&quot;</span><span class="p">,</span><span class="s">&quot;jb@bevemyr.com&quot;</span><span class="p" data-group-id="5191482122-2">]</span><span class="p">,</span><span class="w">
+                 </span><span class="s">&quot;Test Subject&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;My Message&quot;</span><span class="p">,</span><span class="w">
+                 </span><span class="p" data-group-id="5191482122-3">[</span><span class="p" data-group-id="5191482122-4">{</span><span class="ss">server</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mail.bevemyr.com&quot;</span><span class="p" data-group-id="5191482122-4">}</span><span class="p">,</span><span class="w">
+                  </span><span class="p" data-group-id="5191482122-5">{</span><span class="ss">username</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;alex&quot;</span><span class="p" data-group-id="5191482122-5">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5191482122-6">{</span><span class="ss">password</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;secret&quot;</span><span class="p" data-group-id="5191482122-6">}</span><span class="p">,</span><span class="w">
+                  </span><span class="p" data-group-id="5191482122-7">{</span><span class="ss">attachments</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5191482122-8">[</span><span class="s">&quot;file1.txt&quot;</span><span class="p" data-group-id="5191482122-8">]</span><span class="p" data-group-id="5191482122-7">}</span><span class="p" data-group-id="5191482122-3">]</span><span class="p" data-group-id="5191482122-1">)</span><span class="p">.</span><span class="w">
   
-   <pre><code class="language-erlang">   Example:
-       % Send a message to two recipients with a file attachment using
-       % SSL protocol at mail server "mail.bevemyr.com":
-       smtp:send(ssl, "Alex &lt;jb@bevemyr.com&gt;",
-                 ["katrin@bevemyr.com","jb@bevemyr.com"],
-                 "Test Subject", "My Message",
-                 [{server, "mail.bevemyr.com"},
-                  {username, "alex"}, {password, "secret"},
-                  {attachments, ["file1.txt"]}]).
+       </span><span class="c1">% Send a message to a recipient with a file attachment given custom</span><span class="w">
+       </span><span class="c1">% MIME type using localhost mail server</span><span class="w">
+       </span><span class="nc">smtp</span><span class="p">:</span><span class="nf">send</span><span class="p" data-group-id="5191482122-9">(</span><span class="ss">tcp</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;jb@bevemyr.com&quot;</span><span class="p">,</span><span class="w">
+                 </span><span class="p" data-group-id="5191482122-10">[</span><span class="s">&quot;katrin@bevemyr.com&quot;</span><span class="p" data-group-id="5191482122-10">]</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Test Subject&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;My Message&quot;</span><span class="p">,</span><span class="w">
+                 </span><span class="p" data-group-id="5191482122-11">[</span><span class="p" data-group-id="5191482122-12">{</span><span class="ss">server</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mail.bevemyr.com&quot;</span><span class="p" data-group-id="5191482122-12">}</span><span class="p">,</span><span class="w">
+                  </span><span class="p" data-group-id="5191482122-13">{</span><span class="ss">username</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;alex&quot;</span><span class="p" data-group-id="5191482122-13">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5191482122-14">{</span><span class="ss">password</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;secret&quot;</span><span class="p" data-group-id="5191482122-14">}</span><span class="p">,</span><span class="w">
+                  </span><span class="p" data-group-id="5191482122-15">{</span><span class="ss">attachments</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5191482122-16">[</span><span class="p" data-group-id="5191482122-17">{</span><span class="s">&quot;file1.bin&quot;</span><span class="p">,</span><span class="s">&quot;application/custom_MIME&quot;</span><span class="p" data-group-id="5191482122-17">}</span><span class="p" data-group-id="5191482122-16">]</span><span class="p" data-group-id="5191482122-15">}</span><span class="p" data-group-id="5191482122-11">]</span><span class="p" data-group-id="5191482122-9">)</span><span class="p">.</span><span class="w">
   
-       % Send a message to a recipient with a file attachment given custom
-       % MIME type using localhost mail server
-       smtp:send(tcp, "jb@bevemyr.com",
-                 ["katrin@bevemyr.com"], "Test Subject", "My Message",
-                 [{server, "mail.bevemyr.com"},
-                  {username, "alex"}, {password, "secret"},
-                  {attachments, [{"file1.bin","application/custom_MIME"}]}]).
-  
-       % Send a message to two recipients with an attachment given as list
-       smtp:send(tcp, "jb@bevemyr.com",
-                 ["katrin@bevemyr.com","jb@bevemyr.com"],
-                 "Test Subject", "My Message",
-                 [{"file1.txt","text/plain","Attachment past as list"}]).</code></pre>
-  
-<h2><a href="#" name="types">Data Types</a></h2>
+       </span><span class="c1">% Send a message to two recipients with an attachment given as list</span><span class="w">
+       </span><span class="nc">smtp</span><span class="p">:</span><span class="nf">send</span><span class="p" data-group-id="5191482122-18">(</span><span class="ss">tcp</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;jb@bevemyr.com&quot;</span><span class="p">,</span><span class="w">
+                 </span><span class="p" data-group-id="5191482122-19">[</span><span class="s">&quot;katrin@bevemyr.com&quot;</span><span class="p">,</span><span class="s">&quot;jb@bevemyr.com&quot;</span><span class="p" data-group-id="5191482122-19">]</span><span class="p">,</span><span class="w">
+                 </span><span class="s">&quot;Test Subject&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;My Message&quot;</span><span class="p">,</span><span class="w">
+                 </span><span class="p" data-group-id="5191482122-20">[</span><span class="p" data-group-id="5191482122-21">{</span><span class="s">&quot;file1.txt&quot;</span><span class="p">,</span><span class="s">&quot;text/plain&quot;</span><span class="p">,</span><span class="s">&quot;Attachment past as list&quot;</span><span class="p" data-group-id="5191482122-21">}</span><span class="p" data-group-id="5191482122-20">]</span><span class="p" data-group-id="5191482122-18">)</span><span class="p">.</span></code></pre>
+  </section>
 
-<h3 class="typedecl"><a name="type-proto">proto()</a></h3>
-<p><pre><code class="language-erlang">proto() = tcp | ssl</code></pre></p>
-<p>  Protocol type.</p>
 
-<h3 class="typedecl"><a name="type-smtp_options">smtp_options()</a></h3>
-<p><pre><code class="language-erlang">smtp_options() = 
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:proto/0" translate="no">proto/0</a>
+
+        </div>
+
+          <div class="summary-synopsis">Protocol type.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:smtp_options/0" translate="no">smtp_options/0</a>
+
+        </div>
+
+          <div class="summary-synopsis">SNMP Options<ul><li>Server - server to connect to (no MX lookup)</li><li>Relay - domain to do MX lookup of list of servers</li><li>Port - optional port number (ssl def: 465; tcp def: 25)</li><li>Auth - controls mandatory / optional authentication</li><li>Tls - controls enabling of TLS protocol</li><li>Domain - name of the domain to include in the HELO handshake</li><li>Timeout - timeout to use (default 10000)</li><li>Verbose - controls debugging printout</li><li>Attachments - list of files to attach</li><li>SSLOpts - additional SSL options if using SSL protocol</li></ul></div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#domain/0" translate="no">domain()</a>
+
+        </div>
+
+          <div class="summary-synopsis">Get domain that this host belongs to.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#send/5" translate="no">send(Proto, From, To, Subj, Msg)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Send a message to a list of <code>To</code> receipients using <code>localhost</code>. Error is thrown if unable to send a message. Use inet:format_error/1 to decode the Reason if it is an atom.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#send/6" translate="no">send(Proto, From, To, Subj, Msg, Opts)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Send a message to a list of recipients by connecting to an SMTP server Server. The message can contain attachments in the Attachments list. See examples on the top of this page. Error is thrown if unable to send a message.</div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:proto/0">
+
+  <div class="detail-header">
+    <a href="#t:proto/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">proto/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/smtp.erl#L45" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> proto() :: tcp | ssl.</pre>
+
+      </div>
+
+Protocol type.
+  </section>
+</section>
+<section class="detail" id="t:smtp_options/0">
+
+  <div class="detail-header">
+    <a href="#t:smtp_options/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">smtp_options/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/smtp.erl#L48" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> smtp_options() ::
     [{server, Server :: string()} |
      {relay, Relay :: string()} |
      {port, Port :: integer()} |
@@ -67,69 +278,161 @@ contain attachments.</p>
      {domain, Domain :: string()} |
      {timeout, Millisec :: integer()} |
      {verbose, debug} |
+     {ssl, SSLOpts :: list()} |
      {attachments,
       [Filename ::
            string() |
            {Filename :: string(), ContentType :: string()} |
-           {Filename :: string(),
-            ContentType :: string(),
-            Data :: list()}]}]</code></pre></p>
-<p>  SNMP Options
-      <ul>
-       <li>Server - server to connect to (no MX lookup)</li>
-       <li>Relay  - domain to do MX lookup of list of servers</li>
-       <li>Port   - optional port number (ssl def: 465; tcp def: 25)</li>
-       <li>Auth   - controls mandatory / optional authentication</li>
-       <li>Tls    - controls enabling of TLS protocol</li>
-       <li>Domain - name of the domain to include in the HELO handshake</li>
-       <li>Timeout - timeout to use (default 10000)</li>
-       <li>Verbose - controls debugging printout</li>
-       <li>Attachments - list of files to attach</li>
-      </ul></p>
+           {Filename :: string(), ContentType :: string(), Data :: list()}]}].</pre>
 
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#domain-0">domain/0</a></td><td class="tab">Get domain that this host belongs to.</td></tr>
-<tr class="tab"><td class="tab"><a href="#send-5">send/5</a></td><td class="tab">Send a message to a list of <code>To</code> receipients using <code>localhost</code>.</td></tr>
-<tr class="tab"><td class="tab"><a href="#send-6">send/6</a></td><td class="tab">Send a message to a list of recipients by connecting to an SMTP
-       server Server.</td></tr>
-</table>
+      </div>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
+SNMP Options<ul><li>Server - server to connect to (no MX lookup)</li><li>Relay - domain to do MX lookup of list of servers</li><li>Port - optional port number (ssl def: 465; tcp def: 25)</li><li>Auth - controls mandatory / optional authentication</li><li>Tls - controls enabling of TLS protocol</li><li>Domain - name of the domain to include in the HELO handshake</li><li>Timeout - timeout to use (default 10000)</li><li>Verbose - controls debugging printout</li><li>Attachments - list of files to attach</li><li>SSLOpts - additional SSL options if using SSL protocol</li></ul>
+  </section>
+</section>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="domain-0">domain/0</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">domain() -&gt; binary()</code></pre></p>
-<p> </p>
-</div><p>Get domain that this host belongs to.</p>
+    </div>
+  </section>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="send-5">send/5</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">send(Proto :: <a href="#type-proto">proto()</a>,
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="domain/0">
+
+  <div class="detail-header">
+    <a href="#domain/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">domain()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/smtp.erl#L126" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> domain() -> binary().</pre>
+
+      </div>
+
+Get domain that this host belongs to.
+  </section>
+</section>
+<section class="detail" id="send/5">
+
+  <div class="detail-header">
+    <a href="#send/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">send(Proto, From, To, Subj, Msg)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/smtp.erl#L87" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> send(Proto :: <a href="#t:proto/0">proto</a>(),
      From :: string() | binary(),
      To :: string() | binary(),
      Subj :: string() | binary(),
-     Msg :: string() | binary()) -&gt;
-        ok</code></pre></p>
-<p> </p>
-</div><p>Send a message to a list of <code>To</code> receipients using <code>localhost</code>.
-       Error is thrown if unable to send a message.
-       Use inet:format_error/1 to decode the Reason if it is an atom.</p>
+     Msg :: string() | binary()) ->
+        ok.</pre>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="send-6">send/6</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">send(Proto :: <a href="#type-proto">proto()</a>,
+      </div>
+
+Send a message to a list of <code>To</code> receipients using <code>localhost</code>. Error is thrown if unable to send a message. Use inet:format_error/1 to decode the Reason if it is an atom.
+  </section>
+</section>
+<section class="detail" id="send/6">
+
+  <div class="detail-header">
+    <a href="#send/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">send(Proto, From, To, Subj, Msg, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/smtp.erl#L100" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> send(Proto :: <a href="#t:proto/0">proto</a>(),
      From :: string() | binary(),
      To :: string() | binary(),
      Subj :: string() | binary(),
      Msg :: string() | binary(),
-     Opts :: <a href="#type-smtp_options">smtp_options()</a>) -&gt;
-        ok</code></pre></p>
-<p> </p>
-</div><p>Send a message to a list of recipients by connecting to an SMTP
-       server Server.  The message can contain attachments in the
-       Attachments list.  See examples on the top of this page.
-       Error is thrown if unable to send a message.</p>
-<hr>
+     Opts :: <a href="#t:smtp_options/0">smtp_options</a>()) ->
+        ok.</pre>
 
-</body>
+      </div>
+
+Send a message to a list of recipients by connecting to an SMTP server Server. The message can contain attachments in the Attachments list. See examples on the top of this page. Error is thrown if unable to send a message.
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/smtp.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
 </html>

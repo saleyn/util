@@ -1,145 +1,635 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module user_default</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>user_default — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module user_default</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>This is an extension of the shell commands
-        to do all the work!
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
 
-<p><b>Version:</b> $Revision$
-            $Date$</p>
-<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+      <script src="docs_config.js"></script>
 
-<h2><a href="#" name="description">Description</a></h2>This is an extension of the shell commands
-        to do all the work!  Either place this file in the
-        path accessible to Erlang (via ERL_LIBS) or
-        add this line to the ~/.erlang file:
-        <code>code:load_abs(os:getenv("HOME") ++ "/.erlang/user_default").</code>
-  
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#dbg-0">dbg/0</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgadd-1">dbgadd/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgadd-2">dbgadd/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgdel-1">dbgdel/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgdel-2">dbgdel/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgoff-0">dbgoff/0</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgon-1">dbgon/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgon-2">dbgon/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#dbgtc-1">dbgtc/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#help-0">help/0</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#nl-0">nl/0</a></td><td class="tab">Load all changed modules on all visible nodes.</td></tr>
-<tr class="tab"><td class="tab"><a href="#p-1">p/1</a></td><td class="tab">Term printer.</td></tr>
-<tr class="tab"><td class="tab"><a href="#saveh-1">saveh/1</a></td><td class="tab">Save command history to file.</td></tr>
-<tr class="tab"><td class="tab"><a href="#tc-2">tc/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#tc-4">tc/4</a></td><td class="tab"></td></tr>
-</table>
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbg-0">dbg/0</a></h3>
-<div class="spec">
-<p><tt>dbg() -&gt; any()</tt></p>
-<p> </p>
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L33" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">user_default</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+This is an extension of the shell commands to do all the work! Either place this file in the path accessible to Erlang (via ERL_LIBS) or add this line to the ~/.erlang file: <code>code:load_abs(os:getenv(&quot;HOME&quot;) ++ &quot;/.erlang/user_default&quot;).</code>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgadd/1" translate="no">dbgadd(Module)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgadd/2" translate="no">dbgadd(Module, Fun)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgdel/1" translate="no">dbgdel(Module)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgdel/2" translate="no">dbgdel(Module, Fun)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgoff/0" translate="no">dbgoff()</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgon/1" translate="no">dbgon(Modules)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgon/2" translate="no">dbgon(Module, Fun)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#dbgtc/1" translate="no">dbgtc(File)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#debug/0" translate="no">debug()</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#help/0" translate="no">help()</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#nl/0" translate="no">nl()</a>
+
+        </div>
+
+          <div class="summary-synopsis">Load all changed modules on all visible nodes</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#p/1" translate="no">p(Term)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Term printer</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#saveh/1" translate="no">saveh(File)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Save command history to file</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#tc/2" translate="no">tc(N, F)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#tc/4" translate="no">tc(N, M, F, A)</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="dbgadd/1">
+
+  <div class="detail-header">
+    <a href="#dbgadd/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgadd(Module)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L100" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="dbgadd/2">
+
+  <div class="detail-header">
+    <a href="#dbgadd/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgadd(Module, Fun)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L106" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="dbgdel/1">
+
+  <div class="detail-header">
+    <a href="#dbgdel/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgdel(Module)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L110" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="dbgdel/2">
+
+  <div class="detail-header">
+    <a href="#dbgdel/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgdel(Module, Fun)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L116" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="dbgoff/0">
+
+  <div class="detail-header">
+    <a href="#dbgoff/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgoff()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L120" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="dbgon/1">
+
+  <div class="detail-header">
+    <a href="#dbgon/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgon(Modules)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L80" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="dbgon/2">
+
+  <div class="detail-header">
+    <a href="#dbgon/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgon(Module, Fun)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L89" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="dbgtc/1">
+
+  <div class="detail-header">
+    <a href="#dbgtc/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dbgtc(File)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L74" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="debug/0">
+
+  <div class="detail-header">
+    <a href="#debug/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">debug()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L65" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="help/0">
+
+  <div class="detail-header">
+    <a href="#help/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">help()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L42" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="nl/0">
+
+  <div class="detail-header">
+    <a href="#nl/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">nl()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L129" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Load all changed modules on all visible nodes
+  </section>
+</section>
+<section class="detail" id="p/1">
+
+  <div class="detail-header">
+    <a href="#p/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">p(Term)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L124" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Term printer
+  </section>
+</section>
+<section class="detail" id="saveh/1">
+
+  <div class="detail-header">
+    <a href="#saveh/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">saveh(File)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L134" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Save command history to file
+  </section>
+</section>
+<section class="detail" id="tc/2">
+
+  <div class="detail-header">
+    <a href="#tc/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">tc(N, F)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L158" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="tc/4">
+
+  <div class="detail-header">
+    <a href="#tc/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">tc(N, M, F, A)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/user_default.erl#L161" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/user_default.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
 </div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgadd-1">dbgadd/1</a></h3>
-<div class="spec">
-<p><tt>dbgadd(Module) -&gt; any()</tt></p>
-<p> </p>
-</div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgadd-2">dbgadd/2</a></h3>
-<div class="spec">
-<p><tt>dbgadd(Module, Fun) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgdel-1">dbgdel/1</a></h3>
-<div class="spec">
-<p><tt>dbgdel(Module) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgdel-2">dbgdel/2</a></h3>
-<div class="spec">
-<p><tt>dbgdel(Module, Fun) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgoff-0">dbgoff/0</a></h3>
-<div class="spec">
-<p><tt>dbgoff() -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgon-1">dbgon/1</a></h3>
-<div class="spec">
-<p><tt>dbgon(Modules) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgon-2">dbgon/2</a></h3>
-<div class="spec">
-<p><tt>dbgon(Module, Fun) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dbgtc-1">dbgtc/1</a></h3>
-<div class="spec">
-<p><tt>dbgtc(File) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="help-0">help/0</a></h3>
-<div class="spec">
-<p><tt>help() -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="nl-0">nl/0</a></h3>
-<div class="spec">
-<p><tt>nl() -&gt; any()</tt></p>
-<p> </p>
-</div><p>Load all changed modules on all visible nodes</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="p-1">p/1</a></h3>
-<div class="spec">
-<p><tt>p(Term) -&gt; any()</tt></p>
-<p> </p>
-</div><p>Term printer</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="saveh-1">saveh/1</a></h3>
-<div class="spec">
-<p><tt>saveh(File) -&gt; any()</tt></p>
-<p> </p>
-</div><p>Save command history to file</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="tc-2">tc/2</a></h3>
-<div class="spec">
-<p><tt>tc(N, F) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="tc-4">tc/4</a></h3>
-<div class="spec">
-<p><tt>tc(N, M, F, A) -&gt; any()</tt></p>
-<p> </p>
-</div>
-<hr>
-
-</body>
+  </body>
 </html>

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
+
+    <title>throttle — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-XN2TSG4M.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L37" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">throttle</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>Throttle given rate over a number of seconds.</p><p>Implementation uses time spacing reservation algorithm where each allocation of samples reserves a fraction of space in the throttling window. The reservation gets freed as the time goes by. No more than the <code>Rate</code> number of samples are allowed to fit in the milliseconds <code>Window</code>.</p>This is an Erlang implementation of the throttling algorithm from the utxx library found at this URL: <a href="https://github.com/saleyn/utxx/blob/master/include/utxx/rate_throttler.hpp" target="_top">https://github.com/saleyn/utxx/blob/master/include/utxx/rate_throttler.hpp</a>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:throttle/0" translate="no">throttle/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:time/0" translate="no">time/0</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#add/1" translate="no">add(T)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Add one sample to the throttle</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#add/2" translate="no">add(T, Samples)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Add <code>Samples</code> to the throttle</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#add/3" translate="no">add(Throttle, Samples, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Add <code>Samples</code> to the throtlle. Return <code>{FitSamples, State}</code>, where <code>FitSamples</code> are the number of samples that fit in the throttling window. 0 means that the throttler is fully congested, and more time needs to elapse before the throttles gets reset to accept more samples.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#available/1" translate="no">available(T)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p><em>See also: </em><a href="#available/2">available/2</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#available/2" translate="no">available(Throttle, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Return the number of available samples given <code>Now</code> current time.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#call/2" translate="no">call(T, F)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Call the lambda F, ensuring that it's not called more frequently than the throttle would allow.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#call/3" translate="no">call(Throttle, F, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Call the lambda F, ensuring that it's not called more throttle would allow.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#call/4" translate="no">call(T, M, F, A)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Call M,F,A, ensuring that it's not called more frequently than the throttle would allow.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#call/5" translate="no">call(Throttle, M, F, A, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Call M,F,A, ensuring that it's not called more frequently than the throttle would allow.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#curr_rps/1" translate="no">curr_rps(T)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p><em>See also: </em><a href="#curr_rps/2">curr_rps/2</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#curr_rps/2" translate="no">curr_rps(Throttle, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Return currently used rate per second.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#new/1" translate="no">new(Rate)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Create a new throttle given the <code>Rate</code> per second.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#new/2" translate="no">new(Rate, Window)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p><em>See also: </em><a href="#new/3">new/3</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#new/3" translate="no">new(Rate, Window, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Create a new throttle given the <code>Rate</code> per <code>Window</code> milliseconds. <code>Now</code> is expressesed in microseconds since epoch using <code>now()</code>.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#next_timeout/1" translate="no">next_timeout(T)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Return the number of milliseconds to wait until the throttling threshold is satisfied to fit another sample.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#now/0" translate="no">now()</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#reset/1" translate="no">reset(Throttle)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p><em>See also: </em><a href="#reset/2">reset/2</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#reset/2" translate="no">reset(Throttle, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Reset the throttle request counter</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#used/1" translate="no">used(T)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p><em>See also: </em><a href="#used/2">used/2</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#used/2" translate="no">used(Throttle, Now)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Return the number of used samples given <code>a_now</code> current time.</div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:throttle/0">
+
+  <div class="detail-header">
+    <a href="#t:throttle/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">throttle/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L51" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> throttle() :: #throttle{}.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:time/0">
+
+  <div class="detail-header">
+    <a href="#t:time/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">time/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L52" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> time() :: non_neg_integer().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="add/1">
+
+  <div class="detail-header">
+    <a href="#add/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add(T)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L134" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Add one sample to the throttle
+  </section>
+</section>
+<section class="detail" id="add/2">
+
+  <div class="detail-header">
+    <a href="#add/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add(T, Samples)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L137" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Add <code>Samples</code> to the throttle
+  </section>
+</section>
+<section class="detail" id="add/3">
+
+  <div class="detail-header">
+    <a href="#add/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add(Throttle, Samples, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L145" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> add(<a href="#t:throttle/0">throttle</a>(), integer(), <a href="#t:time/0">time</a>()) -> {integer(), <a href="#t:throttle/0">throttle</a>()}.</pre>
+
+      </div>
+
+Add <code>Samples</code> to the throtlle. Return <code>{FitSamples, State}</code>, where <code>FitSamples</code> are the number of samples that fit in the throttling window. 0 means that the throttler is fully congested, and more time needs to elapse before the throttles gets reset to accept more samples.
+  </section>
+</section>
+<section class="detail" id="available/1">
+
+  <div class="detail-header">
+    <a href="#available/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">available(T)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L162" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p><em>See also: </em><a href="#available/2">available/2</a>.</p>
+  </section>
+</section>
+<section class="detail" id="available/2">
+
+  <div class="detail-header">
+    <a href="#available/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">available(Throttle, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L165" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Return the number of available samples given <code>Now</code> current time.
+  </section>
+</section>
+<section class="detail" id="call/2">
+
+  <div class="detail-header">
+    <a href="#call/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">call(T, F)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L95" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Call the lambda F, ensuring that it's not called more frequently than the throttle would allow.</p>Example: <code>1&gt; T = throttle:new(10, 1000). 2&gt; lists:foldl(fun(_,{T1,A}) -&gt; {T2,R} = throttle:call(T1, fun() -&gt; http:get(&quot;google.com&quot;) end), {T2, [R|A]} end, {T,[]}, lists:seq(1, 100)).</code>
+  </section>
+</section>
+<section class="detail" id="call/3">
+
+  <div class="detail-header">
+    <a href="#call/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">call(Throttle, F, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L123" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> call(#throttle{}, fun(() -> any()), non_neg_integer()) -> {#throttle{}, any()}.</pre>
+
+      </div>
+
+Call the lambda F, ensuring that it's not called more throttle would allow.
+  </section>
+</section>
+<section class="detail" id="call/4">
+
+  <div class="detail-header">
+    <a href="#call/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">call(T, M, F, A)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L109" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Call M,F,A, ensuring that it's not called more frequently than the throttle would allow.</p>Example: <code>1&gt; T = throttle:new(10, 1000). 2&gt; lists:foldl(fun(_,{T1,A}) -&gt; {T2,R} = throttle:call(T1, http, get, [&quot;google.com&quot;]), {T2, [R|A]} end, {T,[]}, lists:seq(1, 100)).</code>
+  </section>
+</section>
+<section class="detail" id="call/5">
+
+  <div class="detail-header">
+    <a href="#call/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">call(Throttle, M, F, A, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L116" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> call(#throttle{}, atom(), atom(), [any()], non_neg_integer()) -> {#throttle{}, any()}.</pre>
+
+      </div>
+
+Call M,F,A, ensuring that it's not called more frequently than the throttle would allow.
+  </section>
+</section>
+<section class="detail" id="curr_rps/1">
+
+  <div class="detail-header">
+    <a href="#curr_rps/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">curr_rps(T)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L188" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p><em>See also: </em><a href="#curr_rps/2">curr_rps/2</a>.</p>
+  </section>
+</section>
+<section class="detail" id="curr_rps/2">
+
+  <div class="detail-header">
+    <a href="#curr_rps/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">curr_rps(Throttle, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L191" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Return currently used rate per second.
+  </section>
+</section>
+<section class="detail" id="new/1">
+
+  <div class="detail-header">
+    <a href="#new/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new(Rate)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L60" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> new(non_neg_integer()) -> <a href="#t:throttle/0">throttle</a>().</pre>
+
+      </div>
+
+Create a new throttle given the <code>Rate</code> per second.
+  </section>
+</section>
+<section class="detail" id="new/2">
+
+  <div class="detail-header">
+    <a href="#new/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new(Rate, Window)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L65" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> new(non_neg_integer(), non_neg_integer()) -> <a href="#t:throttle/0">throttle</a>().</pre>
+
+      </div>
+
+<p><em>See also: </em><a href="#new/3">new/3</a>.</p>
+  </section>
+</section>
+<section class="detail" id="new/3">
+
+  <div class="detail-header">
+    <a href="#new/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new(Rate, Window, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L71" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> new(non_neg_integer(), non_neg_integer(), <a href="#t:time/0">time</a>()) -> <a href="#t:throttle/0">throttle</a>().</pre>
+
+      </div>
+
+Create a new throttle given the <code>Rate</code> per <code>Window</code> milliseconds. <code>Now</code> is expressesed in microseconds since epoch using <code>now()</code>.
+  </section>
+</section>
+<section class="detail" id="next_timeout/1">
+
+  <div class="detail-header">
+    <a href="#next_timeout/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">next_timeout(T)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L177" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Return the number of milliseconds to wait until the throttling threshold is satisfied to fit another sample.
+  </section>
+</section>
+<section class="detail" id="now/0">
+
+  <div class="detail-header">
+    <a href="#now/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">now()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L195" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="reset/1">
+
+  <div class="detail-header">
+    <a href="#reset/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">reset(Throttle)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L77" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p><em>See also: </em><a href="#reset/2">reset/2</a>.</p>
+  </section>
+</section>
+<section class="detail" id="reset/2">
+
+  <div class="detail-header">
+    <a href="#reset/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">reset(Throttle, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L81" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Reset the throttle request counter
+  </section>
+</section>
+<section class="detail" id="used/1">
+
+  <div class="detail-header">
+    <a href="#used/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">used(T)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L169" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p><em>See also: </em><a href="#used/2">used/2</a>.</p>
+  </section>
+</section>
+<section class="detail" id="used/2">
+
+  <div class="detail-header">
+    <a href="#used/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">used(Throttle, Now)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/throttle.erl#L172" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Return the number of used samples given <code>a_now</code> current time.
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/throttle.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>

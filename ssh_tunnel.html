@@ -1,146 +1,455 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module ssh_tunnel</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>ssh_tunnel — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module ssh_tunnel</h1>
-<ul class="index"><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
 
+      <script src="docs_config.js"></script>
 
-<h2><a href="#" name="types">Data Types</a></h2>
-
-<h3 class="typedecl"><a name="type-location">location()</a></h3>
-<p><pre><code class="language-erlang">location() = {string(), integer()}</code></pre></p>
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
 
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#connect-0">connect/0</a></td><td class="tab">Module for creating SSH tunnels using <code>ssh</code>.</td></tr>
-<tr class="tab"><td class="tab"><a href="#connect-3">connect/3</a></td><td class="tab">Create a connetion to a remote host with the provided options.</td></tr>
-<tr class="tab"><td class="tab"><a href="#direct_stream_local-2">direct_stream_local/2</a></td><td class="tab">Creates a ssh stream local-forward channel to a remote unix domain socket.</td></tr>
-<tr class="tab"><td class="tab"><a href="#direct_tcpip-3">direct_tcpip/3</a></td><td class="tab">Creates a ssh directtcp-ip forwarded channel to a remote port.</td></tr>
-<tr class="tab"><td class="tab"><a href="#open_channel-6">open_channel/6</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#start_tunnel-3">start_tunnel/3</a></td><td class="tab">Starts a SSHTunnel.Tunnel process.</td></tr>
-</table>
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="connect-0">connect/0</a></h3>
-<div class="spec">
-<p><tt>connect() -&gt; any()</tt></p>
-<p> </p>
-</div><p><p>Module for creating SSH tunnels using <code>ssh</code>.
-  <a href="https://github.com/drowzy/ssh_tunnel" target="_top"><tt>https://github.com/drowzy/ssh_tunnel</tt></a></p>
- 
-  <p>It provides functions to create forwarded ssh channels, similair
-  to how other channels can be created using <code>ssh_connection</code>.
-  There are two type of channels supported
-  * <code>directtcp-ip` - Forwards a port from the client machine to the remote machine.
-    This is the same as `ssh -nNT -L 8080:forward.example.com:9000 user@sshserver.example.com</code>
-  * <code>direct-streamlocal</code> - Forwards to a unix domain socket.
-    This is the same as <code>ssh -nNT -L 8080:/var/lib/mysql/mysql.sock user@sshserver.example.com</code>
-  When using <code>direct_tcpip/3</code> or <code>direct_stream_local/2</code> directly there
-  will not be any local port or socket bound, this can either be done
-  using <code>ssh_tunnel</code> or by manually sending data with <code>ssh_connection.send/3</code>.
-  Although <code>connect/1</code> can be used to connect to the remote host, other
-  methods are supported.
-  One can use [SSHex](https://github.com/rubencaro/sshex), <code>ssh:connect/3</code>  
-for instance.</p>
- 
-  <p>## Tunnels  
-Tunnels are on-demand TCP servers and are bound listeners to either a port  
-or a path. The tunnel will handle relaying TCP messages to the ssh  
-connection and back.</p>
- 
-  ## Examples
-  <pre><code class="language-erlang">    {ok, SshRef} = ssh_tunnel:connect("sshserver.example.com", 22, []),
-    {ok, Pid}    = ssh_tunnel:start_tunnel(Pid, {tcpip, {8080, {"192.168.90.15", 80}}}),
-    % Send a TCP message for instance HTTP
-    Resp = HTTPoison.get!("127.0.0.1:8080"),
-    io:format("Received body: ~p\n", [Resp])</code></pre></p>
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="connect-3">connect/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">connect(Host :: list() | tuple(),
-        Port :: integer(),
-        Opts :: list()) -&gt;
-           {ok, pid()} | {error, term()}</code></pre></p>
-<p> </p>
-</div><p>Create a connetion to a remote host with the provided options.
-  This function is mostly used as convenience wrapper around <code>ssh_connect/3</code>
-  and does not support all options.
-  returns: <code>{ok, Connection}</code> or <code>{error, Reason}</code>.
-  <a href="https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html" target="_top"><tt>https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html</tt></a></p>
+<div class="main">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="direct_stream_local-2">direct_stream_local/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">direct_stream_local(Pid :: pid(), SocketPath :: string()) -&gt;
-                       {ok, integer()} | {error, term()}</code></pre></p>
-<p> </p>
-</div><p>Creates a ssh stream local-forward channel to a remote unix domain socket.
-  It sends the request that the server make a connection to its local Unix domain socket.
-  The returned channel together with a ssh connection reference (returned from <code>ssh:connect/4</code>)
-  can be used to send messages with <code>ssh_connection:send/3</code>.
-  returns: <code>{ok, Channel}` or `{error, Reason}</code>.
-  Ex:
-  <pre><code class="language-erlang">  msg = "GET /images/json HTTP/1.1\r\nHost: /var/run/docker.sock\r\nAccept: */*\r\n\r\n"
-  {ok, Pid} = ssh_tunnel:connect("192.168.90.15", 22),
-  {ok, Ch}  = ssh_tunnel:direct_stream_local(Pid, "/var/run/docker.sock"),
-  ok = ssh_connection.send(Pid, Ch, Msg)</code></pre></p>
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="direct_tcpip-3">direct_tcpip/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">direct_tcpip(Pid :: pid(), From :: <a href="#type-location">location()</a>, To :: <a href="#type-location">location()</a>) -&gt;
-                {ok, integer()} | {error, term()}</code></pre></p>
-<p> </p>
-</div><p>Creates a ssh directtcp-ip forwarded channel to a remote port.
-  The returned channel together with a ssh connection reference (returned
-  from <code>:ssh.connect/4</code>) can be used to send messages with <code>ssh_connection:send/3</code>
-  returns: <code>{ok, channel}</code> or <code>{error, reason}</code>.
-  ## Examples:
-      msg = "GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.47.0\r\nAccept: */*\r\n\r\n"
-      {ok, Pid} = ssh_tunnel:connect("192.168.1.10", 22),
-      {ok, Ch} = ssh_tunnel:direct_tcpip(Pid, {"127.0.0.1", 8080}, {"192.168.1.10", 80}),
-      ok = ssh_connection:send(Pid, Ch, Msg),
-      recieve do
-        {ssh_cm, _, {data, Channel, _, Data}} -&gt; io:format("Data: ~p\n", [Data])
-      end</p>
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="open_channel-6">open_channel/6</a></h3>
-<div class="spec">
-<p><tt>open_channel(Pid, Type, Msg, WindowSize, MaxPktSz, Timeout) -&gt; any()</tt></p>
-<p> </p>
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">ssh_tunnel</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
+
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:location/0" translate="no">location/0</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#connect/0" translate="no">connect()</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Module for creating SSH tunnels using <code>ssh</code>. <a href="https://github.com/drowzy/ssh_tunnel" target="_top">https://github.com/drowzy/ssh_tunnel</a></p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#connect/3" translate="no">connect(Host, Port, Opts)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Create a connetion to a remote host with the provided options. This function is mostly used as convenience wrapper around <code>ssh_connect/3</code> and does not support all options. returns: <code>{ok, Connection}</code> or <code>{error, Reason}</code>. <a href="https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html" target="_top">https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html</a></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#direct_stream_local/2" translate="no">direct_stream_local(Pid, SocketPath)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Creates a ssh stream local-forward channel to a remote unix domain socket. It sends the request that the server make a connection to its local Unix domain socket. The returned channel together with a ssh connection reference (returned from <code>ssh:connect/4</code>) can be used to send messages with <code>ssh_connection:send/3</code>. returns: <code>{ok, Channel}` or `{error, Reason}</code>. Ex:<pre><code class="makeup erlang" translate="no"><span class="w">  </span><span class="ss">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;GET /images/json HTTP/1.1\r\nHost: /var/run/docker.sock\r\nAccept: */*\r\n\r\n&quot;</span><span class="w">
+  </span><span class="p" data-group-id="2510826115-1">{</span><span class="ss">ok</span><span class="p">,</span><span class="w"> </span><span class="n">Pid</span><span class="p" data-group-id="2510826115-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ssh_tunnel</span><span class="p">:</span><span class="nf">connect</span><span class="p" data-group-id="2510826115-2">(</span><span class="s">&quot;192.168.90.15&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p" data-group-id="2510826115-2">)</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="2510826115-3">{</span><span class="ss">ok</span><span class="p">,</span><span class="w"> </span><span class="n">Ch</span><span class="p" data-group-id="2510826115-3">}</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nc">ssh_tunnel</span><span class="p">:</span><span class="nf">direct_stream_local</span><span class="p" data-group-id="2510826115-4">(</span><span class="n">Pid</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/var/run/docker.sock&quot;</span><span class="p" data-group-id="2510826115-4">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">ssh_connection</span><span class="p">.</span><span class="nf">send</span><span class="p" data-group-id="2510826115-5">(</span><span class="n">Pid</span><span class="p">,</span><span class="w"> </span><span class="n">Ch</span><span class="p">,</span><span class="w"> </span><span class="n">Msg</span><span class="p" data-group-id="2510826115-5">)</span></code></pre></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#direct_tcpip/3" translate="no">direct_tcpip(Pid, From, To)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Creates a ssh directtcp-ip forwarded channel to a remote port. The returned channel together with a ssh connection reference (returned from <code>:ssh.connect/4</code>) can be used to send messages with <code>ssh_connection:send/3</code> returns: <code>{ok, channel}</code> or <code>{error, reason}</code>. ## Examples: msg = &quot;GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.47.0\r\nAccept: */*\r\n\r\n&quot; {ok, Pid} = ssh_tunnel:connect(&quot;192.168.1.10&quot;, 22), {ok, Ch} = ssh_tunnel:direct_tcpip(Pid, {&quot;127.0.0.1&quot;, 8080}, {&quot;192.168.1.10&quot;, 80}), ok = ssh_connection:send(Pid, Ch, Msg), recieve do {ssh_cm, _, {data, Channel, _, Data}} -&gt; io:format(&quot;Data: ~p\n&quot;, [Data]) end</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#open_channel/6" translate="no">open_channel(Pid, Type, Msg, WindowSize, MaxPktSz, Timeout)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#start_tunnel/3" translate="no">start_tunnel(Pid, Transport, To)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Starts a SSHTunnel.Tunnel process. The tunnel will listen to either a local port or local path and handle passing messages between the TCP client and ssh connection. ## Examples {ok, SSH} = ssh_tunnel:connect(&quot;sshserver.example.com&quot;, 22), {ok, Pid} = ssh_tunnel:start_tunnel(Pid, tcp, {8080, {&quot;192.168.90.15&quot;, 80}}) # Send a TCP message %HTTPoison.Response{body: body} = HTTPoison.get!(&quot;127.0.0.1:8080&quot;) IO.puts(&quot;Received body: #{body})</div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:location/0">
+
+  <div class="detail-header">
+    <a href="#t:location/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">location/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L43" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> location() :: {string(), integer()}.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="connect/0">
+
+  <div class="detail-header">
+    <a href="#connect/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">connect()</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L45" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Module for creating SSH tunnels using <code>ssh</code>. <a href="https://github.com/drowzy/ssh_tunnel" target="_top">https://github.com/drowzy/ssh_tunnel</a></p><p>It provides functions to create forwarded ssh channels, similair to how other channels can be created using <code>ssh_connection</code>. There are two type of channels supported * <code>directtcp-ip` - Forwards a port from the client machine to the remote machine. This is the same as `ssh -nNT -L 8080:forward.example.com:9000 user@sshserver.example.com</code> * <code>direct-streamlocal</code> - Forwards to a unix domain socket. This is the same as <code>ssh -nNT -L 8080:/var/lib/mysql/mysql.sock user@sshserver.example.com</code> When using <code>direct_tcpip/3</code> or <code>direct_stream_local/2</code> directly there will not be any local port or socket bound, this can either be done using <code>ssh_tunnel</code> or by manually sending data with <code>ssh_connection.send/3</code>. Although <code>connect/1</code> can be used to connect to the remote host, other methods are supported. One can use [SSHex](https://github.com/rubencaro/sshex), <code>ssh:connect/3</code> for instance.</p><p>## Tunnels Tunnels are on-demand TCP servers and are bound listeners to either a port or a path. The tunnel will handle relaying TCP messages to the ssh connection and back.</p>## Examples<pre><code class="makeup erlang" translate="no"><span class="w">    </span><span class="p" data-group-id="6230353913-1">{</span><span class="ss">ok</span><span class="p">,</span><span class="w"> </span><span class="n">SshRef</span><span class="p" data-group-id="6230353913-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ssh_tunnel</span><span class="p">:</span><span class="nf">connect</span><span class="p" data-group-id="6230353913-2">(</span><span class="s">&quot;sshserver.example.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6230353913-3">[</span><span class="p" data-group-id="6230353913-3">]</span><span class="p" data-group-id="6230353913-2">)</span><span class="p">,</span><span class="w">
+    </span><span class="p" data-group-id="6230353913-4">{</span><span class="ss">ok</span><span class="p">,</span><span class="w"> </span><span class="n">Pid</span><span class="p" data-group-id="6230353913-4">}</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="nc">ssh_tunnel</span><span class="p">:</span><span class="nf">start_tunnel</span><span class="p" data-group-id="6230353913-5">(</span><span class="n">Pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6230353913-6">{</span><span class="ss">tcpip</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6230353913-7">{</span><span class="mi">8080</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6230353913-8">{</span><span class="s">&quot;192.168.90.15&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">80</span><span class="p" data-group-id="6230353913-8">}</span><span class="p" data-group-id="6230353913-7">}</span><span class="p" data-group-id="6230353913-6">}</span><span class="p" data-group-id="6230353913-5">)</span><span class="p">,</span><span class="w">
+    </span><span class="c1">% Send a TCP message for instance HTTP</span><span class="w">
+    </span><span class="n">Resp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">HTTPoison</span><span class="p">.</span><span class="nb">get</span><span class="o">!</span><span class="p" data-group-id="6230353913-9">(</span><span class="s">&quot;127.0.0.1:8080&quot;</span><span class="p" data-group-id="6230353913-9">)</span><span class="p">,</span><span class="w">
+    </span><span class="nc">io</span><span class="p">:</span><span class="nf">format</span><span class="p" data-group-id="6230353913-10">(</span><span class="s">&quot;Received body: </span><span class="si">~p</span><span class="s">\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6230353913-11">[</span><span class="n">Resp</span><span class="p" data-group-id="6230353913-11">]</span><span class="p" data-group-id="6230353913-10">)</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="connect/3">
+
+  <div class="detail-header">
+    <a href="#connect/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">connect(Host, Port, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L53" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> connect(list() | tuple(), integer(), list()) -> {ok, pid()} | {error, term()}.</pre>
+
+      </div>
+
+Create a connetion to a remote host with the provided options. This function is mostly used as convenience wrapper around <code>ssh_connect/3</code> and does not support all options. returns: <code>{ok, Connection}</code> or <code>{error, Reason}</code>. <a href="https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html" target="_top">https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html</a>
+  </section>
+</section>
+<section class="detail" id="direct_stream_local/2">
+
+  <div class="detail-header">
+    <a href="#direct_stream_local/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">direct_stream_local(Pid, SocketPath)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L118" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> direct_stream_local(pid(), string()) -> {ok, integer()} | {error, term()}.</pre>
+
+      </div>
+
+Creates a ssh stream local-forward channel to a remote unix domain socket. It sends the request that the server make a connection to its local Unix domain socket. The returned channel together with a ssh connection reference (returned from <code>ssh:connect/4</code>) can be used to send messages with <code>ssh_connection:send/3</code>. returns: <code>{ok, Channel}` or `{error, Reason}</code>. Ex:<pre><code class="makeup erlang" translate="no"><span class="w">  </span><span class="ss">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;GET /images/json HTTP/1.1\r\nHost: /var/run/docker.sock\r\nAccept: */*\r\n\r\n&quot;</span><span class="w">
+  </span><span class="p" data-group-id="2510826115-1">{</span><span class="ss">ok</span><span class="p">,</span><span class="w"> </span><span class="n">Pid</span><span class="p" data-group-id="2510826115-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ssh_tunnel</span><span class="p">:</span><span class="nf">connect</span><span class="p" data-group-id="2510826115-2">(</span><span class="s">&quot;192.168.90.15&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">22</span><span class="p" data-group-id="2510826115-2">)</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="2510826115-3">{</span><span class="ss">ok</span><span class="p">,</span><span class="w"> </span><span class="n">Ch</span><span class="p" data-group-id="2510826115-3">}</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nc">ssh_tunnel</span><span class="p">:</span><span class="nf">direct_stream_local</span><span class="p" data-group-id="2510826115-4">(</span><span class="n">Pid</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/var/run/docker.sock&quot;</span><span class="p" data-group-id="2510826115-4">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">ssh_connection</span><span class="p">.</span><span class="nf">send</span><span class="p" data-group-id="2510826115-5">(</span><span class="n">Pid</span><span class="p">,</span><span class="w"> </span><span class="n">Ch</span><span class="p">,</span><span class="w"> </span><span class="n">Msg</span><span class="p" data-group-id="2510826115-5">)</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="direct_tcpip/3">
+
+  <div class="detail-header">
+    <a href="#direct_tcpip/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">direct_tcpip(Pid, From, To)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L97" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> direct_tcpip(pid(), From :: <a href="#t:location/0">location</a>(), To :: <a href="#t:location/0">location</a>()) -> {ok, integer()} | {error, term()}.</pre>
+
+      </div>
+
+Creates a ssh directtcp-ip forwarded channel to a remote port. The returned channel together with a ssh connection reference (returned from <code>:ssh.connect/4</code>) can be used to send messages with <code>ssh_connection:send/3</code> returns: <code>{ok, channel}</code> or <code>{error, reason}</code>. ## Examples: msg = &quot;GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.47.0\r\nAccept: */*\r\n\r\n&quot; {ok, Pid} = ssh_tunnel:connect(&quot;192.168.1.10&quot;, 22), {ok, Ch} = ssh_tunnel:direct_tcpip(Pid, {&quot;127.0.0.1&quot;, 8080}, {&quot;192.168.1.10&quot;, 80}), ok = ssh_connection:send(Pid, Ch, Msg), recieve do {ssh_cm, _, {data, Channel, _, Data}} -&gt; io:format(&quot;Data: ~p\n&quot;, [Data]) end
+  </section>
+</section>
+<section class="detail" id="open_channel/6">
+
+  <div class="detail-header">
+    <a href="#open_channel/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">open_channel(Pid, Type, Msg, WindowSize, MaxPktSz, Timeout)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L123" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="start_tunnel/3">
+
+  <div class="detail-header">
+    <a href="#start_tunnel/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start_tunnel(Pid, Transport, To)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/ssh_tunnel.erl#L67" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> start_tunnel(pid(), tcp | local, tuple() | integer()) -> {ok, pid()} | {error, term()}.</pre>
+
+      </div>
+
+Starts a SSHTunnel.Tunnel process. The tunnel will listen to either a local port or local path and handle passing messages between the TCP client and ssh connection. ## Examples {ok, SSH} = ssh_tunnel:connect(&quot;sshserver.example.com&quot;, 22), {ok, Pid} = ssh_tunnel:start_tunnel(Pid, tcp, {8080, {&quot;192.168.90.15&quot;, 80}}) # Send a TCP message %HTTPoison.Response{body: body} = HTTPoison.get!(&quot;127.0.0.1:8080&quot;) IO.puts(&quot;Received body: #{body})
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/ssh_tunnel.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
 </div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start_tunnel-3">start_tunnel/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">start_tunnel(Pid :: pid(),
-             Transport :: tcp | local,
-             To :: tuple() | integer()) -&gt;
-                {ok, pid()} | {error, term()}</code></pre></p>
-<p> </p>
-</div><p>Starts a SSHTunnel.Tunnel process.
-  The tunnel will listen to either a local port or local path and handle
-  passing messages between the TCP client and ssh connection.
-  ## Examples
-      {ok, SSH} = ssh_tunnel:connect("sshserver.example.com", 22),
-      {ok, Pid} = ssh_tunnel:start_tunnel(Pid, tcp, {8080, {"192.168.90.15", 80}})
-      # Send a TCP message
-      %HTTPoison.Response{body: body} = HTTPoison.get!("127.0.0.1:8080")
-      IO.puts("Received body: #{body})</p>
-<hr>
 
-</body>
+  </body>
 </html>

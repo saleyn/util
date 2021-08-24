@@ -1,379 +1,1487 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module stringx</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>stringx — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module stringx</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Implements miscelaneous string functions.
-<p>Copyright © 2006 Serge Aleynikov</p>
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
 
-<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:saleyn@gmail.com"><tt>saleyn@gmail.com</tt></a>).</p>
+      <script src="docs_config.js"></script>
 
-<h2><a href="#" name="description">Description</a></h2>Implements miscelaneous string functions
-  
-<h2><a href="#" name="types">Data Types</a></h2>
-
-<h3 class="typedecl"><a name="type-ccy_sym">ccy_sym()</a></h3>
-<p><pre><code class="language-erlang">ccy_sym() = binary() | string()</code></pre></p>
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
 
-<h3 class="typedecl"><a name="type-decimals">decimals()</a></h3>
-<p><pre><code class="language-erlang">decimals() = 0..253</code></pre></p>
-<p> see types for erlang:float_to_binary/2</p>
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
 
-<h3 class="typedecl"><a name="type-format_number_opts">format_number_opts()</a></h3>
-<p><pre><code class="language-erlang">format_number_opts() = 
-    #{thousands =&gt; binary() | string(),
-      decimal_point =&gt; binary() | string(),
-      ccy_sym =&gt; <a href="#type-ccy_sym">ccy_sym()</a>,
-      ccy_pos =&gt; left | right,
-      ccy_sep =&gt; binary() | string(),
-      return =&gt; binary | list}</code></pre></p>
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
 
 
-<h3 class="typedecl"><a name="type-formatted_number">formatted_number()</a></h3>
-<p><pre><code class="language-erlang">formatted_number() = binary()</code></pre></p>
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
 
 
-<h3 class="typedecl"><a name="type-precision">precision()</a></h3>
-<p><pre><code class="language-erlang">precision() = integer()</code></pre></p>
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L17" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">stringx</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
+
+</h1>
 
 
-<h3 class="typedecl"><a name="type-pretty_print_opts">pretty_print_opts()</a></h3>
-<p><pre><code class="language-erlang">pretty_print_opts() = 
-    #{number_pad =&gt; char(),
-      out_header =&gt; boolean(),
-      out_sep =&gt; boolean(),
-      th_dir =&gt; both | leading | trailing,
-      td_dir =&gt; both | leading | trailing,
-      td_start =&gt; integer(),
-      td_exclude =&gt; list(),
-      td_sep =&gt; string(),
-      tr_sep =&gt; string(),
-      tr_sep_td =&gt; string(),
-      prefix =&gt; string(),
-      thousands =&gt; string() | binary(),
-      translate =&gt; fun((term()) -&gt; term()),
-      footer_rows =&gt; integer(),
-      td_formats =&gt;
+  <section id="moduledoc">
+Implements miscelaneous string functions
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:ccy_sym/0" translate="no">ccy_sym/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:decimals/0" translate="no">decimals/0</a>
+
+        </div>
+
+          <div class="summary-synopsis">see types for erlang:float_to_binary/2</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:format_number_opts/0" translate="no">format_number_opts/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:formatted_number/0" translate="no">formatted_number/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:precision/0" translate="no">precision/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:pretty_print_opts/0" translate="no">pretty_print_opts/0</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#align_rows/1" translate="no">align_rows(Rows)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#align_rows/2" translate="no">align_rows(Rows, Options)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Align rows of terms by stringifying them to uniform column width. If some row doesn't need to be aligned, pass its value as a binary. <code>Options</code> can be</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#aligned_format/2" translate="no">aligned_format(Fmt, Rows)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#aligned_format/3" translate="no">aligned_format(Fmt, Rows, Directions)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#batch_split/2" translate="no">batch_split(N, L)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Split a list into batches of N items</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#binary_join/2" translate="no">binary_join(Tail, Sep)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format/2" translate="no">format(Fmt, Args)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Convert format and arguments to binary/list shortening . This function can be used by Elixir, which is missing the equivalent of <code>io_lib.format/2</code></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_binary/2" translate="no">format_binary(Fmt, Args)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Convert format and arguments to binary/list shortening . This function can be used by Elixir, which is missing the equivalent of <code>io_lib.format/2</code></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_integer/1" translate="no">format_integer(Integer)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_integer/2" translate="no">format_integer(Integer, Opts)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_number/3" translate="no">format_number(N, Precision, Decimals)</a>
+
+        </div>
+
+          <div class="summary-synopsis">The same as uef_format:format_number/4 with #{} as the forth argument.<p><em>See also: </em><a href="#format_number/4">format_number/4</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_number/4" translate="no">format_number(Number, Precision, Decimals, Opts)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Formats Number by adding thousands separator between each set of 3 digits to the left of the decimal point, substituting Decimals for the decimal point, and rounding to the specified Precision. Returns a binary value.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_price/1" translate="no">format_price(Number)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Formats Number in price-like style. Returns a binary containing FormattedPrice formatted with a precision of 2 and decimal digits of 2. The same as format_price/2 with a precision of 2 as the second argument. See uef_format:format_price/2 docs.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_price/2" translate="no">format_price(Number, Precision)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Formats Number in price-like style. Returns a binary containing FormattedPrice formatted with a specified precision as the second argument and decimal digits of 2. The same as uef_format:format_price/3 with #{} as the third argument.<p><em>See also: </em><a href="#format_price/3">format_price/3</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format_price/3" translate="no">format_price(Number, Precision, CcySymbol_OR_Options)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Formats Number in price-like style. Returns a binary containing FormattedPrice formatted with a specified precision as the second argument, decimal digits of 2, and with ccy symbol (or options) as the third argument. If CcySymbol_OR_Options is a map the functions works as format_number/4 with decimal digits of 2 as the third argument and with options as the forth one. If CcySymbol_OR_Options is a binary or a string, the corresponding ccy symbol is added to the left.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#parse_csv/1" translate="no">parse_csv(File)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Parse a given CSV file.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#parse_csv/2" translate="no">parse_csv(File, Opts)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Parse a given CSV file.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#pretty_print_table/1" translate="no">pretty_print_table(LofMaps0)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Pretty print table of lists/tuples/maps to list. The following options control formatting behavior:<dl><dt>number_pad</dt><dd>Leading padding character used for numbers</dd><dt>th_dir</dt><dd>Table header row padding direction (both|leading|trailing)</dd><dt>td_dir</dt><dd>Table row padding direction (both|leading|trailing)</dd><dt>td_start</dt><dd>Don't print columns less than this (e.g. use 2 for records)</dd><dt>td_exclulde</dt><dd>List of column ID's (starting with 1) or names to exclude</dd><dt>td_sep</dt><dd>Column separator (default <code>&quot; | &quot;</code>)</dd><dt>tr_sep</dt><dd>Row separator (default <code>&quot;-&quot;</code>)</dd><dt>tr_sep_td</dt><dd>Column delimiter used in separating rows (<code>&quot;+&quot;</code>)</dd><dt>prefix</dt><dd>Prepend each row with this string</dd><dt>td_formats</dt><dd>A tuple containing column formats. Each value is either a format string passed to <code>io_lib:format/2</code> or a function taking either one argument <code>fun(Value) -&gt; {number|string, FormattedValue::string()}</code> or three arguments <code>fun(Key,Value,Row::tuple()|map()) -&gt; {number|string, FormattedValue::string()}</code>. This three argument function can perform calculation of the field value based on values of other fields in the <code>Row</code>.</dd><dt>unicode</dt><dd>Use unicode outline characters</dd><dt>outline</dt><dd>Draw top, left and line box outline (by default only the bottom one is drawn). Values:<ul><li><code>none</code> - on outline box</li><li><code>full</code> - outline box on all 4 sides</li><li><code>[top, left, bottom, right]</code> - outline box on given sides</li></ul></dd></dl>Example:<pre><code class="makeup erlang" translate="no"><span class="w">  </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">stringx</span><span class="p">:</span><span class="nf">pretty_print_table</span><span class="p" data-group-id="3231863411-1">(</span><span class="w">
+       </span><span class="p" data-group-id="3231863411-2">{</span><span class="ss">a</span><span class="p">,</span><span class="ss">b</span><span class="p">,</span><span class="ss">c</span><span class="p">,</span><span class="ss">d</span><span class="p" data-group-id="3231863411-2">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-3">[</span><span class="p" data-group-id="3231863411-4">{</span><span class="ss">a</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="ss">ccc</span><span class="p" data-group-id="3231863411-4">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-5">{</span><span class="ss">bxxx</span><span class="p">,</span><span class="w"> </span><span class="mf">200.00123</span><span class="p">,</span><span class="w"> </span><span class="ss">&#39;Done&#39;</span><span class="p" data-group-id="3231863411-5">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-6">{</span><span class="ss">abc</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="ss">xx</span><span class="p" data-group-id="3231863411-6">}</span><span class="p" data-group-id="3231863411-3">]</span><span class="p">,</span><span class="w">
+       </span><span class="o">#</span><span class="ss">opts</span><span class="p" data-group-id="3231863411-7">{</span><span class="ss">td_dir</span><span class="o">=</span><span class="ss">both</span><span class="p">,</span><span class="w"> </span><span class="ss">td_exclude</span><span class="o">=</span><span class="p" data-group-id="3231863411-8">[</span><span class="ss">d</span><span class="p" data-group-id="3231863411-8">]</span><span class="p">,</span><span class="w"> </span><span class="ss">td_formats</span><span class="o">=</span><span class="w">
+           </span><span class="p" data-group-id="3231863411-9">{</span><span class="ss">undefined</span><span class="p">,</span><span class="w"> </span><span class="nf">fun</span><span class="p" data-group-id="3231863411-10">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-10">)</span><span class="w"> </span><span class="k">when</span><span class="w"> </span><span class="nf">is_integer</span><span class="p" data-group-id="3231863411-11">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-11">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="3231863411-12">{</span><span class="ss">number</span><span class="p">,</span><span class="w"> </span><span class="nf">integer_to_list</span><span class="p" data-group-id="3231863411-13">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-13">)</span><span class="p" data-group-id="3231863411-12">}</span><span class="p">;</span><span class="w">
+                          </span><span class="p" data-group-id="3231863411-14">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-14">)</span><span class="w"> </span><span class="k">when</span><span class="w"> </span><span class="nf">is_float</span><span class="p" data-group-id="3231863411-15">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-15">)</span><span class="w">   </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="3231863411-16">{</span><span class="ss">number</span><span class="p">,</span><span class="w"> </span><span class="nf">float_to_list</span><span class="p" data-group-id="3231863411-17">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-18">[</span><span class="p" data-group-id="3231863411-19">{</span><span class="ss">decimals</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="3231863411-19">}</span><span class="p" data-group-id="3231863411-18">]</span><span class="p" data-group-id="3231863411-17">)</span><span class="p" data-group-id="3231863411-16">}</span><span class="w">
+                       </span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="si">~w</span><span class="s">&quot;</span><span class="p" data-group-id="3231863411-9">}</span><span class="p" data-group-id="3231863411-7">}</span><span class="p" data-group-id="3231863411-1">)</span><span class="p">.</span><span class="w">
+   </span><span class="ss">a</span><span class="w">   </span><span class="p">|</span><span class="w">     </span><span class="ss">b</span><span class="w">     </span><span class="p">|</span><span class="w">   </span><span class="ss">c</span><span class="w">
+  </span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="w">
+   </span><span class="ss">a</span><span class="w">   </span><span class="p">|</span><span class="w">        </span><span class="mi">10</span><span class="w"> </span><span class="p">|</span><span class="w">  </span><span class="ss">ccc</span><span class="w">
+  </span><span class="ss">bxxx</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="mf">200.00123</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="ss">&#39;Done&#39;</span><span class="w">
+  </span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span></code></pre></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#pretty_print_table/2" translate="no">pretty_print_table(HeaderRowKeys, Rows)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#pretty_print_table/3" translate="no">pretty_print_table(HeaderRowKeys, Rows, Opts)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#pretty_table/1" translate="no">pretty_table(LofMaps0)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Pretty print list of maps to list.<p><em>See also: </em><a href="#pretty_table/3">pretty_table/3</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#pretty_table/2" translate="no">pretty_table(HeaderRowKeys, Rows)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Pretty print table of lists/tuples/maps to list.<p><em>See also: </em><a href="#pretty_table/3">pretty_table/3</a>.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#pretty_table/3" translate="no">pretty_table(HeaderRowKeys, Rows, Opts)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#round_number/2" translate="no">round_number(Number, Precision)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Rounds the number to the specified precision.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#round_price/1" translate="no">round_price(Number)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Rounds the number to the precision of 2.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#titlecase/1" translate="no">titlecase(S)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Convert words in a string to capitalize first letter of each word.</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#wordwrap/2" translate="no">wordwrap(S, Margin)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Wrap words words in a string</div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#wordwrap/3" translate="no">wordwrap(Words, Margin, Word)</a>
+
+        </div>
+
+          <div class="summary-synopsis">Wrap words words in a string to multiple lines that fit the margin Example: <code>1&gt; stringx:wordwrap([&quot;abc&quot;, &quot;efg&quot;, &quot;exdf&quot;], 8, &quot;,&quot;). [&quot;abc,efg,&quot;,&quot;exdf&quot;]</code></div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:ccy_sym/0">
+
+  <div class="detail-header">
+    <a href="#t:ccy_sym/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">ccy_sym/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L35" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> ccy_sym() :: binary() | string().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:decimals/0">
+
+  <div class="detail-header">
+    <a href="#t:decimals/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">decimals/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L34" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> decimals() :: 0..253.</pre>
+
+      </div>
+
+see types for erlang:float_to_binary/2
+  </section>
+</section>
+<section class="detail" id="t:format_number_opts/0">
+
+  <div class="detail-header">
+    <a href="#t:format_number_opts/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">format_number_opts/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L36" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> format_number_opts() ::
+    #{thousands => binary() | string(),
+      decimal_point => binary() | string(),
+      ccy_sym => <a href="#t:ccy_sym/0">ccy_sym</a>(),
+      ccy_pos => left | right,
+      ccy_sep => binary() | string(),
+      return => binary | list}.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:formatted_number/0">
+
+  <div class="detail-header">
+    <a href="#t:formatted_number/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">formatted_number/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L32" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> formatted_number() :: binary().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:precision/0">
+
+  <div class="detail-header">
+    <a href="#t:precision/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">precision/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L33" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> precision() :: integer().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:pretty_print_opts/0">
+
+  <div class="detail-header">
+    <a href="#t:pretty_print_opts/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">pretty_print_opts/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L45" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> pretty_print_opts() ::
+    #{number_pad => char(),
+      header => boolean(),
+      th_dir => both | leading | trailing,
+      td_dir => both | leading | trailing,
+      td_start => integer(),
+      td_exclude => list(),
+      td_sep => string(),
+      tr_sep => string(),
+      tr_sep_td => string(),
+      prefix => string(),
+      thousands => string() | binary(),
+      translate => fun((term()) -> term()),
+      footer_rows => integer(),
+      td_formats =>
           tuple() |
-          fun((ColVal :: term()) -&gt;
+          fun((ColVal :: term()) ->
                   {string, string()} |
                   {number, string() | number()} |
-                  {number,
-                   Decimals :: integer(),
-                   ColVal :: number()} |
+                  {number, Decimals :: integer(), ColVal :: number()} |
                   {ccy, number()}),
-      thousands =&gt; string() | binary(),
-      ccy_sym =&gt; string() | binary(),
-      ccy_sep =&gt; string() | binary(),
-      ccy_pos =&gt; left | right}</code></pre></p>
+      thousands => string() | binary(),
+      ccy_sym => string() | binary(),
+      ccy_sep => string() | binary(),
+      ccy_pos => left | right}.</pre>
+
+      </div>
 
 
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#align_rows-1">align_rows/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#align_rows-2">align_rows/2</a></td><td class="tab">Align rows of terms by stringifying them to uniform column width.</td></tr>
-<tr class="tab"><td class="tab"><a href="#aligned_format-2">aligned_format/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#aligned_format-3">aligned_format/3</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#batch_split-2">batch_split/2</a></td><td class="tab">Split a list into batches of N items.</td></tr>
-<tr class="tab"><td class="tab"><a href="#binary_join-2">binary_join/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#format_integer-1">format_integer/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#format_integer-2">format_integer/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#format_number-3">format_number/3</a></td><td class="tab">
-  The same as uef_format:format_number/4 with #{} as the forth argument.</td></tr>
-<tr class="tab"><td class="tab"><a href="#format_number-4">format_number/4</a></td><td class="tab">
-  Formats Number by adding thousands separator between each set of 3
-  digits to the left of the decimal point, substituting Decimals for
-  the decimal point, and rounding to the specified Precision.</td></tr>
-<tr class="tab"><td class="tab"><a href="#format_price-1">format_price/1</a></td><td class="tab">
-  Formats Number in price-like style.</td></tr>
-<tr class="tab"><td class="tab"><a href="#format_price-2">format_price/2</a></td><td class="tab">
-  Formats Number in price-like style.</td></tr>
-<tr class="tab"><td class="tab"><a href="#format_price-3">format_price/3</a></td><td class="tab">
-  Formats Number in price-like style.</td></tr>
-<tr class="tab"><td class="tab"><a href="#parse_csv-1">parse_csv/1</a></td><td class="tab">Parse a given CSV file.</td></tr>
-<tr class="tab"><td class="tab"><a href="#parse_csv-2">parse_csv/2</a></td><td class="tab">Parse a given CSV file.</td></tr>
-<tr class="tab"><td class="tab"><a href="#pretty_print_table-1">pretty_print_table/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#pretty_print_table-2">pretty_print_table/2</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#pretty_print_table-3">pretty_print_table/3</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#pretty_table-1">pretty_table/1</a></td><td class="tab">Pretty print list of maps to list.</td></tr>
-<tr class="tab"><td class="tab"><a href="#pretty_table-2">pretty_table/2</a></td><td class="tab">Pretty print table of lists/tuples/maps to list.</td></tr>
-<tr class="tab"><td class="tab"><a href="#pretty_table-3">pretty_table/3</a></td><td class="tab">Pretty print table of lists/tuples/maps to list.</td></tr>
-<tr class="tab"><td class="tab"><a href="#round_number-2">round_number/2</a></td><td class="tab">Rounds the number to the specified precision.</td></tr>
-<tr class="tab"><td class="tab"><a href="#round_price-1">round_price/1</a></td><td class="tab">Rounds the number to the precision of 2.</td></tr>
-<tr class="tab"><td class="tab"><a href="#titlecase-1">titlecase/1</a></td><td class="tab">Convert words in a string to capitalize first letter of each word.</td></tr>
-<tr class="tab"><td class="tab"><a href="#wordwrap-2">wordwrap/2</a></td><td class="tab">Wrap words words in a string.</td></tr>
-</table>
+  </section>
+</section>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
+    </div>
+  </section>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="align_rows-1">align_rows/1</a></h3>
-<div class="spec">
-<p><tt>align_rows(Rows) -&gt; any()</tt></p>
-<p> </p>
-</div>
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="align_rows/1">
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="align_rows-2">align_rows/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">align_rows(Rows :: [tuple() | binary() | list()],
+  <div class="detail-header">
+    <a href="#align_rows/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">align_rows(Rows)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L415" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="align_rows/2">
+
+  <div class="detail-header">
+    <a href="#align_rows/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">align_rows(Rows, Options)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L452" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> align_rows(Rows :: [tuple() | binary() | list()],
            Options ::
                [{pad,
                  Dir ::
                      [trailing | leading | both |
-                      {Pos :: integer() | last,
-                       trailing | leading | both | none}]} |
+                      {Pos :: integer() | last, trailing | leading | both | none}]} |
                 {exclude, Cols :: [integer()]} |
                 {return, Ret :: tuple | list} |
                 {prefix, string()} |
-                {ignore_empty, boolean()}]) -&gt;
-              [AlignedRow :: tuple() | list()]</code></pre></p>
-<p> </p>
-</div><p>Align rows of terms by stringifying them to uniform column width.
-       If some row doesn't need to be aligned, pass its value as a binary.
-  <code>Options</code> can be:
- </p>
+                {ignore_empty, boolean()}]) ->
+              [AlignedRow :: tuple() | list()].</pre>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="aligned_format-2">aligned_format/2</a></h3>
-<div class="spec">
-<p><tt>aligned_format(Fmt, Rows) -&gt; any()</tt></p>
-<p> </p>
+      </div>
+
+<p>Align rows of terms by stringifying them to uniform column width. If some row doesn't need to be aligned, pass its value as a binary. <code>Options</code> can be:</p><code>Rows</code> is a list. All rows must have the same arity except if a row is a binary. <code>Options</code> contain:<dl><dt>{pad, Direction}</dt><dd>Column padding direction, where <code>Direction</code> is one of <code>leading</code>, <code>trailing</code>, <code>{Position::integer(), leading|trailing|none}</code>, <code>{last, leading|trailing|none}</code></dd><dt>{return, tuple|list}</dt><dd>Return result rows as lists or tuples</dd><dt>{prefix, string()}</dt><dd>Prefix first item in each row with this string</dd><dt>{ignore_empty, boolean()}</dt><dd>Don't pad trailing empty columns if this option is true</dd><dt>{exclude, [integer()]}</dt><dd>Exclude given column numbers</dd></dl>
+  </section>
+</section>
+<section class="detail" id="aligned_format/2">
+
+  <div class="detail-header">
+    <a href="#aligned_format/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">aligned_format(Fmt, Rows)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L396" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="aligned_format/3">
+
+  <div class="detail-header">
+    <a href="#aligned_format/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">aligned_format(Fmt, Rows, Directions)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L405" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="batch_split/2">
+
+  <div class="detail-header">
+    <a href="#batch_split/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">batch_split(N, L)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L944" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> batch_split(integer(), list()) -> [list()].</pre>
+
+      </div>
+
+Split a list into batches of N items
+  </section>
+</section>
+<section class="detail" id="binary_join/2">
+
+  <div class="detail-header">
+    <a href="#binary_join/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">binary_join(Tail, Sep)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L925" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="format/2">
+
+  <div class="detail-header">
+    <a href="#format/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format(Fmt, Args)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L699" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format(binary() | string(), list()) -> binary() | string().</pre>
+
+      </div>
+
+Convert format and arguments to binary/list shortening . This function can be used by Elixir, which is missing the equivalent of <code>io_lib.format/2</code>
+  </section>
+</section>
+<section class="detail" id="format_binary/2">
+
+  <div class="detail-header">
+    <a href="#format_binary/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_binary(Fmt, Args)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L706" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_binary(binary() | string(), list()) -> binary().</pre>
+
+      </div>
+
+Convert format and arguments to binary/list shortening . This function can be used by Elixir, which is missing the equivalent of <code>io_lib.format/2</code>
+  </section>
+</section>
+<section class="detail" id="format_integer/1">
+
+  <div class="detail-header">
+    <a href="#format_integer/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_integer(Integer)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L715" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_integer(integer()) -> <a href="#t:formatted_number/0">formatted_number</a>().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="format_integer/2">
+
+  <div class="detail-header">
+    <a href="#format_integer/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_integer(Integer, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L718" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_integer(integer(), <a href="#t:format_number_opts/0">format_number_opts</a>()) -> <a href="#t:formatted_number/0">formatted_number</a>().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="format_number/3">
+
+  <div class="detail-header">
+    <a href="#format_number/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_number(N, Precision, Decimals)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L726" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_number(number(), <a href="#t:precision/0">precision</a>(), <a href="#t:decimals/0">decimals</a>()) -> <a href="#t:formatted_number/0">formatted_number</a>().</pre>
+
+      </div>
+
+The same as uef_format:format_number/4 with #{} as the forth argument.<p><em>See also: </em><a href="#format_number/4">format_number/4</a>.</p>
+  </section>
+</section>
+<section class="detail" id="format_number/4">
+
+  <div class="detail-header">
+    <a href="#format_number/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_number(Number, Precision, Decimals, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L741" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_number(number(), <a href="#t:precision/0">precision</a>(), <a href="#t:decimals/0">decimals</a>(), <a href="#t:format_number_opts/0">format_number_opts</a>()) -> <a href="#t:formatted_number/0">formatted_number</a>().</pre>
+
+      </div>
+
+Formats Number by adding thousands separator between each set of 3 digits to the left of the decimal point, substituting Decimals for the decimal point, and rounding to the specified Precision. Returns a binary value.
+  </section>
+</section>
+<section class="detail" id="format_price/1">
+
+  <div class="detail-header">
+    <a href="#format_price/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_price(Number)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L758" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_price(Number :: number()) -> FormattedPrice :: <a href="#t:formatted_number/0">formatted_number</a>().</pre>
+
+      </div>
+
+Formats Number in price-like style. Returns a binary containing FormattedPrice formatted with a precision of 2 and decimal digits of 2. The same as format_price/2 with a precision of 2 as the second argument. See uef_format:format_price/2 docs.
+  </section>
+</section>
+<section class="detail" id="format_price/2">
+
+  <div class="detail-header">
+    <a href="#format_price/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_price(Number, Precision)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L769" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_price(Number :: number(), Precision :: <a href="#t:precision/0">precision</a>()) -> <a href="#t:formatted_number/0">formatted_number</a>().</pre>
+
+      </div>
+
+Formats Number in price-like style. Returns a binary containing FormattedPrice formatted with a specified precision as the second argument and decimal digits of 2. The same as uef_format:format_price/3 with #{} as the third argument.<p><em>See also: </em><a href="#format_price/3">format_price/3</a>.</p>
+  </section>
+</section>
+<section class="detail" id="format_price/3">
+
+  <div class="detail-header">
+    <a href="#format_price/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format_price(Number, Precision, CcySymbol_OR_Options)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L786" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format_price(Number :: number(),
+             Precision :: <a href="#t:precision/0">precision</a>(),
+             CcySymbol_OR_Options :: <a href="#t:format_number_opts/0">format_number_opts</a>() | <a href="#t:ccy_sym/0">ccy_sym</a>()) ->
+                FormattedPrice :: <a href="#t:formatted_number/0">formatted_number</a>().</pre>
+
+      </div>
+
+Formats Number in price-like style. Returns a binary containing FormattedPrice formatted with a specified precision as the second argument, decimal digits of 2, and with ccy symbol (or options) as the third argument. If CcySymbol_OR_Options is a map the functions works as format_number/4 with decimal digits of 2 as the third argument and with options as the forth one. If CcySymbol_OR_Options is a binary or a string, the corresponding ccy symbol is added to the left.
+  </section>
+</section>
+<section class="detail" id="parse_csv/1">
+
+  <div class="detail-header">
+    <a href="#parse_csv/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">parse_csv(File)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L934" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> parse_csv(string()) -> [[string()]].</pre>
+
+      </div>
+
+Parse a given CSV file.
+  </section>
+</section>
+<section class="detail" id="parse_csv/2">
+
+  <div class="detail-header">
+    <a href="#parse_csv/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">parse_csv(File, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L939" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> parse_csv(string(), [fix_lengths | {open, Opts :: list()}]) -> [[string()]].</pre>
+
+      </div>
+
+Parse a given CSV file.
+  </section>
+</section>
+<section class="detail" id="pretty_print_table/1">
+
+  <div class="detail-header">
+    <a href="#pretty_print_table/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pretty_print_table(LofMaps0)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L195" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+Pretty print table of lists/tuples/maps to list. The following options control formatting behavior:<dl><dt>number_pad</dt><dd>Leading padding character used for numbers</dd><dt>th_dir</dt><dd>Table header row padding direction (both|leading|trailing)</dd><dt>td_dir</dt><dd>Table row padding direction (both|leading|trailing)</dd><dt>td_start</dt><dd>Don't print columns less than this (e.g. use 2 for records)</dd><dt>td_exclulde</dt><dd>List of column ID's (starting with 1) or names to exclude</dd><dt>td_sep</dt><dd>Column separator (default <code>&quot; | &quot;</code>)</dd><dt>tr_sep</dt><dd>Row separator (default <code>&quot;-&quot;</code>)</dd><dt>tr_sep_td</dt><dd>Column delimiter used in separating rows (<code>&quot;+&quot;</code>)</dd><dt>prefix</dt><dd>Prepend each row with this string</dd><dt>td_formats</dt><dd>A tuple containing column formats. Each value is either a format string passed to <code>io_lib:format/2</code> or a function taking either one argument <code>fun(Value) -&gt; {number|string, FormattedValue::string()}</code> or three arguments <code>fun(Key,Value,Row::tuple()|map()) -&gt; {number|string, FormattedValue::string()}</code>. This three argument function can perform calculation of the field value based on values of other fields in the <code>Row</code>.</dd><dt>unicode</dt><dd>Use unicode outline characters</dd><dt>outline</dt><dd>Draw top, left and line box outline (by default only the bottom one is drawn). Values:<ul><li><code>none</code> - on outline box</li><li><code>full</code> - outline box on all 4 sides</li><li><code>[top, left, bottom, right]</code> - outline box on given sides</li></ul></dd></dl>Example:<pre><code class="makeup erlang" translate="no"><span class="w">  </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">stringx</span><span class="p">:</span><span class="nf">pretty_print_table</span><span class="p" data-group-id="3231863411-1">(</span><span class="w">
+       </span><span class="p" data-group-id="3231863411-2">{</span><span class="ss">a</span><span class="p">,</span><span class="ss">b</span><span class="p">,</span><span class="ss">c</span><span class="p">,</span><span class="ss">d</span><span class="p" data-group-id="3231863411-2">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-3">[</span><span class="p" data-group-id="3231863411-4">{</span><span class="ss">a</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="ss">ccc</span><span class="p" data-group-id="3231863411-4">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-5">{</span><span class="ss">bxxx</span><span class="p">,</span><span class="w"> </span><span class="mf">200.00123</span><span class="p">,</span><span class="w"> </span><span class="ss">&#39;Done&#39;</span><span class="p" data-group-id="3231863411-5">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-6">{</span><span class="ss">abc</span><span class="p">,</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="ss">xx</span><span class="p" data-group-id="3231863411-6">}</span><span class="p" data-group-id="3231863411-3">]</span><span class="p">,</span><span class="w">
+       </span><span class="o">#</span><span class="ss">opts</span><span class="p" data-group-id="3231863411-7">{</span><span class="ss">td_dir</span><span class="o">=</span><span class="ss">both</span><span class="p">,</span><span class="w"> </span><span class="ss">td_exclude</span><span class="o">=</span><span class="p" data-group-id="3231863411-8">[</span><span class="ss">d</span><span class="p" data-group-id="3231863411-8">]</span><span class="p">,</span><span class="w"> </span><span class="ss">td_formats</span><span class="o">=</span><span class="w">
+           </span><span class="p" data-group-id="3231863411-9">{</span><span class="ss">undefined</span><span class="p">,</span><span class="w"> </span><span class="nf">fun</span><span class="p" data-group-id="3231863411-10">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-10">)</span><span class="w"> </span><span class="k">when</span><span class="w"> </span><span class="nf">is_integer</span><span class="p" data-group-id="3231863411-11">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-11">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="3231863411-12">{</span><span class="ss">number</span><span class="p">,</span><span class="w"> </span><span class="nf">integer_to_list</span><span class="p" data-group-id="3231863411-13">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-13">)</span><span class="p" data-group-id="3231863411-12">}</span><span class="p">;</span><span class="w">
+                          </span><span class="p" data-group-id="3231863411-14">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-14">)</span><span class="w"> </span><span class="k">when</span><span class="w"> </span><span class="nf">is_float</span><span class="p" data-group-id="3231863411-15">(</span><span class="n">V</span><span class="p" data-group-id="3231863411-15">)</span><span class="w">   </span><span class="p">-&gt;</span><span class="w"> </span><span class="p" data-group-id="3231863411-16">{</span><span class="ss">number</span><span class="p">,</span><span class="w"> </span><span class="nf">float_to_list</span><span class="p" data-group-id="3231863411-17">(</span><span class="n">V</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3231863411-18">[</span><span class="p" data-group-id="3231863411-19">{</span><span class="ss">decimals</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p" data-group-id="3231863411-19">}</span><span class="p" data-group-id="3231863411-18">]</span><span class="p" data-group-id="3231863411-17">)</span><span class="p" data-group-id="3231863411-16">}</span><span class="w">
+                       </span><span class="k">end</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="si">~w</span><span class="s">&quot;</span><span class="p" data-group-id="3231863411-9">}</span><span class="p" data-group-id="3231863411-7">}</span><span class="p" data-group-id="3231863411-1">)</span><span class="p">.</span><span class="w">
+   </span><span class="ss">a</span><span class="w">   </span><span class="p">|</span><span class="w">     </span><span class="ss">b</span><span class="w">     </span><span class="p">|</span><span class="w">   </span><span class="ss">c</span><span class="w">
+  </span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="w">
+   </span><span class="ss">a</span><span class="w">   </span><span class="p">|</span><span class="w">        </span><span class="mi">10</span><span class="w"> </span><span class="p">|</span><span class="w">  </span><span class="ss">ccc</span><span class="w">
+  </span><span class="ss">bxxx</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="mf">200.00123</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="ss">&#39;Done&#39;</span><span class="w">
+  </span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="pretty_print_table/2">
+
+  <div class="detail-header">
+    <a href="#pretty_print_table/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pretty_print_table(HeaderRowKeys, Rows)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L198" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="pretty_print_table/3">
+
+  <div class="detail-header">
+    <a href="#pretty_print_table/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pretty_print_table(HeaderRowKeys, Rows, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L201" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="pretty_table/1">
+
+  <div class="detail-header">
+    <a href="#pretty_table/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pretty_table(LofMaps0)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L115" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> pretty_table([map()]) -> list().</pre>
+
+      </div>
+
+Pretty print list of maps to list.<p><em>See also: </em><a href="#pretty_table/3">pretty_table/3</a>.</p>
+  </section>
+</section>
+<section class="detail" id="pretty_table/2">
+
+  <div class="detail-header">
+    <a href="#pretty_table/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pretty_table(HeaderRowKeys, Rows)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L124" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> pretty_table([string()], [Row :: tuple() | list() | map()]) -> list().</pre>
+
+      </div>
+
+Pretty print table of lists/tuples/maps to list.<p><em>See also: </em><a href="#pretty_table/3">pretty_table/3</a>.</p>
+  </section>
+</section>
+<section class="detail" id="pretty_table/3">
+
+  <div class="detail-header">
+    <a href="#pretty_table/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pretty_table(HeaderRowKeys, Rows, Opts)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L129" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> pretty_table([string() | atom()] | tuple(),
+             [Row :: tuple() | list() | map()],
+             Opts :: map() | #opts{}) ->
+                list().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="round_number/2">
+
+  <div class="detail-header">
+    <a href="#round_number/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">round_number(Number, Precision)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L801" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> round_number(Number :: number(), Precision :: integer()) -> float().</pre>
+
+      </div>
+
+Rounds the number to the specified precision.
+  </section>
+</section>
+<section class="detail" id="round_price/1">
+
+  <div class="detail-header">
+    <a href="#round_price/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">round_price(Number)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L796" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> round_price(Number :: number()) -> float().</pre>
+
+      </div>
+
+Rounds the number to the precision of 2.
+  </section>
+</section>
+<section class="detail" id="titlecase/1">
+
+  <div class="detail-header">
+    <a href="#titlecase/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">titlecase(S)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L84" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> titlecase(string()) -> string().</pre>
+
+      </div>
+
+Convert words in a string to capitalize first letter of each word.
+  </section>
+</section>
+<section class="detail" id="wordwrap/2">
+
+  <div class="detail-header">
+    <a href="#wordwrap/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">wordwrap(S, Margin)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L92" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> wordwrap(string(), integer()) -> string().</pre>
+
+      </div>
+
+Wrap words words in a string
+  </section>
+</section>
+<section class="detail" id="wordwrap/3">
+
+  <div class="detail-header">
+    <a href="#wordwrap/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">wordwrap(Words, Margin, Word)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/stringx.erl#L106" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> wordwrap([Word], integer(), Word) -> [string() | binary()] when Word :: string() | binary().</pre>
+
+      </div>
+
+Wrap words words in a string to multiple lines that fit the margin Example: <code>1&gt; stringx:wordwrap([&quot;abc&quot;, &quot;efg&quot;, &quot;exdf&quot;], 8, &quot;,&quot;). [&quot;abc,efg,&quot;,&quot;exdf&quot;]</code>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/stringx.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
 </div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="aligned_format-3">aligned_format/3</a></h3>
-<div class="spec">
-<p><tt>aligned_format(Fmt, Rows, Directions) -&gt; any()</tt></p>
-<p> </p>
-</div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="batch_split-2">batch_split/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">batch_split(N :: integer(), L :: list()) -&gt; [list()]</code></pre></p>
-<p> </p>
-</div><p>Split a list into batches of N items</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="binary_join-2">binary_join/2</a></h3>
-<div class="spec">
-<p><tt>binary_join(Tail, Sep) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_integer-1">format_integer/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format_integer(Integer :: integer()) -&gt; <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_integer-2">format_integer/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format_integer(Integer :: integer(), Opts :: <a href="#type-format_number_opts">format_number_opts()</a>) -&gt;
-                  <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_number-3">format_number/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format_number(N :: number(),
-              Precision :: <a href="#type-precision">precision()</a>,
-              Decimals :: <a href="#type-decimals">decimals()</a>) -&gt;
-                 <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
-<p> </p>
-</div><p>
-  The same as uef_format:format_number/4 with #{} as the forth argument.</p>
-<p><b>See also:</b> <a href="#format_number-4">format_number/4</a>.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_number-4">format_number/4</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format_number(Number :: number(),
-              Precision :: <a href="#type-precision">precision()</a>,
-              Decimals :: <a href="#type-decimals">decimals()</a>,
-              Opts :: <a href="#type-format_number_opts">format_number_opts()</a>) -&gt;
-                 <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
-<p> </p>
-</div><p>
-  Formats Number by adding thousands separator between each set of 3
-  digits to the left of the decimal point, substituting Decimals for
-  the decimal point, and rounding to the specified Precision.
-  Returns a binary value.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_price-1">format_price/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format_price(Number :: number()) -&gt;
-                FormattedPrice :: <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
-<p> </p>
-</div><p>
-  Formats Number in price-like style.
-  Returns a binary containing FormattedPrice formatted with a precision
-  of 2 and decimal digits of 2. The same as format_price/2 with a precision
-  of 2 as the second argument. See uef_format:format_price/2 docs.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_price-2">format_price/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format_price(Number :: number(), Precision :: <a href="#type-precision">precision()</a>) -&gt;
-                <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
-<p> </p>
-</div><p>
-  Formats Number in price-like style.
-  Returns a binary containing FormattedPrice formatted with a specified
-  precision as the second argument and decimal digits of 2.
-  The same as uef_format:format_price/3 with #{} as the third argument.</p>
-<p><b>See also:</b> <a href="#format_price-3">format_price/3</a>.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_price-3">format_price/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format_price(Number :: number(),
-             Precision :: <a href="#type-precision">precision()</a>,
-             CcySymbol_OR_Options ::
-                 <a href="#type-format_number_opts">format_number_opts()</a> | <a href="#type-ccy_sym">ccy_sym()</a>) -&gt;
-                FormattedPrice :: <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
-<p> </p>
-</div><p>
-  Formats Number in price-like style.
-  Returns a binary containing FormattedPrice formatted with a specified
-  precision as the second argument, decimal digits of 2,
-  and with ccy symbol (or options) as the third argument.
-  If CcySymbol_OR_Options is a map the functions works as format_number/4
-  with decimal digits of 2 as the third argument and with options as the forth one.
-  If CcySymbol_OR_Options is a binary or a string, the corresponding
-  ccy symbol is added to the left.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse_csv-1">parse_csv/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">parse_csv(File :: string()) -&gt; [[string()]]</code></pre></p>
-<p> </p>
-</div><p>Parse a given CSV file.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse_csv-2">parse_csv/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">parse_csv(File :: string(),
-          Opts :: [fix_lengths | {open, Opts :: list()}]) -&gt;
-             [[string()]]</code></pre></p>
-<p> </p>
-</div><p>Parse a given CSV file.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_print_table-1">pretty_print_table/1</a></h3>
-<div class="spec">
-<p><tt>pretty_print_table(LofMaps0) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_print_table-2">pretty_print_table/2</a></h3>
-<div class="spec">
-<p><tt>pretty_print_table(HeaderRowKeys, Rows) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_print_table-3">pretty_print_table/3</a></h3>
-<div class="spec">
-<p><tt>pretty_print_table(HeaderRowKeys, Rows, Opts) -&gt; any()</tt></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_table-1">pretty_table/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">pretty_table(LofMaps0 :: [map()]) -&gt; list()</code></pre></p>
-<p> </p>
-</div><p>Pretty print list of maps to list.</p>
-<p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_table-2">pretty_table/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">pretty_table(HeaderRowKeys :: [string()],
-             Rows :: [Row :: tuple() | list() | map()]) -&gt;
-                list()</code></pre></p>
-<p> </p>
-</div><p>Pretty print table of lists/tuples/maps to list.</p>
-<p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_table-3">pretty_table/3</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">pretty_table(HeaderRowKeys :: [string()],
-             Rows :: [Row :: tuple() | list() | map()],
-             Opts :: map()) -&gt;
-                list()</code></pre></p>
-<p> </p>
-</div><p>Pretty print table of lists/tuples/maps to list.
-  The following options control formatting behavior:
-  <dl>
-  <dt>number_pad</dt>
-       <dd>Leading padding character used for numbers</dd>
-  <dt>th_dir</dt>
-       <dd>Table header row padding direction (both|leading|trailing)</dd>
-  <dt>td_dir</dt>
-       <dd>Table row padding direction (both|leading|trailing)</dd>
-  <dt>td_start</dt>
-       <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
-  <dt>td_exclulde</dt>
-       <dd>List of column ID's (starting with 1) or names to exclude</dd>
-  <dt>td_sep</dt>
-       <dd>Column separator (default <code>" | "</code>)</dd>
-  <dt>tr_sep</dt>
-       <dd>Row separator (default <code>"-"</code>)</dd>
-  <dt>tr_sep_td</dt>
-       <dd>Column delimiter used in separating rows (<code>"+"`)&lt;/dd&gt;
-  &lt;dt&gt;prefix&lt;/dt&gt;
-       &lt;dd&gt;Prepend each row with this string&lt;/dd&gt;
-  &lt;dt&gt;td_formats&lt;/dt&gt;
-       &lt;dd&gt;A tuple containing column formats. Each value is either
-           a format string passed to `io_lib:format/2</code> or a function taking
-           either one argument
-           <code>fun(Value) -&gt; {number|string, FormattedValue::string()}</code>
-           or three arguments
-           <code>fun(Key,Value,Row::tuple()|map()) -&gt; {number|string, FormattedValue::string()}</code>.
-           This three argument function can perform calculation of the field
-           value based on values of other fields in the <code>Row</code>.
-       </dd>
-  </dl>
-  Example:
-  <pre><code class="language-erlang">  1&gt; stringx:pretty_print_table(
-       {a,b,c,d}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}, {abc, 100.0, xx}],
-       #opts{td_dir=both, td_exclude=[d], td_formats=
-           {undefined, fun(V) when is_integer(V) -&gt; {number, integer_to_list(V)};
-                          (V) when is_float(V)   -&gt; {number, float_to_list(V, [{decimals, 5}])}
-                       end, "~w"}}).
-   a   |     b     |   c
-  -----+-----------+-------
-   a   |        10 |  ccc
-  bxxx | 200.00123 | 'Done'
-  -----+-----------+-------</code></pre></p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="round_number-2">round_number/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">round_number(Number :: number(), Precision :: integer()) -&gt;
-                float()</code></pre></p>
-<p> </p>
-</div><p>Rounds the number to the specified precision.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="round_price-1">round_price/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">round_price(Number :: number()) -&gt; float()</code></pre></p>
-<p> </p>
-</div><p>Rounds the number to the precision of 2.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="titlecase-1">titlecase/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">titlecase(S :: string()) -&gt; string()</code></pre></p>
-<p> </p>
-</div><p>Convert words in a string to capitalize first letter of each word.</p>
-
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="wordwrap-2">wordwrap/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">wordwrap(S :: string(), Margin :: integer()) -&gt; string()</code></pre></p>
-<p> </p>
-</div><p>Wrap words words in a string</p>
-<hr>
-
-</body>
+  </body>
 </html>

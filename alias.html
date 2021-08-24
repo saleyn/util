@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.29.0">
     <meta name="project" content="util v1.1.5">
 
-    <title>base32 — util v1.1.5</title>
+    <title>alias — util v1.1.5</title>
     <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
@@ -95,16 +95,20 @@ util
 </button>
 
 
-    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/base32.erl#L20" title="View Source" class="view-source" rel="help">
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/alias.erl#L11" title="View Source" class="view-source" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">base32</span> 
+  <span translate="no">alias</span> 
   <small class="app-vsn" translate="no">(util v1.1.5)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+Creation of module aliases
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -123,31 +127,17 @@ util
 
       <div class="summary-row">
         <div class="summary-signature">
-          <a href="#decode/1" translate="no">decode(Bin)</a>
+          <a href="#create/2" translate="no">create(Alias, OrigMod)</a>
 
         </div>
+
+          <div class="summary-synopsis">Create a module <code>Alias</code> for the given <code>OrigMod</code> module. This function is useful for creating in-memory Elixir wrapper modules without needing to maintain persistent files with such wrappers. <code>IncFuns</code> argument can be <code>all</code> or a list of <code>{Fun, Arity}</code> values which only export a subset of functions from the <code>OrigMod</code>.</div>
 
       </div>
 
       <div class="summary-row">
         <div class="summary-signature">
-          <a href="#decode/2" translate="no">decode(Bin, Opts)</a>
-
-        </div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#encode/1" translate="no">encode(Bin)</a>
-
-        </div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#encode/2" translate="no">encode(Bin, Opts)</a>
+          <a href="#create/3" translate="no">create(Alias, OrigMod, IncFuns)</a>
 
         </div>
 
@@ -167,16 +157,16 @@ util
 Functions
     </h1>
     <div class="functions-list">
-<section class="detail" id="decode/1">
+<section class="detail" id="create/2">
 
   <div class="detail-header">
-    <a href="#decode/1" class="detail-link" title="Link to this function">
+    <a href="#create/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">decode(Bin)</h1>
+    <h1 class="signature" translate="no">create(Alias, OrigMod)</h1>
 
-      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/base32.erl#L80" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/alias.erl#L20" class="view-source" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -186,63 +176,19 @@ Functions
 
   <section class="docstring">
 
-
+Create a module <code>Alias</code> for the given <code>OrigMod</code> module. This function is useful for creating in-memory Elixir wrapper modules without needing to maintain persistent files with such wrappers. <code>IncFuns</code> argument can be <code>all</code> or a list of <code>{Fun, Arity}</code> values which only export a subset of functions from the <code>OrigMod</code>.
   </section>
 </section>
-<section class="detail" id="decode/2">
+<section class="detail" id="create/3">
 
   <div class="detail-header">
-    <a href="#decode/2" class="detail-link" title="Link to this function">
+    <a href="#create/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">decode(Bin, Opts)</h1>
+    <h1 class="signature" translate="no">create(Alias, OrigMod, IncFuns)</h1>
 
-      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/base32.erl#L83" class="view-source" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="encode/1">
-
-  <div class="detail-header">
-    <a href="#encode/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">encode(Bin)</h1>
-
-      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/base32.erl#L27" class="view-source" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="encode/2">
-
-  <div class="detail-header">
-    <a href="#encode/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">encode(Bin, Opts)</h1>
-
-      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/base32.erl#L30" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/alias.erl#L22" class="view-source" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -268,7 +214,7 @@ Functions
               <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
               <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
 
-                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/base32.erl">(current file)</a>
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/alias.erl">(current file)</a>
 
             </span>
 

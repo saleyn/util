@@ -1,113 +1,392 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module util_log_formatter</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
-</head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
-<script>
-  hljs.highlightAll();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
 
-<body class="src">
-<a name="top"></a>
-<hr>
+    <title>util_log_formatter — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
 
-<h1>Module util_log_formatter</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Log formatter  
-Derived from //kernel/logger/logger_formatter.
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-XN2TSG4M.js"></script>
 
 
-<h2><a href="#" name="description">Description</a></h2><p>Log formatter  
-Derived from //kernel/logger/logger_formatter</p>
- 
-  This implementation is copied from logger_fomatter.erl and adds the
-  following features:
-  <dl>
-  <dt>time_offset = none</dt>
-    <dd>when provided, no time zone offset will be written to the log.</dd>
-  <dt>time_unit = second | millisecond | microsecond</dt>
-    <dd>controls time stamp granularity in the log.</dd>
-  <dt>report_prefix = string()</dt>
-    <dd>inserts given prefix before <code>msg</code> for logging a report (default: "\n").</dd>
-  <dt>report_term_depth = integer()</dt>
-    <dd>max depth of terms included in the reports. Use <code>infinity</code> for
-        unlimited (default: 50)</dd>
-  </dl>
- 
-  <p>Report printing is modified to align keys in a report to the right.</p>
- 
-  Additional template formatting atoms:
-  <dl>
-    <dt>lev</dt>
-      <dd>prints "[X]" to the log to indicate the log level, where
-          <code>X` is the first capitalized letter of the log level.&lt;/dd&gt;
-    &lt;dt&gt;LEVEL&lt;/dt&gt;&lt;dd&gt;same as</code>level' but is printed in upper case.</dd>
-    <dt>modline</dt><dd>prints 'Module:Line' to the log.</dd>
-    <dt>regpid</dt><dd>prints:</dd>
-       <dl>
-             <dt><code>*</code></dt><dd>if the registered name of the caller's pid
-                      matches caller's module name.</dd>
-             <dt><code>RegisteredName</code></dt><dd>of the calling process</dd>
-             <dt><code>X.Y.Z</code></dt><dd>pid of the caller with leading <code>0.</code> stripped.</dd>
-       </dl>
-    <dt>regname</dt>
-       <dl>
-             <dd>prints <code>&lt;RegisteredName&gt;</code> of the process or its pid
-                 if the process is not registered</dd>
-       </dl>
-  </dl>
-<h2><a href="#" name="types">Data Types</a></h2>
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
 
-<h3 class="typedecl"><a name="type-config">config()</a></h3>
-<p><pre><code class="language-erlang">config() = 
-    #{chars_limit =&gt; pos_integer() | unlimited,
-      depth =&gt; pos_integer() | unlimited,
-      legacy_header =&gt; boolean(),
-      max_size =&gt; pos_integer() | unlimited,
-      report_cb =&gt; <a href="http://www.erlang.org/doc/man/kernel/doc/logger.html#type-report_cb">logger:report_cb()</a>,
-      single_line =&gt; boolean(),
-      template =&gt; <a href="#type-template">template()</a>,
-      time_designator =&gt; byte(),
-      time_offset =&gt; integer() | [byte()] | none,
-      time_unit =&gt; atom(),
-      report_prefix =&gt; boolean(),
-      report_term_depth =&gt; integer()}</code></pre></p>
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
 
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
 
-<h3 class="typedecl"><a name="type-metakey">metakey()</a></h3>
-<p><pre><code class="language-erlang">metakey() = atom() | [atom()]</code></pre></p>
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
 
 
-<h3 class="typedecl"><a name="type-template">template()</a></h3>
-<p><pre><code class="language-erlang">template() = 
-    [<a href="#type-metakey">metakey()</a> | {<a href="#type-metakey">metakey()</a>, <a href="#type-template">template()</a>, <a href="#type-template">template()</a>} | string()]</code></pre></p>
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
 
 
-<h2><a href="#" name="index">Function Index</a></h2>
-<table class="tab" width="100%" class="tab" summary="function index"><tr class="tab"><td class="tab"><a href="#check_config-1">check_config/1</a></td><td class="tab"></td></tr>
-<tr class="tab"><td class="tab"><a href="#format-2">format/2</a></td><td class="tab"></td></tr>
-</table>
+    <a href="https://github.com/saleyn/util/blob/v1.1.5/src/util_log_formatter.erl#L61" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
 
-<h2><a href="#" name="functions">Function Details</a></h2>
+  <span translate="no">util_log_formatter</span> 
+  <small class="app-vsn" translate="no">(util v1.1.5)</small>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="check_config-1">check_config/1</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">check_config(Config) -&gt; ok | {error, term()}</code></pre>
-<ul class="definitions"><li><pre><code class="language-erlang">Config = <a href="#type-config">config()</a></code></pre></li></ul></p>
-<p> </p>
+</h1>
+
+
+  <section id="moduledoc">
+<p>Log formatter Derived from //kernel/logger/logger_formatter</p>This implementation is copied from logger_fomatter.erl and adds the following features:<dl><dt>time_offset = none</dt><dd>when provided, no time zone offset will be written to the log.</dd><dt>time_unit = second | millisecond | microsecond</dt><dd>controls time stamp granularity in the log.</dd><dt>report_prefix = string()</dt><dd>inserts given prefix before <code>msg</code> for logging a report (default: &quot;\n&quot;).</dd><dt>report_term_depth = integer()</dt><dd>max depth of terms included in the reports. Use <code>infinity</code> for unlimited (default: 50)</dd></dl><p>Report printing is modified to align keys in a report to the right.</p>Additional template formatting atoms:<dl><dt>lev</dt><dd>prints &quot;[X]&quot; to the log to indicate the log level, where <code>X` is the first capitalized letter of the log level.&lt;/dd&gt; &lt;dt&gt;LEVEL&lt;/dt&gt;&lt;dd&gt;same as</code>level' but is printed in upper case.</dd><dt>modline</dt><dd>prints 'Module:Line' to the log.</dd><dt>regpid</dt><dd>prints:</dd><dl><dt><code>*</code></dt><dd>if the registered name of the caller's pid matches caller's module name.</dd><dt><code>RegisteredName</code></dt><dd>of the calling process</dd><dt><code>X.Y.Z</code></dt><dd>pid of the caller with leading <code>0.</code> stripped.</dd></dl><dt>regname</dt><dl><dd>prints <code>&lt;RegisteredName&gt;</code> of the process or its pid if the process is not registered</dd></dl></dl>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:config/0" translate="no">config/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:metakey/0" translate="no">metakey/0</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#t:template/0" translate="no">template/0</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#check_config/1" translate="no">check_config(Config)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#format/2" translate="no">format(LogEvent, Config)</a>
+
+        </div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:config/0">
+
+  <div class="detail-header">
+    <a href="#t:config/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">config/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/util_log_formatter.erl#L73" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> config() ::
+    #{chars_limit => pos_integer() | unlimited,
+      depth => pos_integer() | unlimited,
+      legacy_header => boolean(),
+      max_size => pos_integer() | unlimited,
+      report_cb => <a href="https://www.erlang.org/doc/man/logger.html#type-report_cb">logger:report_cb</a>(),
+      single_line => boolean(),
+      template => <a href="#t:template/0">template</a>(),
+      time_designator => byte(),
+      time_offset => integer() | [byte()] | none,
+      time_unit => atom(),
+      report_prefix => boolean(),
+      report_term_depth => integer()}.</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:metakey/0">
+
+  <div class="detail-header">
+    <a href="#t:metakey/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">metakey/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/util_log_formatter.erl#L89" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> metakey() :: atom() | [atom()].</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:template/0">
+
+  <div class="detail-header">
+    <a href="#t:template/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">template/0</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/util_log_formatter.erl#L88" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-type</span> template() :: [<a href="#t:metakey/0">metakey</a>() | {<a href="#t:metakey/0">metakey</a>(), <a href="#t:template/0">template</a>(), <a href="#t:template/0">template</a>()} | string()].</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="check_config/1">
+
+  <div class="detail-header">
+    <a href="#check_config/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">check_config(Config)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/util_log_formatter.erl#L656" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> check_config(Config) -> ok | {error, term()} when Config :: <a href="#t:config/0">config</a>().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="format/2">
+
+  <div class="detail-header">
+    <a href="#format/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">format(LogEvent, Config)</h1>
+
+      <a href="https://github.com/saleyn/util/blob/v1.1.5/src/util_log_formatter.erl#L97" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">-spec</span> format(LogEvent, Config) -> <a href="https://www.erlang.org/doc/man/unicode.html#type-chardata">unicode:chardata</a>()
+          when LogEvent :: <a href="https://www.erlang.org/doc/man/logger.html#type-log_event">logger:log_event</a>(), Config :: <a href="#t:config/0">config</a>().</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+                <a href="https://preview.hex.pm/preview/util/1.1.5/show/src/util_log_formatter.erl">(current file)</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
 </div>
 
-<h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format-2">format/2</a></h3>
-<div class="spec">
-<p><pre><code class="language-erlang">format(LogEvent, Config) -&gt; <a href="http://www.erlang.org/doc/man/stdlib/doc/unicode.html#type-chardata">unicode:chardata()</a></code></pre>
-<ul class="definitions"><li><pre><code class="language-erlang">LogEvent = <a href="http://www.erlang.org/doc/man/kernel/doc/logger.html#type-log_event">logger:log_event()</a></code></pre></li><li><pre><code class="language-erlang">Config = <a href="#type-config">config()</a></code></pre></li></ul></p>
-<p> </p>
-</div>
-<hr>
 
-</body>
+  </body>
 </html>

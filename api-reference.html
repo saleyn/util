@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.0">
+    <meta name="project" content="util v1.1.5">
+
+    <title>API Reference — util v1.1.5</title>
+    <link rel="stylesheet" href="dist/html-erlang-4XYKNH4U.css" />
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
+    <script src="dist/sidebar_items-0FECD598.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-XN2TSG4M.js"></script>
+
+
+  </head>
+  <body data-type="extras" class="page-extra">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+util
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v1.1.5
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+  <span>API Reference <small class="app-vsn">util v1.1.5</small></span>
+</h1>
+
+
+  <section class="details-list">
+    <h2 id="modules" class="section-heading">
+  <a href="#modules" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">modules</p>
+  </a>
+  Modules
+</h2>
+
+    <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="alias.html" translate="no">alias</a>
+
+  </div>
+
+    <div class="summary-synopsis">Creation of module aliases</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="base32.html" translate="no">base32</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="cipher.html" translate="no">cipher</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="csv.html" translate="no">csv</a>
+
+  </div>
+
+    <div class="summary-synopsis">CSV file parsing functions</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="decompiler.html" translate="no">decompiler</a>
+
+  </div>
+
+    <div class="summary-synopsis">Module and function decompiler</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="env.html" translate="no">env</a>
+
+  </div>
+
+    <div class="summary-synopsis">Environment utils</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="erlang_scan.html" translate="no">erlang_scan</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="file_log_reader.html" translate="no">file_log_reader</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Periodically read an append-only log file and parse newly added data.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="gen_leader.html" translate="no">gen_leader</a>
+
+  </div>
+
+    <div class="summary-synopsis">Leader election behavior.<p>This application implements a leader election behavior modeled after gen_server. This behavior intends to make it reasonably straightforward to implement a fully distributed server with master-slave semantics.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="gin.html" translate="no">gin</a>
+
+  </div>
+
+    <div class="summary-synopsis">Guard in</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="hex.html" translate="no">hex</a>
+
+  </div>
+
+    <div class="summary-synopsis">Hexadecimal conversion functions</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="io_lib_pretty_limited.html" translate="no">io_lib_pretty_limited</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="listx.html" translate="no">listx</a>
+
+  </div>
+
+    <div class="summary-synopsis">Miscelaneous list functions</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="osx.html" translate="no">osx</a>
+
+  </div>
+
+    <div class="summary-synopsis">OS supporting commands</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="pcap.html" translate="no">pcap</a>
+
+  </div>
+
+    <div class="summary-synopsis">PCAP file reader/writer.</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="pmap.html" translate="no">pmap</a>
+
+  </div>
+
+    <div class="summary-synopsis">Parallel map and multicall.</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="prof.html" translate="no">prof</a>
+
+  </div>
+
+    <div class="summary-synopsis">Profiling functions</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="restrict_remsh_mod.html" translate="no">restrict_remsh_mod</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Sample restricted remote shell module disabling <code>q/0</code> and <code>init:stop/{0,1}</code> commands. The shell introduces a replacement command to stop remote node: <code>remote:stop/1</code> equivalent to <code>init:stop/1</code>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="smerl.html" translate="no">smerl</a>
+
+  </div>
+
+    <div class="summary-synopsis">Simple Metaprogramming for Erlang</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="smtp.html" translate="no">smtp</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>SMTP mail client. This module can sent emails to one or more recipients, using primary/backup SMTP servers. Messages can contain attachments.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="sntp.html" translate="no">sntp</a>
+
+  </div>
+
+    <div class="summary-synopsis">Implements SNTP query logic. SNTP - Simple Network Time Protocol (RFC-2030).</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="ssh_sign.html" translate="no">ssh_sign</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="ssh_tunnel.html" translate="no">ssh_tunnel</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="stringx.html" translate="no">stringx</a>
+
+  </div>
+
+    <div class="summary-synopsis">Implements miscelaneous string functions</div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="sup_bridge.html" translate="no">sup_bridge</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="throttle.html" translate="no">throttle</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Throttle given rate over a number of seconds.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="trunc_io.html" translate="no">trunc_io</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Module to print out terms for logging. Limits by length rather than depth.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="user_default.html" translate="no">user_default</a>
+
+  </div>
+
+    <div class="summary-synopsis">This is an extension of the shell commands to do all the work! Either place this file in the path accessible to Erlang (via ERL_LIBS) or add this line to the ~/.erlang file: <code>code:load_abs(os:getenv(&quot;HOME&quot;) ++ &quot;/.erlang/user_default&quot;).</code></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="util_log_color_formatter.html" translate="no">util_log_color_formatter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Implementation of coloring handler for the Erlang's logger. See <a href="https://github.com/hauleth/logger_colorful" target="_top">https://github.com/hauleth/logger_colorful</a>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="util_log_formatter.html" translate="no">util_log_formatter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Log formatter Derived from //kernel/logger/logger_formatter</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="xmltree.html" translate="no">xmltree</a>
+
+  </div>
+
+    <div class="summary-synopsis">Parse XML into a hierarchical Erlang term<pre><code class="makeup erlang" translate="no"><span class="w">   </span><span class="c1">% Example xml:</span><span class="w">
+  
+    </span><span class="o">&lt;</span><span class="o">?</span><span class="ss">xml</span><span class="w"> </span><span class="ss">version</span><span class="o">=</span><span class="s">&quot;1.0&quot;</span><span class="w"> </span><span class="ss">encoding</span><span class="o">=</span><span class="s">&quot;UTF-8&quot;</span><span class="w"> </span><span class="o">?</span><span class="o">&gt;</span><span class="w">
+    </span><span class="o">&lt;</span><span class="ss">root</span><span class="w"> </span><span class="ss">id</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="o">&gt;</span><span class="w">
+      </span><span class="o">&lt;</span><span class="ss">ele</span><span class="w"> </span><span class="ss">id</span><span class="o">=</span><span class="s">&quot;2&quot;</span><span class="o">/</span><span class="o">&gt;</span><span class="w">
+      </span><span class="o">&lt;</span><span class="ss">ele</span><span class="w"> </span><span class="ss">id</span><span class="o">=</span><span class="s">&quot;3&quot;</span><span class="o">&gt;</span><span class="ss">vvv</span><span class="err">\</span><span class="ss">nxxx</span><span class="err">\</span><span class="ss">n</span><span class="o">&lt;</span><span class="o">/</span><span class="ss">ele</span><span class="o">&gt;</span><span class="w">
+    </span><span class="o">&lt;</span><span class="o">/</span><span class="ss">root</span><span class="o">&gt;</span><span class="w">
+  
+  
+   </span><span class="p">#</span><span class="w"> </span><span class="n">Usage</span><span class="w"> </span><span class="ss">example</span><span class="w">
+   </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">xmltree</span><span class="p">:</span><span class="nf">file</span><span class="p" data-group-id="5321818606-1">(</span><span class="n">L</span><span class="p" data-group-id="5321818606-1">)</span><span class="p">.</span><span class="w">
+   </span><span class="p" data-group-id="5321818606-2">{</span><span class="ss">root</span><span class="p">,</span><span class="p" data-group-id="5321818606-3">[</span><span class="p" data-group-id="5321818606-4">{</span><span class="ss">id</span><span class="p">,</span><span class="p">&lt;&lt;</span><span class="s">&quot;1&quot;</span><span class="p">&gt;&gt;</span><span class="p" data-group-id="5321818606-4">}</span><span class="p" data-group-id="5321818606-3">]</span><span class="p">,</span><span class="w">
+        </span><span class="p" data-group-id="5321818606-5">[</span><span class="p" data-group-id="5321818606-6">{</span><span class="ss">ele</span><span class="p">,</span><span class="p" data-group-id="5321818606-7">[</span><span class="p" data-group-id="5321818606-8">{</span><span class="ss">id</span><span class="p">,</span><span class="p">&lt;&lt;</span><span class="s">&quot;2&quot;</span><span class="p">&gt;&gt;</span><span class="p" data-group-id="5321818606-8">}</span><span class="p" data-group-id="5321818606-7">]</span><span class="p">,</span><span class="p" data-group-id="5321818606-9">[</span><span class="p" data-group-id="5321818606-9">]</span><span class="p" data-group-id="5321818606-6">}</span><span class="p">,</span><span class="w">
+         </span><span class="p" data-group-id="5321818606-10">{</span><span class="ss">ele</span><span class="p">,</span><span class="p" data-group-id="5321818606-11">[</span><span class="p" data-group-id="5321818606-12">{</span><span class="ss">id</span><span class="p">,</span><span class="p">&lt;&lt;</span><span class="s">&quot;3&quot;</span><span class="p">&gt;&gt;</span><span class="p" data-group-id="5321818606-12">}</span><span class="p" data-group-id="5321818606-11">]</span><span class="p">,</span><span class="p">&lt;&lt;</span><span class="s">&quot;vvv\nxxx\n&quot;</span><span class="p">&gt;&gt;</span><span class="p" data-group-id="5321818606-10">}</span><span class="p" data-group-id="5321818606-5">]</span><span class="p" data-group-id="5321818606-2">}</span><span class="w">
+  
+   </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Rules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5321818606-13">{</span><span class="ss">root</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5321818606-14">[</span><span class="p" data-group-id="5321818606-15">{</span><span class="ss">id</span><span class="p">,</span><span class="ss">integer</span><span class="p" data-group-id="5321818606-15">}</span><span class="p" data-group-id="5321818606-14">]</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5321818606-16">[</span><span class="p" data-group-id="5321818606-17">{</span><span class="ss">ele</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5321818606-18">[</span><span class="p" data-group-id="5321818606-19">{</span><span class="ss">id</span><span class="p">,</span><span class="ss">integer</span><span class="p" data-group-id="5321818606-19">}</span><span class="p" data-group-id="5321818606-18">]</span><span class="p">,</span><span class="w"> </span><span class="ss">string</span><span class="p" data-group-id="5321818606-17">}</span><span class="p" data-group-id="5321818606-16">]</span><span class="p" data-group-id="5321818606-13">}</span><span class="p">,</span><span class="w">
+   </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">xmltree</span><span class="p">:</span><span class="nf">string</span><span class="p" data-group-id="5321818606-20">(</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">Rules</span><span class="p" data-group-id="5321818606-20">)</span><span class="p">.</span><span class="w">
+   </span><span class="p" data-group-id="5321818606-21">{</span><span class="ss">root</span><span class="p">,</span><span class="p" data-group-id="5321818606-22">[</span><span class="p" data-group-id="5321818606-23">{</span><span class="ss">id</span><span class="p">,</span><span class="mi">1</span><span class="p" data-group-id="5321818606-23">}</span><span class="p" data-group-id="5321818606-22">]</span><span class="p">,</span><span class="w">
+      </span><span class="p" data-group-id="5321818606-24">[</span><span class="p" data-group-id="5321818606-25">{</span><span class="ss">ele</span><span class="p">,</span><span class="p" data-group-id="5321818606-26">[</span><span class="p" data-group-id="5321818606-27">{</span><span class="ss">id</span><span class="p">,</span><span class="mi">2</span><span class="p" data-group-id="5321818606-27">}</span><span class="p" data-group-id="5321818606-26">]</span><span class="p">,</span><span class="p" data-group-id="5321818606-28">[</span><span class="p" data-group-id="5321818606-28">]</span><span class="p" data-group-id="5321818606-25">}</span><span class="p">,</span><span class="p" data-group-id="5321818606-29">{</span><span class="ss">ele</span><span class="p">,</span><span class="p" data-group-id="5321818606-30">[</span><span class="p" data-group-id="5321818606-31">{</span><span class="ss">id</span><span class="p">,</span><span class="mi">3</span><span class="p" data-group-id="5321818606-31">}</span><span class="p" data-group-id="5321818606-30">]</span><span class="p">,</span><span class="s">&quot;vvv\nxxx\n&quot;</span><span class="p" data-group-id="5321818606-29">}</span><span class="p" data-group-id="5321818606-24">]</span><span class="p" data-group-id="5321818606-21">}</span></code></pre></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="xref_test.html" translate="no">xref_test</a>
+
+  </div>
+
+</div>
+
+    </div>
+  </section>
+
+
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="readme.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Overview
+        </span>
+      </a>
+
+  </div>
+</div>
+      <footer class="footer">
+
+          <p>
+            On Hex.pm:
+
+            <span class="line">
+              <a href="https://hex.pm/packages/util/1.1.5" class="line footer-hex-package">Package</a>
+              <a href="https://preview.hex.pm/preview/util/1.1.5" class="line">Preview</a>
+
+            </span>
+
+            <button class="a-main line footer-button display-quick-switch">
+              Search
+            </button>
+          </p>
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+
+            <a href="https://erlang.org" title="Erlang" target="_blank" translate="no">Erlang programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>
