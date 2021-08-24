@@ -48,7 +48,7 @@ BEGIN {
 {
   # copyright
   gsub(/Copyright \+\([cC]\)/, "@copyright")
-  gsub(/\([Cc]\)/, "\\&copy;")
+  gsub(/\([Cc]\)/, "@copyright")
   gsub(/\([rR]\)/, "\\&reg;")
   gsub(/@/,     "\\&commat;")
   gsub(/\(tm\)/,"\\&trade;")
