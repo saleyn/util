@@ -5,6 +5,13 @@
 <title>Module smerl</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -57,50 +64,50 @@
 <h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-args">args()</a></h3>
-<p><pre>args() = term() | [term()]</pre></p>
+<p><pre><code class="language-erlang">args() = term() | [term()]</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-error_t">error_t()</a></h3>
-<p><pre>error_t(Error) = ok | {error, Error}</pre></p>
+<p><pre><code class="language-erlang">error_t(Error) = ok | {error, Error}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-export">export()</a></h3>
-<p><pre>export() = {Function :: atom(), Arity :: arity()}</pre></p>
+<p><pre><code class="language-erlang">export() = {Function :: atom(), Arity :: arity()}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-exports">exports()</a></h3>
-<p><pre>exports() = [<a href="#type-export">export()</a>]</pre></p>
+<p><pre><code class="language-erlang">exports() = [<a href="#type-export">export()</a>]</code></pre></p>
 <p>  A list of <code><a href="#type-export">export()</a></code>s.</p>
 
 <h3 class="typedecl"><a name="type-func_form">func_form()</a></h3>
-<p><pre>func_form() = <a href="http://www.erlang.org/doc/man/stdlib/doc/erl_parse.html#type-abstract_form">erl_parse:abstract_form()</a></pre></p>
+<p><pre><code class="language-erlang">func_form() = <a href="http://www.erlang.org/doc/man/stdlib/doc/erl_parse.html#type-abstract_form">erl_parse:abstract_form()</a></code></pre></p>
 <p>  The abstract form for the function, as described
   in the ERTS Users' manual.</p>
 
 <h3 class="typedecl"><a name="type-func_forms">func_forms()</a></h3>
-<p><pre>func_forms() = [<a href="#type-func_form">func_form()</a>]</pre></p>
+<p><pre><code class="language-erlang">func_forms() = [<a href="#type-func_form">func_form()</a>]</code></pre></p>
 <p>  A list of <code><a href="#type-func_form">func_form()</a></code>s.</p>
 
 <h3 class="typedecl"><a name="type-meta_mod">meta_mod()</a></h3>
-<p><pre>meta_mod() = 
+<p><pre><code class="language-erlang">meta_mod() = 
     #meta_mod{module = module(),
               file = undefined | <a href="http://www.erlang.org/doc/man/kernel/doc/file.html#type-filename">file:filename()</a>,
               exports = <a href="#type-exports">exports()</a>,
               forms = <a href="#type-func_forms">func_forms()</a>,
-              export_all = boolean()}</pre></p>
+              export_all = boolean()}</code></pre></p>
 <p>  A data structure holding the abstract representation
   for a module.</p>
 
 <h3 class="typedecl"><a name="type-ok_t">ok_t()</a></h3>
-<p><pre>ok_t(Value) = {ok, Value} | error</pre></p>
+<p><pre><code class="language-erlang">ok_t(Value) = {ok, Value} | error</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-result">result()</a></h3>
-<p><pre>result(Value, Error) = {ok, Value} | {error, Error}</pre></p>
+<p><pre><code class="language-erlang">result(Value, Error) = {ok, Value} | {error, Error}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-result">result()</a></h3>
-<p><pre>result(Value) = <a href="#type-result">result</a>(Value, term())</pre></p>
+<p><pre><code class="language-erlang">result(Value) = <a href="#type-result">result</a>(Value, term())</code></pre></p>
 
 
 <h2><a href="#" name="index">Function Index</a></h2>
@@ -168,31 +175,31 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="add_func-2">add_func/2</a></h3>
 <div class="spec">
-<p><pre>add_func(MetaMod, Form) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, parse_error)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Form = <a href="#type-func_form">func_form()</a> | string()</pre></li></ul></p>
+<p><pre><code class="language-erlang">add_func(MetaMod, Form) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, parse_error)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Form = <a href="#type-func_form">func_form()</a> | string()</code></pre></li></ul></p>
 <p> </p>
 </div><p>Equivalent to <a href="#add_func-3"><tt>add_func(MetaMod, Form, true)</tt></a>.</p>
 <p>Add a new exported function to <code>MetaMod</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="add_func-3">add_func/3</a></h3>
 <div class="spec">
-<p><pre>add_func(MetaMod, Func, Export) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, parse_error)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Func = <a href="#type-func_form">func_form()</a> | string()</pre></li><li><pre>Export = boolean()</pre></li></ul></p>
+<p><pre><code class="language-erlang">add_func(MetaMod, Func, Export) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, parse_error)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Func = <a href="#type-func_form">func_form()</a> | string()</code></pre></li><li><pre><code class="language-erlang">Export = boolean()</code></pre></li></ul></p>
 <p> </p>
 </div><p>Add <code>Function</code> to <code>MetaMod</code> and return the new <code><a href="#type-meta_mod">meta_mod()</a></code>. If
   <code>Export</code> is <code>true</code>, add <code>Function</code> to <code>MetaMod</code>'s <code>exports</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="compile-1">compile/1</a></h3>
 <div class="spec">
-<p><pre>compile(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; <a href="#type-error_t">error_t</a>(term())</pre></p>
+<p><pre><code class="language-erlang">compile(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; <a href="#type-error_t">error_t</a>(term())</code></pre></p>
 <p> </p>
 </div><p>Equivalent to <a href="#compile-2"><tt>compile(MetaMod, [])</tt></a>.</p>
 <p>Compile <code>MetaMod</code> and load the resulting BEAM into the emulator.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="compile-2">compile/2</a></h3>
 <div class="spec">
-<p><pre>compile(MetaMod, Options) -&gt; <a href="#type-error_t">error_t</a>(term())</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Options = [<a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-property">proplists:property()</a>]</pre></li></ul></p>
+<p><pre><code class="language-erlang">compile(MetaMod, Options) -&gt; <a href="#type-error_t">error_t</a>(term())</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Options = [<a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-property">proplists:property()</a>]</code></pre></li></ul></p>
 <p> </p>
 </div><p>Equivalent to <a href="#compile-2"><tt>compile(MetaMod,
         [report_errprs, report_warnings, return_errors])</tt></a>.</p>
@@ -203,7 +210,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry-2">curry/2</a></h3>
 <div class="spec">
-<p><pre>curry(Form :: <a href="#type-func_form">func_form()</a>, Args :: <a href="#type-args">args()</a>) -&gt; <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</pre></p>
+<p><pre><code class="language-erlang">curry(Form :: <a href="#type-func_form">func_form()</a>, Args :: <a href="#type-args">args()</a>) -&gt; <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</code></pre></p>
 <p> </p>
 </div><p>Get the curried form for <code>Form</code> with <code>Args</code>.
   Here, "currying" involves replacing one or more of the function's leading
@@ -211,77 +218,77 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry-4">curry/4</a></h3>
 <div class="spec">
-<p><pre>curry(Module, Function, Arity, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</pre>
-<ul class="definitions"><li><pre>Module = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">curry(Module, Function, Arity, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">Module = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Curry <code>Module</code>:<code>Function</code>/<code>Arity</code> with the given <code>Args</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry-5">curry/5</a></h3>
 <div class="spec">
-<p><pre>curry(Module, Function, Arity, Args, NewName) -&gt;
-         <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</pre>
-<ul class="definitions"><li><pre>Module = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li><li><pre>NewName = atom()</pre></li></ul></p>
+<p><pre><code class="language-erlang">curry(Module, Function, Arity, Args, NewName) -&gt;
+         <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">Module = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li><li><pre><code class="language-erlang">NewName = atom()</code></pre></li></ul></p>
 <p> </p>
 </div><p>Curry <code>Module</code>:<code>Function</code>/<code>Arity</code>with the given <code>Args</code>,
   renaming it to <code>NewName</code> and return the renamed form.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry_add-3">curry_add/3</a></h3>
 <div class="spec">
-<p><pre>curry_add(MetaMod, Form, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Form = <a href="#type-func_form">func_form()</a></pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">curry_add(MetaMod, Form, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Form = <a href="#type-func_form">func_form()</a></code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Add <code>Form</code> curried with <code>Args</code> to <code>MetaMod</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry_add-4">curry_add/4</a></h3>
 <div class="spec">
-<p><pre>curry_add(MetaMod, Function, Arity, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">curry_add(MetaMod, Function, Arity, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Add <code>Function</code>/<code>Arity</code> curried with <code>Args</code> to <code>MetaMod</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry_add-5">curry_add/5</a></h3>
 <div class="spec">
-<p><pre>curry_add(MetaMod, Function, Arity, Args, NewName) -&gt; Result</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li><li><pre>NewName = atom()</pre></li><li><pre>Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, parse_error)</pre></li></ul></p>
+<p><pre><code class="language-erlang">curry_add(MetaMod, Function, Arity, Args, NewName) -&gt; Result</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li><li><pre><code class="language-erlang">NewName = atom()</code></pre></li><li><pre><code class="language-erlang">Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, parse_error)</code></pre></li></ul></p>
 <p> </p>
 </div><p>Curry <code>MetaMod</code>:<code>Function</code>/<code>Arity</code> and add it to <code>MetaMod</code> as <code>NewName</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry_add-6">curry_add/6</a></h3>
 <div class="spec">
-<p><pre>curry_add(MetaMod, Module, Function, Arity, Args, NewName) -&gt;
-             Result</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Module = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li><li><pre>NewName = atom()</pre></li><li><pre>Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre></li></ul></p>
+<p><pre><code class="language-erlang">curry_add(MetaMod, Module, Function, Arity, Args, NewName) -&gt;
+             Result</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Module = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li><li><pre><code class="language-erlang">NewName = atom()</code></pre></li><li><pre><code class="language-erlang">Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre></li></ul></p>
 <p> </p>
 </div><p>Curry <code>Module</code>:<code>Function</code>/<code>Arity</code> and add it to <code>MetaMod</code> as <code>NewName</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry_replace-3">curry_replace/3</a></h3>
 <div class="spec">
-<p><pre>curry_replace(MetaMod, Form, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Form = <a href="#type-func_form">func_form()</a></pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">curry_replace(MetaMod, Form, Args) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Form = <a href="#type-func_form">func_form()</a></code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Replace the function represented by <code>Form</code> in <code>MetaMod</code>
   with its curried form.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="curry_replace-4">curry_replace/4</a></h3>
 <div class="spec">
-<p><pre>curry_replace(MetaMod, Function, Arity, Args) -&gt;
-                 <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Args = <a href="#type-args">args()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">curry_replace(MetaMod, Function, Arity, Args) -&gt;
+                 <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Args = <a href="#type-args">args()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Replace <code>Function</code>/<code>Arity</code> in <code>MetaMod</code> with its curried form.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="embed_all-2">embed_all/2</a></h3>
 <div class="spec">
-<p><pre>embed_all(MetaMod, Values) -&gt; NewMod</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Values = [{Name :: atom(), Value :: term()}]</pre></li><li><pre>NewMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">embed_all(MetaMod, Values) -&gt; NewMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Values = [{Name :: atom(), Value :: term()}]</code></pre></li><li><pre><code class="language-erlang">NewMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Apply <a docgen-rel="seemfa" docgen-href="#embed_args/2" href="#embed_args-2"><code>embed_args/2</code></a> with <code>Values</code> to all forms in <code>MetaMod</code>.
   <code>exports</code> for functions whose arities change are preserved.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="embed_args-2">embed_args/2</a></h3>
 <div class="spec">
-<p><pre>embed_args(Form, Vals) -&gt; NewForm</pre>
-<ul class="definitions"><li><pre>Form = <a href="#type-func_form">func_form()</a></pre></li><li><pre>Vals = [{Name :: atom(), Value :: term()}]</pre></li><li><pre>NewForm = <a href="#type-func_form">func_form()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">embed_args(Form, Vals) -&gt; NewForm</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">Form = <a href="#type-func_form">func_form()</a></code></pre></li><li><pre><code class="language-erlang">Vals = [{Name :: atom(), Value :: term()}]</code></pre></li><li><pre><code class="language-erlang">NewForm = <a href="#type-func_form">func_form()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Replace the arguments of the function represented by <code>Form</code>,
   where the argument's <code>Name</code> matches an element from <code>Vals</code>
@@ -289,16 +296,16 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="embed_args-4">embed_args/4</a></h3>
 <div class="spec">
-<p><pre>embed_args(MetaMod, Function, Arity, Values) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Values = <a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-proplist">proplists:proplist()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">embed_args(MetaMod, Function, Arity, Values) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Values = <a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-proplist">proplists:proplist()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Equivalent to <a href="#embed_args-5"><tt>embed_args(MetaMod, Name, Arity, Values, Name)</tt></a>.</p>
 
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="embed_args-5">embed_args/5</a></h3>
 <div class="spec">
-<p><pre>embed_args(MetaMod, Function, Arity, Values, NewName) -&gt; Result</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>Values = <a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-proplist">proplists:proplist()</a></pre></li><li><pre>NewName = atom()</pre></li><li><pre>Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre></li></ul></p>
+<p><pre><code class="language-erlang">embed_args(MetaMod, Function, Arity, Values, NewName) -&gt; Result</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">Values = <a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-proplist">proplists:proplist()</a></code></pre></li><li><pre><code class="language-erlang">NewName = atom()</code></pre></li><li><pre><code class="language-erlang">Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre></li></ul></p>
 <p> </p>
 </div><p>Apply <a docgen-rel="seemfa" docgen-href="#embed_args/2" href="#embed_args-2"><code>embed_args/2</code></a> to <code>MetaMod</code>:<code>Function</code>/<code>Arity</code> and
   add the resulting function to <code>MetMod</code>, after renaming it to <code>NewName</code>.</p>
@@ -306,8 +313,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="extend-2">extend/2</a></h3>
 <div class="spec">
-<p><pre>extend(Parent, Child) -&gt; NewChildMod</pre>
-<ul class="definitions"><li><pre>Parent = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Child = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>NewChildMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">extend(Parent, Child) -&gt; NewChildMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">Parent = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Child = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">NewChildMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Add aliases for <code>Parent</code>'s functions missing from <code>Child</code> to <code>Child</code>.
   The new functions in <code>Child</code> are shallow, i.e. they have the name and arity
@@ -316,8 +323,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="extend-3">extend/3</a></h3>
 <div class="spec">
-<p><pre>extend(Parent, Child, ArityDiff) -&gt; NewChildMod</pre>
-<ul class="definitions"><li><pre>Parent = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Child = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>ArityDiff = non_neg_integer()</pre></li><li><pre>NewChildMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">extend(Parent, Child, ArityDiff) -&gt; NewChildMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">Parent = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Child = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">ArityDiff = non_neg_integer()</code></pre></li><li><pre><code class="language-erlang">NewChildMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Similar to <a docgen-rel="seemfa" docgen-href="#extend/2" href="#extend-2"><code>extend/2</code></a>, with the addition of <code>ArityDiff</code>, which
   indicates the difference in arities <em>Smerl</em> should use when figuring
@@ -326,8 +333,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="extend-4">extend/4</a></h3>
 <div class="spec">
-<p><pre>extend(Parent, Child, ArityDiff, Options) -&gt; NewChildMod</pre>
-<ul class="definitions"><li><pre>Parent = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Child = module() | <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>ArityDiff = non_neg_integer()</pre></li><li><pre>Options = [<a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-property">proplists:property()</a>]</pre></li><li><pre>NewChildMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">extend(Parent, Child, ArityDiff, Options) -&gt; NewChildMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">Parent = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Child = module() | <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">ArityDiff = non_neg_integer()</code></pre></li><li><pre><code class="language-erlang">Options = [<a href="http://www.erlang.org/doc/man/stdlib/doc/proplists.html#type-property">proplists:property()</a>]</code></pre></li><li><pre><code class="language-erlang">NewChildMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div>
 
@@ -347,8 +354,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="for_file-3">for_file/3</a></h3>
 <div class="spec">
-<p><pre>for_file(SrcFilePath, IncludePaths, Macros) -&gt; Result</pre>
-<ul class="definitions"><li><pre>SrcFilePath = <a href="http://www.erlang.org/doc/man/kernel/doc/file.html#type-filename">file:filename()</a></pre></li><li><pre>IncludePaths = [<a href="http://www.erlang.org/doc/man/kernel/doc/file.html#type-filename">file:filename()</a>]</pre></li><li><pre>Macros = [{module(), atom()}]</pre></li><li><pre>Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, invalid_module)</pre></li></ul></p>
+<p><pre><code class="language-erlang">for_file(SrcFilePath, IncludePaths, Macros) -&gt; Result</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">SrcFilePath = <a href="http://www.erlang.org/doc/man/kernel/doc/file.html#type-filename">file:filename()</a></code></pre></li><li><pre><code class="language-erlang">IncludePaths = [<a href="http://www.erlang.org/doc/man/kernel/doc/file.html#type-filename">file:filename()</a>]</code></pre></li><li><pre><code class="language-erlang">Macros = [{module(), atom()}]</code></pre></li><li><pre><code class="language-erlang">Result = <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>, invalid_module)</code></pre></li></ul></p>
 <p> </p>
 </div><p>Create a meta_mod for a module from its source file.</p>
 
@@ -368,8 +375,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="for_module-3">for_module/3</a></h3>
 <div class="spec">
-<p><pre>for_module(ModuleName, IncludePaths, Macros) -&gt; <a href="#type-result">result</a>(meta_mod)</pre>
-<ul class="definitions"><li><pre>ModuleName = atom() | string()</pre></li><li><pre>IncludePaths = [string()]</pre></li><li><pre>Macros = [{atom(), term()}]</pre></li></ul></p>
+<p><pre><code class="language-erlang">for_module(ModuleName, IncludePaths, Macros) -&gt; <a href="#type-result">result</a>(meta_mod)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">ModuleName = atom() | string()</code></pre></li><li><pre><code class="language-erlang">IncludePaths = [string()]</code></pre></li><li><pre><code class="language-erlang">Macros = [{atom(), term()}]</code></pre></li></ul></p>
 <p> </p>
 </div><p><p>Create a meta_mod tuple for an existing module. If ModuleName is a
   string, it is interpreted as a file name (this is the same as calling
@@ -383,67 +390,67 @@ an error.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="get_attribute-2">get_attribute/2</a></h3>
 <div class="spec">
-<p><pre>get_attribute(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>, Key :: atom()) -&gt;
-                 <a href="#type-result">result</a>(term())</pre></p>
+<p><pre><code class="language-erlang">get_attribute(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>, Key :: atom()) -&gt;
+                 <a href="#type-result">result</a>(term())</code></pre></p>
 <p> </p>
 </div><p>Get the value of <code>MetaMod</code>'s <code>Key</code> attribute.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="get_export_all-1">get_export_all/1</a></h3>
 <div class="spec">
-<p><pre>get_export_all(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; boolean()</pre></p>
+<p><pre><code class="language-erlang">get_export_all(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; boolean()</code></pre></p>
 <p> </p>
 </div><p>Get the <code>export_all</code> value for <code>MetaMod</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="get_exports-1">get_exports/1</a></h3>
 <div class="spec">
-<p><pre>get_exports(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; <a href="#type-exports">exports()</a></pre></p>
+<p><pre><code class="language-erlang">get_exports(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; <a href="#type-exports">exports()</a></code></pre></p>
 <p> </p>
 </div><p>Return the list of exports in the meta_mod.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="get_forms-1">get_forms/1</a></h3>
 <div class="spec">
-<p><pre>get_forms(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; <a href="#type-func_forms">func_forms()</a></pre></p>
+<p><pre><code class="language-erlang">get_forms(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; <a href="#type-func_forms">func_forms()</a></code></pre></p>
 <p> </p>
 </div><p>Return the list of function forms in the meta_mod.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="get_func-3">get_func/3</a></h3>
 <div class="spec">
-<p><pre>get_func(MetaMod, Function, Arity) -&gt; <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a> | module()</pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li></ul></p>
+<p><pre><code class="language-erlang">get_func(MetaMod, Function, Arity) -&gt; <a href="#type-result">result</a>(<a href="#type-func_form">func_form()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a> | module()</code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li></ul></p>
 <p> </p>
 </div><p>Attempt to get the <code><a href="#type-func_form">func_form()</a></code> for <code>MetaMod</code>:<code>Function</code>/<code>Arity</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="get_module-1">get_module/1</a></h3>
 <div class="spec">
-<p><pre>get_module(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; module()</pre></p>
+<p><pre><code class="language-erlang">get_module(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; module()</code></pre></p>
 <p> </p>
 </div><p>Return the module name for the meta_mod.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="has_func-3">has_func/3</a></h3>
 <div class="spec">
-<p><pre>has_func(MetaMod, Function, Arity) -&gt; boolean()</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li></ul></p>
+<p><pre><code class="language-erlang">has_func(MetaMod, Function, Arity) -&gt; boolean()</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li></ul></p>
 <p> </p>
 </div><p>Check whether <code>MetaMod</code> has a function <code>Function</code>/<code>Arity</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="new-1">new/1</a></h3>
 <div class="spec">
-<p><pre>new(Module :: module()) -&gt; <a href="#type-meta_mod">meta_mod()</a></pre></p>
+<p><pre><code class="language-erlang">new(Module :: module()) -&gt; <a href="#type-meta_mod">meta_mod()</a></code></pre></p>
 <p> </p>
 </div><p>Create a new meta_mod for a module with the given name.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="remove_export-3">remove_export/3</a></h3>
 <div class="spec">
-<p><pre>remove_export(MetaMod, Function, Arity) -&gt; NewMod</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>NewMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">remove_export(MetaMod, Function, Arity) -&gt; NewMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">NewMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Remove an export <code>{Function, Arity}</code>
   from the list of <code>exports</code> in <code>MetaMod</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="remove_func-3">remove_func/3</a></h3>
 <div class="spec">
-<p><pre>remove_func(MetaMod, Function, Arity) -&gt; NewMod</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = atom()</pre></li><li><pre>Arity = arity()</pre></li><li><pre>NewMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">remove_func(MetaMod, Function, Arity) -&gt; NewMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = atom()</code></pre></li><li><pre><code class="language-erlang">Arity = arity()</code></pre></li><li><pre><code class="language-erlang">NewMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Try to remove <code>Function</code> from <code>MetaMod</code>.
   If the function exists, return the new <code><a href="#type-meta_mod">meta_mod()</a></code>.
@@ -451,14 +458,14 @@ an error.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="rename-2">rename/2</a></h3>
 <div class="spec">
-<p><pre>rename(Form :: <a href="#type-func_form">func_form()</a>, NewName :: atom()) -&gt; <a href="#type-func_form">func_form()</a></pre></p>
+<p><pre><code class="language-erlang">rename(Form :: <a href="#type-func_form">func_form()</a>, NewName :: atom()) -&gt; <a href="#type-func_form">func_form()</a></code></pre></p>
 <p> </p>
 </div><p>Change the name of the function represented by <code>Form</code> to <code>NewName</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="replace_func-2">replace_func/2</a></h3>
 <div class="spec">
-<p><pre>replace_func(MetaMod, Function) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Function = string() | <a href="#type-func_form">func_form()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">replace_func(MetaMod, Function) -&gt; <a href="#type-result">result</a>(<a href="#type-meta_mod">meta_mod()</a>)</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Function = string() | <a href="#type-func_form">func_form()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Replace an existing function with a new one. If a matching function
   doesn't exist, add <code>Function</code> to <code>MetaMod</code>. This is tantamount to calling
@@ -466,42 +473,42 @@ an error.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="set_export_all-2">set_export_all/2</a></h3>
 <div class="spec">
-<p><pre>set_export_all(MetaMod, Value) -&gt; NewMod</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Value = boolean()</pre></li><li><pre>NewMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">set_export_all(MetaMod, Value) -&gt; NewMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Value = boolean()</code></pre></li><li><pre><code class="language-erlang">NewMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Set the <code>export_all</code> value for <code>MetaMod</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="set_exports-2">set_exports/2</a></h3>
 <div class="spec">
-<p><pre>set_exports(MetaMod, Exports) -&gt; NewMod</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Exports = <a href="#type-exports">exports()</a></pre></li><li><pre>NewMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">set_exports(MetaMod, Exports) -&gt; NewMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Exports = <a href="#type-exports">exports()</a></code></pre></li><li><pre><code class="language-erlang">NewMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Set the <code>MetaMod</code>'s export list to <code>Exports</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="set_forms-2">set_forms/2</a></h3>
 <div class="spec">
-<p><pre>set_forms(MetaMod, Forms) -&gt; NewMod</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Forms = <a href="#type-func_forms">func_forms()</a></pre></li><li><pre>NewMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">set_forms(MetaMod, Forms) -&gt; NewMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Forms = <a href="#type-func_forms">func_forms()</a></code></pre></li><li><pre><code class="language-erlang">NewMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="set_module-2">set_module/2</a></h3>
 <div class="spec">
-<p><pre>set_module(MetaMod, NewName) -&gt; NewMod</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>NewName = module()</pre></li><li><pre>NewMod = <a href="#type-meta_mod">meta_mod()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">set_module(MetaMod, NewName) -&gt; NewMod</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">NewName = module()</code></pre></li><li><pre><code class="language-erlang">NewMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Set the meta_mod's module name.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="to_src-1">to_src/1</a></h3>
 <div class="spec">
-<p><pre>to_src(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; Source :: string()</pre></p>
+<p><pre><code class="language-erlang">to_src(MetaMod :: <a href="#type-meta_mod">meta_mod()</a>) -&gt; Source :: string()</code></pre></p>
 <p> </p>
 </div><p>Return the pretty-printed source code for <code>MetaMod</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="to_src-2">to_src/2</a></h3>
 <div class="spec">
-<p><pre>to_src(MetaMod, Filename) -&gt; <a href="#type-error_t">error_t</a>(term())</pre>
-<ul class="definitions"><li><pre>MetaMod = <a href="#type-meta_mod">meta_mod()</a></pre></li><li><pre>Filename = <a href="http://www.erlang.org/doc/man/kernel/doc/file.html#type-filename">file:filename()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">to_src(MetaMod, Filename) -&gt; <a href="#type-error_t">error_t</a>(term())</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">MetaMod = <a href="#type-meta_mod">meta_mod()</a></code></pre></li><li><pre><code class="language-erlang">Filename = <a href="http://www.erlang.org/doc/man/kernel/doc/file.html#type-filename">file:filename()</a></code></pre></li></ul></p>
 <p> </p>
 </div><p>Equivalent to <a href="file.html#write_file-2"><tt>file:write_file(Filename, to_src(MetaMod))</tt></a>.</p>
 

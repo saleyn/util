@@ -5,6 +5,13 @@
 <title>Module smtp</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -18,7 +25,7 @@
 recipients, using primary/backup SMTP servers.  Messages can        
 contain attachments.</p>
   
-   <pre>   Example:
+   <pre><code class="language-erlang">   Example:
        % Send a message to two recipients with a file attachment using
        % SSL protocol at mail server "mail.bevemyr.com":
        smtp:send(ssl, "Alex &lt;jb@bevemyr.com&gt;",
@@ -40,16 +47,16 @@ contain attachments.</p>
        smtp:send(tcp, "jb@bevemyr.com",
                  ["katrin@bevemyr.com","jb@bevemyr.com"],
                  "Test Subject", "My Message",
-                 [{"file1.txt","text/plain","Attachment past as list"}]).</pre>
+                 [{"file1.txt","text/plain","Attachment past as list"}]).</code></pre>
   
 <h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-proto">proto()</a></h3>
-<p><pre>proto() = tcp | ssl</pre></p>
+<p><pre><code class="language-erlang">proto() = tcp | ssl</code></pre></p>
 <p>  Protocol type.</p>
 
 <h3 class="typedecl"><a name="type-smtp_options">smtp_options()</a></h3>
-<p><pre>smtp_options() = 
+<p><pre><code class="language-erlang">smtp_options() = 
     [{server, Server :: string()} |
      {relay, Relay :: string()} |
      {port, Port :: integer()} |
@@ -66,7 +73,7 @@ contain attachments.</p>
            {Filename :: string(), ContentType :: string()} |
            {Filename :: string(),
             ContentType :: string(),
-            Data :: list()}]}]</pre></p>
+            Data :: list()}]}]</code></pre></p>
 <p>  SNMP Options
       <ul>
        <li>Server - server to connect to (no MX lookup)</li>
@@ -91,18 +98,18 @@ contain attachments.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="domain-0">domain/0</a></h3>
 <div class="spec">
-<p><pre>domain() -&gt; binary()</pre></p>
+<p><pre><code class="language-erlang">domain() -&gt; binary()</code></pre></p>
 <p> </p>
 </div><p>Get domain that this host belongs to.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="send-5">send/5</a></h3>
 <div class="spec">
-<p><pre>send(Proto :: <a href="#type-proto">proto()</a>,
+<p><pre><code class="language-erlang">send(Proto :: <a href="#type-proto">proto()</a>,
      From :: string() | binary(),
      To :: string() | binary(),
      Subj :: string() | binary(),
      Msg :: string() | binary()) -&gt;
-        ok</pre></p>
+        ok</code></pre></p>
 <p> </p>
 </div><p>Send a message to a list of <code>To</code> receipients using <code>localhost</code>.
        Error is thrown if unable to send a message.
@@ -110,13 +117,13 @@ contain attachments.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="send-6">send/6</a></h3>
 <div class="spec">
-<p><pre>send(Proto :: <a href="#type-proto">proto()</a>,
+<p><pre><code class="language-erlang">send(Proto :: <a href="#type-proto">proto()</a>,
      From :: string() | binary(),
      To :: string() | binary(),
      Subj :: string() | binary(),
      Msg :: string() | binary(),
      Opts :: <a href="#type-smtp_options">smtp_options()</a>) -&gt;
-        ok</pre></p>
+        ok</code></pre></p>
 <p> </p>
 </div><p>Send a message to a list of recipients by connecting to an SMTP
        server Server.  The message can contain attachments in the

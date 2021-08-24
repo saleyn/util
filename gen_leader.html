@@ -5,6 +5,13 @@
 <title>Module gen_leader</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -52,62 +59,62 @@
 <h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-bcast_type">bcast_type()</a></h3>
-<p><pre>bcast_type() = all | sender</pre></p>
+<p><pre><code class="language-erlang">bcast_type() = all | sender</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-caller_ref">caller_ref()</a></h3>
-<p><pre>caller_ref() = {pid(), reference()}</pre></p>
+<p><pre><code class="language-erlang">caller_ref() = {pid(), reference()}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-elid">elid()</a></h3>
-<p><pre>elid() = {<a href="#type-priority">priority()</a>, <a href="#type-incarn">incarn()</a>, <a href="#type-lclock">lclock()</a>}</pre></p>
+<p><pre><code class="language-erlang">elid() = {<a href="#type-priority">priority()</a>, <a href="#type-incarn">incarn()</a>, <a href="#type-lclock">lclock()</a>}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-incarn">incarn()</a></h3>
-<p><pre>incarn() = non_neg_integer()</pre></p>
+<p><pre><code class="language-erlang">incarn() = non_neg_integer()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-lclock">lclock()</a></h3>
-<p><pre>lclock() = non_neg_integer()</pre></p>
+<p><pre><code class="language-erlang">lclock() = non_neg_integer()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-mon_ref">mon_ref()</a></h3>
-<p><pre>mon_ref() = reference()</pre></p>
+<p><pre><code class="language-erlang">mon_ref() = reference()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-name">name()</a></h3>
-<p><pre>name() = atom()</pre></p>
+<p><pre><code class="language-erlang">name() = atom()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-option">option()</a></h3>
-<p><pre>option() = 
+<p><pre><code class="language-erlang">option() = 
     {workers, Workers :: [node()]} |
     {vardir, Dir :: string()} |
     {bcast_type, Type :: <a href="#type-bcast_type">bcast_type()</a>} |
-    {heartbeat, Seconds :: integer()}</pre></p>
+    {heartbeat, Seconds :: integer()}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-options">options()</a></h3>
-<p><pre>options() = [<a href="#type-option">option()</a>]</pre></p>
+<p><pre><code class="language-erlang">options() = [<a href="#type-option">option()</a>]</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-priority">priority()</a></h3>
-<p><pre>priority() = integer()</pre></p>
+<p><pre><code class="language-erlang">priority() = integer()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-server_ref">server_ref()</a></h3>
-<p><pre>server_ref() = 
-    <a href="#type-name">name()</a> | {<a href="#type-name">name()</a>, node()} | {global, <a href="#type-name">name()</a>} | pid()</pre></p>
+<p><pre><code class="language-erlang">server_ref() = 
+    <a href="#type-name">name()</a> | {<a href="#type-name">name()</a>, node()} | {global, <a href="#type-name">name()</a>} | pid()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-start_ret">start_ret()</a></h3>
-<p><pre>start_ret() = {ok, pid()} | {error, term()}</pre></p>
+<p><pre><code class="language-erlang">start_ret() = {ok, pid()} | {error, term()}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-status">status()</a></h3>
-<p><pre>status() = 
+<p><pre><code class="language-erlang">status() = 
     elec1 | elec2 | wait | joining | worker | waiting_worker |
-    norm</pre></p>
+    norm</code></pre></p>
 
 
 <h2><a href="#" name="index">Function Index</a></h2>
@@ -140,7 +147,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="alive-1">alive/1</a></h3>
 <div class="spec">
-<p><pre>alive(Election ::
+<p><pre><code class="language-erlang">alive(Election ::
           #election{leader = none | pid(),
                     previous_leader = none | pid(),
                     name = <a href="#type-name">name()</a>,
@@ -161,13 +168,13 @@
                     incarn = <a href="#type-incarn">incarn()</a>,
                     nextel = integer(),
                     bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-         [node()]</pre></p>
+         [node()]</code></pre></p>
 <p> </p>
 </div><p>Returns list of alive nodes.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="behaviour_info-1">behaviour_info/1</a></h3>
 <div class="spec">
-<p><pre>behaviour_info(Other :: atom()) -&gt; undefined | [{atom(), arity()}]</pre></p>
+<p><pre><code class="language-erlang">behaviour_info(Other :: atom()) -&gt; undefined | [{atom(), arity()}]</code></pre></p>
 <p> </p>
 </div>
 
@@ -179,7 +186,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="call-2">call/2</a></h3>
 <div class="spec">
-<p><pre>call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</pre></p>
+<p><pre><code class="language-erlang">call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</code></pre></p>
 <p> </p>
 </div><p>Equivalent to <code>gen_server:call/2</code>, but with a slightly
   different exit reason if something goes wrong. This function calls
@@ -188,10 +195,10 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="call-3">call/3</a></h3>
 <div class="spec">
-<p><pre>call(Name :: <a href="#type-server_ref">server_ref()</a>,
+<p><pre><code class="language-erlang">call(Name :: <a href="#type-server_ref">server_ref()</a>,
      Request :: term(),
      Timeout :: integer()) -&gt;
-        term()</pre></p>
+        term()</code></pre></p>
 <p> </p>
 </div><p>Equivalent to <code>gen_server:call/3</code>, but with a slightly
   different exit reason if something goes wrong. This function calls
@@ -200,7 +207,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="candidates-1">candidates/1</a></h3>
 <div class="spec">
-<p><pre>candidates(Election ::
+<p><pre><code class="language-erlang">candidates(Election ::
                #election{leader = none | pid(),
                          previous_leader = none | pid(),
                          name = <a href="#type-name">name()</a>,
@@ -221,20 +228,20 @@
                          incarn = <a href="#type-incarn">incarn()</a>,
                          nextel = integer(),
                          bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-              [node()]</pre></p>
+              [node()]</code></pre></p>
 <p> </p>
 </div><p>Returns a list of known candidates.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="cast-2">cast/2</a></h3>
 <div class="spec">
-<p><pre>cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</pre></p>
+<p><pre><code class="language-erlang">cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</code></pre></p>
 <p> </p>
 </div><p>Equivalent to <tt>gen_server:cast / 2</tt>.</p>
 
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="down-1">down/1</a></h3>
 <div class="spec">
-<p><pre>down(Election ::
+<p><pre><code class="language-erlang">down(Election ::
          #election{leader = none | pid(),
                    previous_leader = none | pid(),
                    name = <a href="#type-name">name()</a>,
@@ -255,13 +262,13 @@
                    incarn = <a href="#type-incarn">incarn()</a>,
                    nextel = integer(),
                    bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-        [node()]</pre></p>
+        [node()]</code></pre></p>
 <p> </p>
 </div><p>Returns list of down nodes.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_call-2">leader_call/2</a></h3>
 <div class="spec">
-<p><pre>leader_call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</pre></p>
+<p><pre><code class="language-erlang">leader_call(Name :: <a href="#type-server_ref">server_ref()</a>, Request :: term()) -&gt; term()</code></pre></p>
 <p> </p>
 </div><p>Makes a call (similar to <code>gen_server:call/2</code>) to the
   leader. The call is forwarded via the local gen_leader instance, if
@@ -272,10 +279,10 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_call-3">leader_call/3</a></h3>
 <div class="spec">
-<p><pre>leader_call(Name :: <a href="#type-server_ref">server_ref()</a>,
+<p><pre><code class="language-erlang">leader_call(Name :: <a href="#type-server_ref">server_ref()</a>,
             Request :: term(),
             Timeout :: integer()) -&gt;
-               term()</pre></p>
+               term()</code></pre></p>
 <p> </p>
 </div><p>Makes a call (similar to <code>gen_server:call/3</code>) to the
   leader. The call is forwarded via the local gen_leader instance, if
@@ -284,14 +291,14 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_cast-2">leader_cast/2</a></h3>
 <div class="spec">
-<p><pre>leader_cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</pre></p>
+<p><pre><code class="language-erlang">leader_cast(Name :: <a href="#type-name">name()</a> | pid(), Request :: term()) -&gt; ok</code></pre></p>
 <p> </p>
 </div><p>Similar to <code>gen_server:cast/2</code> but will be forwarded to
   the leader via the local gen_leader instance.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="leader_node-1">leader_node/1</a></h3>
 <div class="spec">
-<p><pre>leader_node(Election ::
+<p><pre><code class="language-erlang">leader_node(Election ::
                 #election{leader = none | pid(),
                           previous_leader = none | pid(),
                           name = <a href="#type-name">name()</a>,
@@ -313,39 +320,39 @@
                           incarn = <a href="#type-incarn">incarn()</a>,
                           nextel = integer(),
                           bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-               node() | none</pre></p>
+               node() | none</code></pre></p>
 <p> </p>
 </div><p>Returns the current leader node.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="reply-2">reply/2</a></h3>
 <div class="spec">
-<p><pre>reply(From :: <a href="#type-caller_ref">caller_ref()</a>, Reply :: term()) -&gt; term()</pre></p>
+<p><pre><code class="language-erlang">reply(From :: <a href="#type-caller_ref">caller_ref()</a>, Reply :: term()) -&gt; term()</code></pre></p>
 <p> </p>
 </div><p>Equivalent to <tt>gen_server:reply / 2</tt>.</p>
 
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start-6">start/6</a></h3>
 <div class="spec">
-<p><pre>start(Name :: atom(),
+<p><pre><code class="language-erlang">start(Name :: atom(),
       CandidateNodes :: [node()],
       OptArgs :: <a href="#type-options">options()</a>,
       Mod :: module(),
       Arg :: term(),
       Options :: list()) -&gt;
-         <a href="#type-start_ret">start_ret()</a></pre></p>
+         <a href="#type-start_ret">start_ret()</a></code></pre></p>
 <p> </p>
 </div><p>Starts a gen_leader process without linking to the parent.</p>
 <p><b>See also:</b> <a href="#start_link-6">start_link/6</a>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start_link-6">start_link/6</a></h3>
 <div class="spec">
-<p><pre>start_link(Name :: atom(),
+<p><pre><code class="language-erlang">start_link(Name :: atom(),
            CandidateNodes :: [node()],
            OptArgs :: <a href="#type-options">options()</a>,
            Mod :: module(),
            Arg :: term(),
            Options :: list()) -&gt;
-              <a href="#type-start_ret">start_ret()</a></pre></p>
+              <a href="#type-start_ret">start_ret()</a></code></pre></p>
 <p> </p>
 </div><p>Starts a gen_leader process.
   <table>
@@ -384,7 +391,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="workers-1">workers/1</a></h3>
 <div class="spec">
-<p><pre>workers(Election ::
+<p><pre><code class="language-erlang">workers(Election ::
             #election{leader = none | pid(),
                       previous_leader = none | pid(),
                       name = <a href="#type-name">name()</a>,
@@ -405,7 +412,7 @@
                       incarn = <a href="#type-incarn">incarn()</a>,
                       nextel = integer(),
                       bcast_type = <a href="#type-bcast_type">bcast_type()</a>}) -&gt;
-           [node()]</pre></p>
+           [node()]</code></pre></p>
 <p> </p>
 </div><p>Returns a list of known workers.</p>
 <hr>

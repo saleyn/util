@@ -5,10 +5,18 @@
 <title>Collection of miscelaneous utility modules</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <h1>Collection of miscelaneous utility modules</h1>
-<p><b>Version:</b> 0.1-305-gbc03acb</p>
+<p><b>Version:</b> 0.1-317-gd227d57</p>
+<p><b>Authors:</b> Serge Aleynikov (<a href="mailto:serge(at)gmail.com"><tt>serge(at)gmail.com</tt></a>).</p>
 
 
 <h3><a name="Erlang_Utility_Modules">Erlang Utility Modules</a></h3>
@@ -16,7 +24,6 @@
 
 <p><a href="https://github.com/saleyn/util/actions/workflows/erlang.yml"><img src="https://github.com/saleyn/util/actions/workflows/erlang.yml/badge.svg"></a></p>
 
-<p><strong>Author</strong> Serge Aleynikov &lt;serge(at)gmail.com&gt;</p>
 
 <h2> Content:</h2>
 
@@ -27,76 +34,59 @@
 <tr class="tab"><td class="tab">csv</td><td class="tab">CSV parsing and loading data to MySQL</td></tr>
 <tr class="tab"><td class="tab">env</td><td class="tab">environment variables substitution, path normalization</td></tr>
 <tr class="tab"><td class="tab">file_log_reader</td><td class="tab">Periodically read an append-only log file and parse newly added data</td></tr>
-</table>
-
-<table class="tab">
-
-<tr class="tab"><th class="tab">io_lib_pretty_limited</th><th class="tab">Print term to binary by constraining the output size</th></tr>
-</table>
-
-
-<table class="tab">
-
-<tr class="tab"><th class="tab">hex</th><th class="tab">Hex to bin conversion</th></tr>
+<tr class="tab"><td class="tab">iif</td><td class="tab">Ternery if function including <code>iif/3</code>, <code>iif/4</code>, <code>ife/3</code>, <code>ife/4</code> parse transforms</td></tr>
+<tr class="tab"><td class="tab">io_lib_pretty_limited</td><td class="tab">Print term to binary by constraining the output size</td></tr>
+<tr class="tab"><td class="tab">gin</td><td class="tab">Convenient parse transform for <code>in(Value, [A,B,C])</code> type of guards</td></tr>
+<tr class="tab"><td class="tab">hex</td><td class="tab">Hex to bin conversion</td></tr>
 <tr class="tab"><td class="tab">listx</td><td class="tab">Miscelaneous list handling functions</td></tr>
 <tr class="tab"><td class="tab">osx</td><td class="tab">Execution of os commands with returned stdout and exit status</td></tr>
 <tr class="tab"><td class="tab">pcap</td><td class="tab">reader/writer of packet capture files (tcpdump, wireshark)</td></tr>
-</table>
-
-
-<table class="tab">
-
-<tr class="tab"><th class="tab">smtp</th><th class="tab">SMTP client supporting tcp and ssl protocols</th></tr>
+<tr class="tab"><td class="tab">restrict_remsh_mod</td><td class="tab">to be used for remote shells to restrict <code>q()</code>, <code>init:stop()</code>, <code>erlang:halt()</code>, etc.</td></tr>
+<tr class="tab"><td class="tab">smtp</td><td class="tab">SMTP client supporting tcp and ssl protocols</td></tr>
 <tr class="tab"><td class="tab">sntp</td><td class="tab">simple SNTP client</td></tr>
-</table>
-
-
-<table class="tab">
-
-<tr class="tab"><th class="tab">stringx</th><th class="tab">miscelaneous string functions</th></tr>
+<tr class="tab"><td class="tab">str</td><td class="tab">stringification functions including <code>str/1</code> and <code>str/2</code> parse transforms</td></tr>
+<tr class="tab"><td class="tab">stringx</td><td class="tab">miscelaneous string functions</td></tr>
 <tr class="tab"><td class="tab">user_default</td><td class="tab">extending shell with useful debugging and profiling commands</td></tr>
+<tr class="tab"><td class="tab">build-aux/md-to-edoc.awk</td><td class="tab">AWK script for converting <code>README.md</code> files to <code>overview.edoc</code></td></tr>
 </table>
-
-
-
 
 <h2> Documentation</h2>
 
  <ul>
-   <li><p>See <a href="https://saleyn.github.io/util">project documentation</a></p>
+   <li>See <a href="https://saleyn.github.io/util">project documentation</a>
+   </li>
 
+ </ul><p>
+This project implements an extension of <code>EDoc</code> documentation by using the color scheme similar
+to <code>GitHub</code>, and generate the <code>overview.edoc</code> from the <code>README.md</code>.</p>
 
+In order to use this feature, modify your <code>Makefile</code> to include:
+<pre><code class="language-erlang">-include build-aux/docs-addon.mk
+build-aux/docs-addon.mk:
+    &commat;echo "Fetching build-aux/docs-addon.mk" &amp;&amp; \
+        mkdir -p build-aux &amp;&amp; \
+        curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk</code></pre>
+Also in your <code>rebar.config</code> add:
+<pre><code class="language-erlang">{edoc_opts, [{overview,        "build-aux/overview.edoc"},
+             {stylesheet_file, "build-aux/edoc.css"},
+             ...]}.</code></pre>
 
+<p>This will add the following targets to your <code>Makefile</code>:</p>
+
+ <ul>
+   <li><code>docs</code> - Make documentation from source code
+   </li>
+   <li><code>gh-pages</code> - Create GitHub pages for the current project
+   </li>
+   <li><code>get-version</code> - Show application release version from the <code>*.app.src</code> and <code>rebar.config</code>
+   </li>
+   <li><code>set-version</code> - Set the version number for the above <code>(make set-version version=X.Y.Z)</code>
+   </li>
+   <li><p><code>clean-docs</code>  - Remove the generated files in the <code>doc</code> directory</p>
 
    </li>
 
-
-
-
  </ul>
-<pre>-include build-aux/docs-addon.mk
-build-aux/docs-addon.mk:
-	&amp;#174;echo "Fetching build-aux/docs-addon.mk" &amp;&amp; \
-		mkdir -p build-aux &amp;&amp; \
-		curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk</pre>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <h2> Download</h2>
 
  <ul>

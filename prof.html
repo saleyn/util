@@ -5,6 +5,13 @@
 <title>Module prof</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -40,13 +47,13 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="start-1">start/1</a></h3>
 <div class="spec">
-<p><pre>start(Pids :: [pid() | atom()]) -&gt; ok</pre></p>
+<p><pre><code class="language-erlang">start(Pids :: [pid() | atom()]) -&gt; ok</code></pre></p>
 <p> </p>
 </div><p>Begin profiling a list of pids</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="stop-0">stop/0</a></h3>
 <div class="spec">
-<p><pre>stop() -&gt; ok</pre></p>
+<p><pre><code class="language-erlang">stop() -&gt; ok</code></pre></p>
 <p> </p>
 </div><p>Finish profiling a list of pids and save results to a file called
        <code>"fprof.analysis"</code>.</p>

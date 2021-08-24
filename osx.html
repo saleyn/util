@@ -5,6 +5,13 @@
 <title>Module osx</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -32,30 +39,30 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="command-1">command/1</a></h3>
 <div class="spec">
-<p><pre>command(Cmd :: string()) -&gt; {integer(), list()}</pre></p>
+<p><pre><code class="language-erlang">command(Cmd :: string()) -&gt; {integer(), list()}</code></pre></p>
 <p> </p>
 </div>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="command-2">command/2</a></h3>
 <div class="spec">
-<p><pre>command(Cmd :: string(),
+<p><pre><code class="language-erlang">command(Cmd :: string(),
         Fun :: list() | undefined | fun((list(), any()) -&gt; any())) -&gt;
-           {integer(), any()}</pre></p>
+           {integer(), any()}</code></pre></p>
 <p> </p>
 </div>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="command-3">command/3</a></h3>
 <div class="spec">
-<p><pre>command(Cmd :: string(),
+<p><pre><code class="language-erlang">command(Cmd :: string(),
         Opt :: list(),
         Fun :: undefined | fun((list(), any()) -&gt; any())) -&gt;
-           {integer(), any()}</pre></p>
+           {integer(), any()}</code></pre></p>
 <p> </p>
 </div>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="normalpath-1">normalpath/1</a></h3>
 <div class="spec">
-<p><pre>normalpath(S :: list()) -&gt; string()</pre></p>
+<p><pre><code class="language-erlang">normalpath(S :: list()) -&gt; string()</code></pre></p>
 <p> </p>
 </div><p>
   Return a path where the use of ".." to indicate parent directory has
@@ -63,7 +70,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="realpath-1">realpath/1</a></h3>
 <div class="spec">
-<p><pre>realpath(Path :: string()) -&gt; string()</pre></p>
+<p><pre><code class="language-erlang">realpath(Path :: string()) -&gt; string()</code></pre></p>
 <p> </p>
 </div><p>
   Return a canonicalized pathname, having resolved symlinks to their
@@ -71,9 +78,9 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="status-1">status/1</a></h3>
 <div class="spec">
-<p><pre>status(Status :: integer()) -&gt;
+<p><pre><code class="language-erlang">status(Status :: integer()) -&gt;
           {status, ExitStatus :: integer()} |
-          {signal, Singnal :: integer(), Core :: boolean()}</pre></p>
+          {signal, Singnal :: integer(), Core :: boolean()}</code></pre></p>
 <p> </p>
 </div>
 <hr>

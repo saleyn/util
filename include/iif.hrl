@@ -1,1 +1,0 @@
--define(IIF(Cond,True,False), case Cond of true -> True; _ -> False end).

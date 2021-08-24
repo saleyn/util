@@ -5,6 +5,13 @@
 <title>Module util_log_formatter</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -56,7 +63,7 @@ Derived from //kernel/logger/logger_formatter</p>
 <h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-config">config()</a></h3>
-<p><pre>config() = 
+<p><pre><code class="language-erlang">config() = 
     #{chars_limit =&gt; pos_integer() | unlimited,
       depth =&gt; pos_integer() | unlimited,
       legacy_header =&gt; boolean(),
@@ -68,16 +75,16 @@ Derived from //kernel/logger/logger_formatter</p>
       time_offset =&gt; integer() | [byte()] | none,
       time_unit =&gt; atom(),
       report_prefix =&gt; boolean(),
-      report_term_depth =&gt; integer()}</pre></p>
+      report_term_depth =&gt; integer()}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-metakey">metakey()</a></h3>
-<p><pre>metakey() = atom() | [atom()]</pre></p>
+<p><pre><code class="language-erlang">metakey() = atom() | [atom()]</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-template">template()</a></h3>
-<p><pre>template() = 
-    [<a href="#type-metakey">metakey()</a> | {<a href="#type-metakey">metakey()</a>, <a href="#type-template">template()</a>, <a href="#type-template">template()</a>} | string()]</pre></p>
+<p><pre><code class="language-erlang">template() = 
+    [<a href="#type-metakey">metakey()</a> | {<a href="#type-metakey">metakey()</a>, <a href="#type-template">template()</a>, <a href="#type-template">template()</a>} | string()]</code></pre></p>
 
 
 <h2><a href="#" name="index">Function Index</a></h2>
@@ -89,15 +96,15 @@ Derived from //kernel/logger/logger_formatter</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="check_config-1">check_config/1</a></h3>
 <div class="spec">
-<p><pre>check_config(Config) -&gt; ok | {error, term()}</pre>
-<ul class="definitions"><li><pre>Config = <a href="#type-config">config()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">check_config(Config) -&gt; ok | {error, term()}</code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">Config = <a href="#type-config">config()</a></code></pre></li></ul></p>
 <p> </p>
 </div>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format-2">format/2</a></h3>
 <div class="spec">
-<p><pre>format(LogEvent, Config) -&gt; <a href="http://www.erlang.org/doc/man/stdlib/doc/unicode.html#type-chardata">unicode:chardata()</a></pre>
-<ul class="definitions"><li><pre>LogEvent = <a href="http://www.erlang.org/doc/man/kernel/doc/logger.html#type-log_event">logger:log_event()</a></pre></li><li><pre>Config = <a href="#type-config">config()</a></pre></li></ul></p>
+<p><pre><code class="language-erlang">format(LogEvent, Config) -&gt; <a href="http://www.erlang.org/doc/man/stdlib/doc/unicode.html#type-chardata">unicode:chardata()</a></code></pre>
+<ul class="definitions"><li><pre><code class="language-erlang">LogEvent = <a href="http://www.erlang.org/doc/man/kernel/doc/logger.html#type-log_event">logger:log_event()</a></code></pre></li><li><pre><code class="language-erlang">Config = <a href="#type-config">config()</a></code></pre></li></ul></p>
 <p> </p>
 </div>
 <hr>

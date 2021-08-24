@@ -5,6 +5,13 @@
 <title>Module hex</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -27,31 +34,31 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="dehex-1">dehex/1</a></h3>
 <div class="spec">
-<p><pre>dehex(C :: char()) -&gt; integer()</pre></p>
+<p><pre><code class="language-erlang">dehex(C :: char()) -&gt; integer()</code></pre></p>
 <p> </p>
 </div><p>Convert a hex digit in range [$0..$9,$a..$f,$A..$F] to integer.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="hex-1">hex/1</a></h3>
 <div class="spec">
-<p><pre>hex(C :: integer()) -&gt; char()</pre></p>
+<p><pre><code class="language-erlang">hex(C :: integer()) -&gt; char()</code></pre></p>
 <p> </p>
 </div><p>Convert an integer to a hex digit in range [0..15].</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="to_bin-1">to_bin/1</a></h3>
 <div class="spec">
-<p><pre>to_bin(Bin :: string()) -&gt; binary()</pre></p>
+<p><pre><code class="language-erlang">to_bin(Bin :: string()) -&gt; binary()</code></pre></p>
 <p> </p>
 </div><p>Convert a hex string to binary.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="to_hex-1">to_hex/1</a></h3>
 <div class="spec">
-<p><pre>to_hex(I :: integer() | iolist()) -&gt; binary()</pre></p>
+<p><pre><code class="language-erlang">to_hex(I :: integer() | iolist()) -&gt; binary()</code></pre></p>
 <p> </p>
 </div><p>Convert an iolist to a hex string.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="to_int-1">to_int/1</a></h3>
 <div class="spec">
-<p><pre>to_int(S :: string() | binary()) -&gt; integer()</pre></p>
+<p><pre><code class="language-erlang">to_int(S :: string() | binary()) -&gt; integer()</code></pre></p>
 <p> </p>
 </div><p>Convert a hex string/binary to integer.</p>
 <hr>

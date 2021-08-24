@@ -5,6 +5,13 @@
 <title>Module sntp</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -32,8 +39,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="avg_time-0">avg_time/0</a></h3>
 <div class="spec">
-<p><pre>avg_time() -&gt;
-            {Min :: integer(), Max :: integer(), Avg :: integer()}</pre></p>
+<p><pre><code class="language-erlang">avg_time() -&gt;
+            {Min :: integer(), Max :: integer(), Avg :: integer()}</code></pre></p>
 <p> </p>
 </div><p>Query NTP time sources from <code>"/etc/ntp.conf"</code> and return
        min/max/avg offset of current host from given time sources.</p>
@@ -41,28 +48,28 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="avg_time-1">avg_time/1</a></h3>
 <div class="spec">
-<p><pre>avg_time(ServerAddresses :: [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]) -&gt;
-            {Min :: integer(), Max :: integer(), Avg :: integer()}</pre></p>
+<p><pre><code class="language-erlang">avg_time(ServerAddresses :: [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]) -&gt;
+            {Min :: integer(), Max :: integer(), Avg :: integer()}</code></pre></p>
 <p> </p>
 </div><p>Query <code>ServerAddress</code> NTP time sources and return min/max/avg offset
        of current host from given time sources.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="time-1">time/1</a></h3>
 <div class="spec">
-<p><pre>time(ServerAddress :: <a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>) -&gt; #sntp{}</pre></p>
+<p><pre><code class="language-erlang">time(ServerAddress :: <a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>) -&gt; #sntp{}</code></pre></p>
 <p> </p>
 </div><p>Query <code>ServerAddress</code> time source to find out server time and
        current host's offset from time source.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="time_servers-0">time_servers/0</a></h3>
 <div class="spec">
-<p><pre>time_servers() -&gt; [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]</pre></p>
+<p><pre><code class="language-erlang">time_servers() -&gt; [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]</code></pre></p>
 <p> </p>
 </div><p>Return a list of default NTP time servers for this host.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="time_servers-1">time_servers/1</a></h3>
 <div class="spec">
-<p><pre>time_servers(Resolve :: boolean()) -&gt; [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]</pre></p>
+<p><pre><code class="language-erlang">time_servers(Resolve :: boolean()) -&gt; [<a href="http://www.erlang.org/doc/man/kernel/doc/inet.html#type-ip_address">inet:ip_address()</a>]</code></pre></p>
 <p> </p>
 </div><p>Return a list of default NTP time servers for this host. If
        <code>Resolve</code> is true, the list will contain IP addresses or else

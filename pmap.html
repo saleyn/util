@@ -5,6 +5,13 @@
 <title>Module pmap</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -35,8 +42,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="multicall-2">multicall/2</a></h3>
 <div class="spec">
-<p><pre>multicall(PidMsgs :: [{pid(), term()}], Timeout :: timeout()) -&gt;
-             {[OkReply :: term()], [ErrorReply :: term()]}</pre></p>
+<p><pre><code class="language-erlang">multicall(PidMsgs :: [{pid(), term()}], Timeout :: timeout()) -&gt;
+             {[OkReply :: term()], [ErrorReply :: term()]}</code></pre></p>
 <p> </p>
 </div><p>Send messages to pids and wait for replies.
        Each Pid would get a message in the form:
@@ -47,8 +54,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pmap-2">pmap/2</a></h3>
 <div class="spec">
-<p><pre>pmap(F :: fun(() -&gt; term()), List :: [Args :: term()]) -&gt;
-        [Reply :: term()]</pre></p>
+<p><pre><code class="language-erlang">pmap(F :: fun(() -&gt; term()), List :: [Args :: term()]) -&gt;
+        [Reply :: term()]</code></pre></p>
 <p> </p>
 </div><p>Evaluate the <code>MultiArgs</code> list by calling <code>F</code> on each argument in
        the list concurrently.</p>
@@ -56,17 +63,17 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pmap-3">pmap/3</a></h3>
 <div class="spec">
-<p><pre>pmap(F :: fun((term()) -&gt; term()),
+<p><pre><code class="language-erlang">pmap(F :: fun((term()) -&gt; term()),
      Args :: [term()],
      Timeout :: integer() | infinity) -&gt;
-        [Reply :: term()]</pre></p>
+        [Reply :: term()]</code></pre></p>
 <p> </p>
 </div><p>Evaluate the <code>MultiArgs</code> list by calling <code>F</code> on each argument in
        the list concurrently.  Same as pmap/2 but has a <code>Timeout</code> option.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="reply-2">reply/2</a></h3>
 <div class="spec">
-<p><pre>reply(X1 :: {pid(), reference()}, Reply :: term()) -&gt; ok</pre></p>
+<p><pre><code class="language-erlang">reply(X1 :: {pid(), reference()}, Reply :: term()) -&gt; ok</code></pre></p>
 <p> </p>
 </div><p>Send a reply back to sender.</p>
 

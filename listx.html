@@ -5,6 +5,13 @@
 <title>Module listx</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -36,7 +43,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="group-2">group/2</a></h3>
 <div class="spec">
-<p><pre>group(Pos :: integer(), List :: [tuple()]) -&gt; [{any(), tuple()}]</pre></p>
+<p><pre><code class="language-erlang">group(Pos :: integer(), List :: [tuple()]) -&gt; [{any(), tuple()}]</code></pre></p>
 <p> </p>
 </div><p>Group elements in the <code>List</code> by element at position <code>Pos</code>.</p>
 
@@ -56,7 +63,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="zip_record-2">zip_record/2</a></h3>
 <div class="spec">
-<p><pre>zip_record(Fields :: list(), State :: tuple()) -&gt; list()</pre></p>
+<p><pre><code class="language-erlang">zip_record(Fields :: list(), State :: tuple()) -&gt; list()</code></pre></p>
 <p> </p>
 </div><p>Convert a record/tuple to a list of <code>{Name,Value}</code> pairs, where <code>Name</code>
        is a field name taken from the <code>Fields</code> list.</p>

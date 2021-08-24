@@ -5,6 +5,13 @@
 <title>Module cipher</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -51,8 +58,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="gpg_key_decode-1">gpg_key_decode/1</a></h3>
 <div class="spec">
-<p><pre>gpg_key_decode(File :: string() | binary()) -&gt;
-                  [<a href="http://www.erlang.org/doc/man/public_key/doc/public_key.html#type-pem_entry">public_key:pem_entry()</a>]</pre></p>
+<p><pre><code class="language-erlang">gpg_key_decode(File :: string() | binary()) -&gt;
+                  [<a href="http://www.erlang.org/doc/man/public_key/doc/public_key.html#type-pem_entry">public_key:pem_entry()</a>]</code></pre></p>
 <p> </p>
 </div><p>Decode PGP public key</p>
 

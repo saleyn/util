@@ -5,6 +5,13 @@
 <title>Module trunc_io</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -36,22 +43,22 @@ terms, not produce precise string lengths.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="fprint-2">fprint/2</a></h3>
 <div class="spec">
-<p><pre>fprint(T :: term(), Max :: pos_integer()) -&gt; string()</pre></p>
+<p><pre><code class="language-erlang">fprint(T :: term(), Max :: pos_integer()) -&gt; string()</code></pre></p>
 <p> </p>
 </div><p>Returns an flattened list containing the ASCII representation of the given
   term.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="print-2">print/2</a></h3>
 <div class="spec">
-<p><pre>print(Tuple :: term(), Max :: pos_integer()) -&gt;
-         {iolist(), pos_integer()}</pre></p>
+<p><pre><code class="language-erlang">print(Tuple :: term(), Max :: pos_integer()) -&gt;
+         {iolist(), pos_integer()}</code></pre></p>
 <p> </p>
 </div><p>Returns {List, Length}</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="safe-2">safe/2</a></h3>
 <div class="spec">
-<p><pre>safe(What :: term(), Len :: pos_integer()) -&gt;
-        {string(), pos_integer()} | {string()}</pre></p>
+<p><pre><code class="language-erlang">safe(What :: term(), Len :: pos_integer()) -&gt;
+        {string(), pos_integer()} | {string()}</code></pre></p>
 <p> </p>
 </div><p><p>Same as print, but never crashes.</p>
  

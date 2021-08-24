@@ -5,6 +5,13 @@
 <title>Module stringx</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -20,33 +27,33 @@
 <h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-ccy_sym">ccy_sym()</a></h3>
-<p><pre>ccy_sym() = binary() | string()</pre></p>
+<p><pre><code class="language-erlang">ccy_sym() = binary() | string()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-decimals">decimals()</a></h3>
-<p><pre>decimals() = 0..253</pre></p>
+<p><pre><code class="language-erlang">decimals() = 0..253</code></pre></p>
 <p> see types for erlang:float_to_binary/2</p>
 
 <h3 class="typedecl"><a name="type-format_number_opts">format_number_opts()</a></h3>
-<p><pre>format_number_opts() = 
+<p><pre><code class="language-erlang">format_number_opts() = 
     #{thousands =&gt; binary() | string(),
       decimal_point =&gt; binary() | string(),
       ccy_sym =&gt; <a href="#type-ccy_sym">ccy_sym()</a>,
       ccy_pos =&gt; left | right,
       ccy_sep =&gt; binary() | string(),
-      return =&gt; binary | list}</pre></p>
+      return =&gt; binary | list}</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-formatted_number">formatted_number()</a></h3>
-<p><pre>formatted_number() = binary()</pre></p>
+<p><pre><code class="language-erlang">formatted_number() = binary()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-precision">precision()</a></h3>
-<p><pre>precision() = integer()</pre></p>
+<p><pre><code class="language-erlang">precision() = integer()</code></pre></p>
 
 
 <h3 class="typedecl"><a name="type-pretty_print_opts">pretty_print_opts()</a></h3>
-<p><pre>pretty_print_opts() = 
+<p><pre><code class="language-erlang">pretty_print_opts() = 
     #{number_pad =&gt; char(),
       out_header =&gt; boolean(),
       out_sep =&gt; boolean(),
@@ -73,7 +80,7 @@
       thousands =&gt; string() | binary(),
       ccy_sym =&gt; string() | binary(),
       ccy_sep =&gt; string() | binary(),
-      ccy_pos =&gt; left | right}</pre></p>
+      ccy_pos =&gt; left | right}</code></pre></p>
 
 
 <h2><a href="#" name="index">Function Index</a></h2>
@@ -121,7 +128,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="align_rows-2">align_rows/2</a></h3>
 <div class="spec">
-<p><pre>align_rows(Rows :: [tuple() | binary() | list()],
+<p><pre><code class="language-erlang">align_rows(Rows :: [tuple() | binary() | list()],
            Options ::
                [{pad,
                  Dir ::
@@ -132,7 +139,7 @@
                 {return, Ret :: tuple | list} |
                 {prefix, string()} |
                 {ignore_empty, boolean()}]) -&gt;
-              [AlignedRow :: tuple() | list()]</pre></p>
+              [AlignedRow :: tuple() | list()]</code></pre></p>
 <p> </p>
 </div><p>Align rows of terms by stringifying them to uniform column width.
        If some row doesn't need to be aligned, pass its value as a binary.
@@ -153,7 +160,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="batch_split-2">batch_split/2</a></h3>
 <div class="spec">
-<p><pre>batch_split(N :: integer(), L :: list()) -&gt; [list()]</pre></p>
+<p><pre><code class="language-erlang">batch_split(N :: integer(), L :: list()) -&gt; [list()]</code></pre></p>
 <p> </p>
 </div><p>Split a list into batches of N items</p>
 
@@ -165,23 +172,23 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_integer-1">format_integer/1</a></h3>
 <div class="spec">
-<p><pre>format_integer(Integer :: integer()) -&gt; <a href="#type-formatted_number">formatted_number()</a></pre></p>
+<p><pre><code class="language-erlang">format_integer(Integer :: integer()) -&gt; <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
 <p> </p>
 </div>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_integer-2">format_integer/2</a></h3>
 <div class="spec">
-<p><pre>format_integer(Integer :: integer(), Opts :: <a href="#type-format_number_opts">format_number_opts()</a>) -&gt;
-                  <a href="#type-formatted_number">formatted_number()</a></pre></p>
+<p><pre><code class="language-erlang">format_integer(Integer :: integer(), Opts :: <a href="#type-format_number_opts">format_number_opts()</a>) -&gt;
+                  <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
 <p> </p>
 </div>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_number-3">format_number/3</a></h3>
 <div class="spec">
-<p><pre>format_number(N :: number(),
+<p><pre><code class="language-erlang">format_number(N :: number(),
               Precision :: <a href="#type-precision">precision()</a>,
               Decimals :: <a href="#type-decimals">decimals()</a>) -&gt;
-                 <a href="#type-formatted_number">formatted_number()</a></pre></p>
+                 <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
 <p> </p>
 </div><p>
   The same as uef_format:format_number/4 with #{} as the forth argument.</p>
@@ -189,11 +196,11 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_number-4">format_number/4</a></h3>
 <div class="spec">
-<p><pre>format_number(Number :: number(),
+<p><pre><code class="language-erlang">format_number(Number :: number(),
               Precision :: <a href="#type-precision">precision()</a>,
               Decimals :: <a href="#type-decimals">decimals()</a>,
               Opts :: <a href="#type-format_number_opts">format_number_opts()</a>) -&gt;
-                 <a href="#type-formatted_number">formatted_number()</a></pre></p>
+                 <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
 <p> </p>
 </div><p>
   Formats Number by adding thousands separator between each set of 3
@@ -203,8 +210,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_price-1">format_price/1</a></h3>
 <div class="spec">
-<p><pre>format_price(Number :: number()) -&gt;
-                FormattedPrice :: <a href="#type-formatted_number">formatted_number()</a></pre></p>
+<p><pre><code class="language-erlang">format_price(Number :: number()) -&gt;
+                FormattedPrice :: <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
 <p> </p>
 </div><p>
   Formats Number in price-like style.
@@ -214,8 +221,8 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_price-2">format_price/2</a></h3>
 <div class="spec">
-<p><pre>format_price(Number :: number(), Precision :: <a href="#type-precision">precision()</a>) -&gt;
-                <a href="#type-formatted_number">formatted_number()</a></pre></p>
+<p><pre><code class="language-erlang">format_price(Number :: number(), Precision :: <a href="#type-precision">precision()</a>) -&gt;
+                <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
 <p> </p>
 </div><p>
   Formats Number in price-like style.
@@ -226,11 +233,11 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="format_price-3">format_price/3</a></h3>
 <div class="spec">
-<p><pre>format_price(Number :: number(),
+<p><pre><code class="language-erlang">format_price(Number :: number(),
              Precision :: <a href="#type-precision">precision()</a>,
              CcySymbol_OR_Options ::
                  <a href="#type-format_number_opts">format_number_opts()</a> | <a href="#type-ccy_sym">ccy_sym()</a>) -&gt;
-                FormattedPrice :: <a href="#type-formatted_number">formatted_number()</a></pre></p>
+                FormattedPrice :: <a href="#type-formatted_number">formatted_number()</a></code></pre></p>
 <p> </p>
 </div><p>
   Formats Number in price-like style.
@@ -244,15 +251,15 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse_csv-1">parse_csv/1</a></h3>
 <div class="spec">
-<p><pre>parse_csv(File :: string()) -&gt; [[string()]]</pre></p>
+<p><pre><code class="language-erlang">parse_csv(File :: string()) -&gt; [[string()]]</code></pre></p>
 <p> </p>
 </div><p>Parse a given CSV file.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse_csv-2">parse_csv/2</a></h3>
 <div class="spec">
-<p><pre>parse_csv(File :: string(),
+<p><pre><code class="language-erlang">parse_csv(File :: string(),
           Opts :: [fix_lengths | {open, Opts :: list()}]) -&gt;
-             [[string()]]</pre></p>
+             [[string()]]</code></pre></p>
 <p> </p>
 </div><p>Parse a given CSV file.</p>
 
@@ -276,26 +283,26 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_table-1">pretty_table/1</a></h3>
 <div class="spec">
-<p><pre>pretty_table(LofMaps0 :: [map()]) -&gt; list()</pre></p>
+<p><pre><code class="language-erlang">pretty_table(LofMaps0 :: [map()]) -&gt; list()</code></pre></p>
 <p> </p>
 </div><p>Pretty print list of maps to list.</p>
 <p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_table-2">pretty_table/2</a></h3>
 <div class="spec">
-<p><pre>pretty_table(HeaderRowKeys :: [string()],
+<p><pre><code class="language-erlang">pretty_table(HeaderRowKeys :: [string()],
              Rows :: [Row :: tuple() | list() | map()]) -&gt;
-                list()</pre></p>
+                list()</code></pre></p>
 <p> </p>
 </div><p>Pretty print table of lists/tuples/maps to list.</p>
 <p><b>See also:</b> <a href="#pretty_table-3">pretty_table/3</a>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="pretty_table-3">pretty_table/3</a></h3>
 <div class="spec">
-<p><pre>pretty_table(HeaderRowKeys :: [string()],
+<p><pre><code class="language-erlang">pretty_table(HeaderRowKeys :: [string()],
              Rows :: [Row :: tuple() | list() | map()],
              Opts :: map()) -&gt;
-                list()</pre></p>
+                list()</code></pre></p>
 <p> </p>
 </div><p>Pretty print table of lists/tuples/maps to list.
   The following options control formatting behavior:
@@ -330,7 +337,7 @@
        </dd>
   </dl>
   Example:
-  <pre>  1&gt; stringx:pretty_print_table(
+  <pre><code class="language-erlang">  1&gt; stringx:pretty_print_table(
        {a,b,c,d}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}, {abc, 100.0, xx}],
        #opts{td_dir=both, td_exclude=[d], td_formats=
            {undefined, fun(V) when is_integer(V) -&gt; {number, integer_to_list(V)};
@@ -340,30 +347,30 @@
   -----+-----------+-------
    a   |        10 |  ccc
   bxxx | 200.00123 | 'Done'
-  -----+-----------+-------</pre></p>
+  -----+-----------+-------</code></pre></p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="round_number-2">round_number/2</a></h3>
 <div class="spec">
-<p><pre>round_number(Number :: number(), Precision :: integer()) -&gt;
-                float()</pre></p>
+<p><pre><code class="language-erlang">round_number(Number :: number(), Precision :: integer()) -&gt;
+                float()</code></pre></p>
 <p> </p>
 </div><p>Rounds the number to the specified precision.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="round_price-1">round_price/1</a></h3>
 <div class="spec">
-<p><pre>round_price(Number :: number()) -&gt; float()</pre></p>
+<p><pre><code class="language-erlang">round_price(Number :: number()) -&gt; float()</code></pre></p>
 <p> </p>
 </div><p>Rounds the number to the precision of 2.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="titlecase-1">titlecase/1</a></h3>
 <div class="spec">
-<p><pre>titlecase(S :: string()) -&gt; string()</pre></p>
+<p><pre><code class="language-erlang">titlecase(S :: string()) -&gt; string()</code></pre></p>
 <p> </p>
 </div><p>Convert words in a string to capitalize first letter of each word.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="wordwrap-2">wordwrap/2</a></h3>
 <div class="spec">
-<p><pre>wordwrap(S :: string(), Margin :: integer()) -&gt; string()</pre></p>
+<p><pre><code class="language-erlang">wordwrap(S :: string(), Margin :: integer()) -&gt; string()</code></pre></p>
 <p> </p>
 </div><p>Wrap words words in a string</p>
 <hr>

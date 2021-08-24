@@ -5,6 +5,13 @@
 <title>Module decompiler</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -32,20 +39,20 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="fun_src-2">fun_src/2</a></h3>
 <div class="spec">
-<p><pre>fun_src(Fun :: function(), Options :: [verbose | ast]) -&gt; string()</pre></p>
+<p><pre><code class="language-erlang">fun_src(Fun :: function(), Options :: [verbose | ast]) -&gt; string()</code></pre></p>
 <p> </p>
 </div><p>Decompile a function to its source text</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="run-1">run/1</a></h3>
 <div class="spec">
-<p><pre>run(BeamFilename :: string()) -&gt; ok | {error, any()}</pre></p>
+<p><pre><code class="language-erlang">run(BeamFilename :: string()) -&gt; ok | {error, any()}</code></pre></p>
 <p> </p>
 </div><p>Decompile a beam file</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="run-2">run/2</a></h3>
 <div class="spec">
-<p><pre>run(BeamFName :: string(), Options :: [verbose | erl | ast]) -&gt;
-       ok | {error, any()}</pre></p>
+<p><pre><code class="language-erlang">run(BeamFName :: string(), Options :: [verbose | erl | ast]) -&gt;
+       ok | {error, any()}</code></pre></p>
 <p> </p>
 </div><p>Decompile a beam file and optionally save it to disk</p>
 <hr>

@@ -5,6 +5,13 @@
 <title>Module csv</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github-dark-dimmed.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/erlang.min.js"></script>
+<script>
+  hljs.highlightAll();
+</script>
+
 <body class="src">
 <a name="top"></a>
 <hr>
@@ -20,7 +27,7 @@
 <h2><a href="#" name="types">Data Types</a></h2>
 
 <h3 class="typedecl"><a name="type-load_options">load_options()</a></h3>
-<p><pre>load_options() = 
+<p><pre><code class="language-erlang">load_options() = 
     [{load_type, recreate | replace | ignore_dups | update_dups} |
      {col_types,
       #{binary() =&gt;
@@ -37,7 +44,7 @@
      {primary_key, PKColumns :: binary() | [binary() | list()]} |
      {drop_temp_table, boolean()} |
      {encoding, string() | atom()} |
-     {verbose, boolean() | integer()}]</pre></p>
+     {verbose, boolean() | integer()}]</code></pre></p>
 <p>  Options for loading data to a database.
   <dl>
   <dt>{load_type, Type}</dt>
@@ -101,23 +108,23 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="guess_data_type-1">guess_data_type/1</a></h3>
 <div class="spec">
-<p><pre>guess_data_type(S :: binary()) -&gt;
+<p><pre><code class="language-erlang">guess_data_type(S :: binary()) -&gt;
                    {null | date | datetime | integer | float |
                     string,
                     term(),
-                    string()}</pre></p>
+                    string()}</code></pre></p>
 <p> </p>
 </div><p>Guess the type of data by its value</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="guess_data_types-2">guess_data_types/2</a></h3>
 <div class="spec">
-<p><pre>guess_data_types(HasHeaderRow :: boolean(),
+<p><pre><code class="language-erlang">guess_data_types(HasHeaderRow :: boolean(),
                  Rows :: [Fields :: [binary()]]) -&gt;
                     {Type ::
                          string | integer | number | float |
                          date | datetime,
                      MaxFieldLen :: integer(),
-                     NumOfNulls :: integer()}</pre></p>
+                     NumOfNulls :: integer()}</code></pre></p>
 <p> </p>
 </div><p>Guess data types of fields in the given CSV list of rows obtained by
        parsing a CSV file with <code>parse(File,[fix_lengths])</code>.
@@ -128,13 +135,13 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="load_to_mysql-4">load_to_mysql/4</a></h3>
 <div class="spec">
-<p><pre>load_to_mysql(File :: string(),
+<p><pre><code class="language-erlang">load_to_mysql(File :: string(),
               Tab :: string(),
               MySqlPid :: pid(),
               Opts :: <a href="#type-load_options">load_options()</a>) -&gt;
                  {Columns :: list(),
                   AffectedCount :: integer(),
-                  RecCount :: integer()}</pre></p>
+                  RecCount :: integer()}</code></pre></p>
 <p> </p>
 </div><p>Load CSV data from a <code>File</code> to a <code>MySQL</code> database.
   <code>Tab</code> is the name of a table where to load data.  <code>MySqlPid</code> is the pid of a
@@ -160,25 +167,25 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="max_field_lengths-2">max_field_lengths/2</a></h3>
 <div class="spec">
-<p><pre>max_field_lengths(HasHeaderRow :: boolean(),
+<p><pre><code class="language-erlang">max_field_lengths(HasHeaderRow :: boolean(),
                   Rows :: [Fields :: list()]) -&gt;
-                     [Len :: integer()]</pre></p>
+                     [Len :: integer()]</code></pre></p>
 <p> </p>
 </div><p>Get max field lengths for a list obtained by parsing a CSV file with
        <code>parse_csv_file(File,[fix_lengths])</code>.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse-1">parse/1</a></h3>
 <div class="spec">
-<p><pre>parse(File :: string()) -&gt; [[binary()]]</pre></p>
+<p><pre><code class="language-erlang">parse(File :: string()) -&gt; [[binary()]]</code></pre></p>
 <p> </p>
 </div><p>Parse a CSV file using default options.</p>
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse-2">parse/2</a></h3>
 <div class="spec">
-<p><pre>parse(File :: binary() | string(),
+<p><pre><code class="language-erlang">parse(File :: binary() | string(),
       Opts ::
           [fix_lengths | binary | list | {open, Opts :: list()}]) -&gt;
-         [[string()]]</pre></p>
+         [[string()]]</code></pre></p>
 <p> </p>
 </div><p>Parse a given CSV file.
   Options:
@@ -194,7 +201,7 @@
 
 <h3 class="function"><a href="#index"><i class="arrow up"></i></a><a  class="function" name="parse_line-1">parse_line/1</a></h3>
 <div class="spec">
-<p><pre>parse_line(Line :: binary()) -&gt; list()</pre></p>
+<p><pre><code class="language-erlang">parse_line(Line :: binary()) -&gt; list()</code></pre></p>
 <p> </p>
 </div><p>Parse a CSV line</p>
 <hr>
