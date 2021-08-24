@@ -25,8 +25,8 @@ BEGIN {
                 "\\&lt;<a href=\"mailto:\\1\">\\1</a>\\&gt;", "g")
   }
   # URLs
-  else if (match($0, /\[[^\[]*?\]\(.+\.svg\)\]\( *([^\)]+)\)/)) {
-    $0 = gensub(/\[[^\[]*?\[[^\]]+\]\(?([^)]+)\)?\]\( *([^\)]+)\)/, "<a href=\"\\2\"><img src=\"\\1\"/></a>", "g")
+  else if (match($0, /\[[^\[]*\[[^\]]*\] *\(.+\.svg[^\)]*\)\] *\( *([^\)]+)\)/)) {
+    $0 = gensub(/\[[^\[]*\[[^\]]+\] *\(([^)]+)\)\] *\( *([^\)]+) *\)/, "<a href=\"\\2\"><img src=\"\\1\"/></a>", "g")
   }
   else if (match($0, /\[.+\] *\( *(http|ftp).+\)/)) {
     #$0 = gensub(/\[[^\[]*?\[[^\]]+\]\(?([^)]+)\)?\]\( *([^\)]+)\)/, "<a href=\"\\2\">\\1</a>", "g")
@@ -50,7 +50,6 @@ BEGIN {
   gsub(/Copyright \+\([cC]\)/, "@copyright")
   gsub(/\([Cc]\)/, "@copyright")
   gsub(/\([rR]\)/, "\\&reg;")
-  #gsub(/@/,     "\\&commat;")
   gsub(/\(tm\)/,"\\&trade;")
   gsub(/\(TM\)/,"\\&trade;")
   # Match ** (\52 = '*')
@@ -77,10 +76,13 @@ BEGIN {
 # Display code blocks
 /```/ {
   pop_all_lists()
+
   gsub(/```[^ ]*/, "```")
   in_code3 = !in_code3
   in_code = in_code1 || in_code2 || in_code3
-  if (!in_code3) sub(/```/, "'''")
+  if (!in_code3)
+    sub(/```/, "'''")
+
   print
   next
 }
@@ -250,6 +252,8 @@ function print_paragraph() {
     printf "\n"
 }
 function print_line() {
+  if (in_code3)
+    gsub(/@/,  "\\&commat;")
   gsub(/&#124;/, "|")   # Substitute the pipe symbol back to original
   print
 }
