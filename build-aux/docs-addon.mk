@@ -10,10 +10,12 @@ docs::
    done
 	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
 docs:: BG=$(shell sed -n '/background-color:/{s/[^#]\+#\([^;]\+\);.*/\1/p;q}' build-aux/edoc.css)
-docs:: TITLE=$(shell sed -n 's/ *{title, *"\([^"]\+\)" *},.*$$/\1/p' rebar.config)"
-docs:: KEYWORDS=$(shell sed -n '/{keywords, *"/,/"}/{s/.*{keywords, *"//; s/"} *,\? *$$//; s/[ \t\r\n]\+/ /g; p;}' rebar.config)
+docs:: TITLE=$(shell sed -n 's/ *{title, *"\([^"]\+\)" *},.*$$/\1/p' rebar.config)
+docs:: KEYWORDS=$(shell sed -n '/{keywords, *"/,/"}/{s/[ \t\r\n]\+/ /g; s/"}.*$$//; s/.*{keywords, *"//p;}' rebar.config)
 docs::
 docs:: clean-docs
+	@[ -n "$(TITLE)"    ] && echo "TITLE:    $(TITLE)"    || echo "Found no {edoc_opts, [{title, ...}]} in rebar.config!"
+	@[ -n "$(KEYWORDS)" ] && echo "KEYWORDS: $(KEYWORDS)" || echo "Found no {edoc_opts, [{keywords, ...}]} in rebar.config!"
 ifeq (rebar3,$(REBAR))
 	@$(REBAR) edoc
 else ifeq (rebar,$(REBAR))
