@@ -33,7 +33,6 @@ pre {
   background-color: var(--color-bg-tertiary);
   background-color: #161b22;
   border-radius: 6px;
-  font-size: 0.9em;
   line-height: 1.5em;
   overflow: auto;
   padding: 0px;
@@ -81,7 +80,6 @@ table {
 
 code, pre, tt {
   font-family: ui-monospace,Courier,"Courier New",monospace;
-  font-size: 0.9em;
   border-radius: 6px;
 }
 
@@ -279,7 +277,6 @@ i {
   text-align: center;
   padding: 14px 16px;
   text-decoration: none;
-  font-size: 1em;
 }
 
 .navbar a:link,
