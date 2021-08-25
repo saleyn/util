@@ -14,8 +14,8 @@ docs:: TITLE=$(shell sed -n 's/.*{title, *"\([^"]\+\)" *},.*$$/\1/p' rebar.confi
 docs:: KEYWORDS=$(shell sed -n '/{keywords, *"/,/"}/{s/[ \t\r\n]\+/ /g; s/"}.*$$//; s/.*{keywords, *"//p;}' rebar.config)
 docs::
 docs:: clean-docs
-	@[ -n "$(TITLE)"    ] && echo "TITLE:    $(TITLE)"    || echo "Found no {edoc_opts, [{title, ...}]} in rebar.config!"
-	@[ -n "$(KEYWORDS)" ] && echo "KEYWORDS: $(KEYWORDS)" || echo "Found no {edoc_opts, [{keywords, ...}]} in rebar.config!"
+	@[ -n "$(TITLE)"    ] && echo -e "\E[0;33mTITLE:    $(TITLE)\E[0m"    || echo "Found no {edoc_opts, [{title, ...}]} in rebar.config!"
+	@[ -n "$(KEYWORDS)" ] && echo -e "\E[0;33mKEYWORDS: $(KEYWORDS)\E[0m" || echo "Found no {edoc_opts, [{keywords, ...}]} in rebar.config!"
 ifeq (rebar3,$(REBAR))
 	@$(REBAR) edoc
 else ifeq (rebar,$(REBAR))
