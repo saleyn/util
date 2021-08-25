@@ -346,4 +346,13 @@ i {
 
 .dropdown:hover .dropdown-content {display:block; } 
 
-
+::-webkit-scrollbar {
+    background-color: #232423;
+    color: #b5ab99;
+}
+::-webkit-scrollbar-corner {
+    background-color: #1a1b1a;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #4b4d4b;
+}

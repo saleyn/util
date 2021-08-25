@@ -57,7 +57,7 @@ endif
 		  		sed -i -e "/<\!-- BODY -->/{r $$f.tmp" -e 'd}' $$f.new && rm $$f.tmp; \
 					if [ "$$f" = "index.html" ]; then \
 						sed -i -e '/<!-- MODULE MENU BEGIN -->/,/<!-- MODULE MENU END -->/d' \
-						       -e 's/<!-- TITLE -->/<title>$(TITLE)<\/title>\n<meta name="keywords" content="$(KEYWORDS)">/' \
+						       -e 's~<!-- TITLE -->~<title>$(TITLE)</title>\n<meta name="keywords" content="$(KEYWORDS)">~' \
 								$$f.new; \
 					fi; \
 					mv -f $$f.new $$f; \
