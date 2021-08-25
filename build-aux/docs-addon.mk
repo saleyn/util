@@ -1,6 +1,6 @@
 docs::
 	@mkdir -p build-aux
-	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh; do \
+	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh module-template.html; do \
     if [ -f build-aux/$$f ]; then \
 	    true; \
 		else \
