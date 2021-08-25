@@ -10,7 +10,7 @@ docs::
    done
 	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
 docs:: BG=$(shell sed -n '/background-color:/{s/[^#]\+#\([^;]\+\);.*/\1/p;q}' build-aux/edoc.css)
-docs:: TITLE=$(shell sed -n 's/ *{title, *"\([^"]\+\)" *},.*$$/\1/p' rebar.config)
+docs:: TITLE=$(shell sed -n 's/.*{title, *"\([^"]\+\)" *},.*$$/\1/p' rebar.config)
 docs:: KEYWORDS=$(shell sed -n '/{keywords, *"/,/"}/{s/[ \t\r\n]\+/ /g; s/"}.*$$//; s/.*{keywords, *"//p;}' rebar.config)
 docs::
 docs:: clean-docs
