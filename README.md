@@ -48,8 +48,12 @@ Also in your `rebar.config` add:
 ```
 {edoc_opts, [{overview,        "build-aux/overview.edoc"},
              {stylesheet_file, "build-aux/edoc.css"},
+             {title,           "Project title used by rebar and also inserted as title to the index.html"},
+             {keywords,        "HTML meta keywords (comma-delimited) for search engine crawlers"}, 
              ...]}.
 ```
+NOTE: the `keywords` option is not specific to `EDoc` but used by the HTML reformatting make
+file `docs-addon.mk`.
 
 This will add the following targets to your `Makefile`:
 
