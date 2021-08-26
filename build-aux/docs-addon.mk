@@ -1,3 +1,5 @@
+MASTER=$(shell [ -f .git/refs/heads/master ] && echo master || echo main)
+
 docs::
 	@mkdir -p build-aux
 	@for f in docs-addon.mk edoc.css md-to-edoc.awk md-to-edoc.sh module-template.html; do \
@@ -73,7 +75,8 @@ clean-docs::
 get-version set-version: APPFILE:=$(shell find -name $(PROJECT).app.src)
 get-version set-version: PROJECT:=$(if $(PROJECT),$(PROJECT),$(notdir $(PWD)))
 get-version:
-	@printf "%-20s: %s\n" "$(notdir $(APPFILE))" "$$(sed -n 's/.*{vsn, \"\([0-9]\+\)\(\(\.[0-9]\+\)\+\)\"}.*/\1\2/p' $(APPFILE))"
+	@echo   "App file: $(APPFILE)"
+	@printf "%-20s: %s\n" "$(notdir $(APPFILE))" "$$(sed -n 's/.*{vsn, *\"\([0-9]\+\)\(\(\.[0-9]\+\)\+\)\"}.*/\1\2/p' $(APPFILE))"
 	@printf "%-20s: %s\n" "rebar.config" "$$(sed -n 's/.*{$(PROJECT), *\"\([0-9]\+\)\(\(\.[0-9]\+\)\+\)\"}.*/\1\2/p' rebar.config)"
 
 set-version:
@@ -81,7 +84,7 @@ set-version:
 	@sed -i "s/{vsn, \"\([0-9]\+\)\(\(\.[0-9]\+\)\+\)\"}/{vsn, \"$(version)\"}/" $(APPFILE)
 	@sed -i "s/{$(PROJECT), \"[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\"}/{$(PROJECT), \"$(version)\"}/" rebar.config
 
-github-docs gh-pages: GVER=$(shell git ls-tree --name-only -r master build-aux | grep 'google.*\.html')
+github-docs gh-pages: GVER=$(shell git ls-tree --name-only -r $(MASTER) build-aux | grep 'google.*\.html')
 github-docs gh-pages: LOCAL_GVER=$(notdir $(GVER))
 github-docs gh-pages:
 	@# The git config params must be set when this target is executed by a GitHub workflow
@@ -94,10 +97,10 @@ github-docs gh-pages:
 		git checkout -b gh-pages; \
 	fi
 	rm -f rebar.lock
-	git checkout master -- src $(shell [ -d include ] && echo include)
-	git checkout master -- Makefile rebar.* README.md
+	git checkout $(MASTER) -- src $(shell [ -d include ] && echo include)
+	git checkout $(MASTER) -- Makefile rebar.* README.md $(GH_PAGES_FILES)
 	@# Create google verification file if one exists in the master
-	[ -n "$(GVER)" ] && git show master:$(GVER) 2>/dev/null > "$(LOCAL_GVER)" || true
+	[ -n "$(GVER)" ] && git show $(MASTER):$(GVER) 2>/dev/null > "$(LOCAL_GVER)" || true
 	make docs
 	mv doc/*.* .
 	make clean
@@ -112,5 +115,5 @@ github-docs gh-pages:
 		then git push origin +gh-pages; echo 'Pushed gh-pages to origin'; \
 		else ret=1; git reset --hard; \
 		fi; \
-		set -e; git checkout master && echo 'Switched to master'; exit $$ret"
+		set -e; git checkout $(MASTER) && echo 'Switched to $(MASTER)'; exit $$ret"
 

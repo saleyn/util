@@ -174,10 +174,10 @@ send_mail(Mod, [S | Rest], {From, To, Subj, Msg} = What, _LastReason, Options) -
         _:Reason when is_atom(Reason) ->
             % This is likely a connection error
             send_mail(Mod, Rest, What, Reason, Options);
-        _:_ ->
+        C:R:Stack ->
             % This is the case when a server couldn't send the message due to
             % other than networking reasons.  Don't retry.
-            throw
+            erlang:raise(C,R,Stack)
     end.
 
 smtp_send_headers(Mod, Port, From, To, Subject, Boundary) ->
