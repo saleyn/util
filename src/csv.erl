@@ -96,11 +96,13 @@ parse(File) when is_list(File); is_binary(File) ->
 %%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
 %%   <dt>binary</dt><dd>Return fields as binaries (default)</dd>
 %%   <dt>list</dt><dd>Return fields as lists</dd>
+%%   <dt>{columns, Names}</dt><dd>Return data only in given columns</dd>
 %% </dl>
 %% @end
 %%------------------------------------------------------------------------------
 -spec parse(binary()|string(), [fix_lengths | binary | list |
-                                {open, Opts::list()}]) -> [[string()]].
+                                {open, Opts::list()} |
+                                {columns, [binary()|string()]}]) -> [[string()]].
 parse(File, Opts) when is_binary(File) ->
   parse(binary_to_list(File), Opts);
 parse(File, Opts) when is_list(File), is_list(Opts) ->
@@ -111,6 +113,10 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
                true  -> binary;
                false -> list
              end,
+  Columns  = case proplists:get_value(columns, Opts, all) of
+               all   -> all;
+               L     -> [to_binary(I) || I <- L]
+             end,
   {ok, F}  = file:open(File, [read, raw, binary]++FileOpts),
   FstLine  = case file:read_line(F) of
                {ok, <<I/utf8, Line/binary>>} when I == 65279 -> %% Utf-8  <<239,187,191,...>>
@@ -118,18 +124,35 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
                Other ->
                  Other
              end,
-  Res      = case parse_csv_file(F, 1, FstLine, []) of
-               L when Mode == binary ->
-                 L;
-               L ->
-                 [[binary_to_list(B) || B <- Row] || Row <- L]
+  FixLen   = proplists:get_value(fix_lengths, Opts, false),
+  CSV      = case parse_csv_file(F, 1, FstLine, []) of
+               [] ->
+                 [];
+               LL when FixLen ->
+                 HLen = length(hd(LL)),
+                 [fix_length(HLen, length(R), R) || R <- LL];
+               LL ->
+                 LL
              end,
-  case lists:member(fix_lengths, Opts) of
-    true when hd(Res) == hd(Res) ->  %% Not an empty list
-      HLen = length(hd(Res)),
-      [fix_length(HLen, length(R), R) || R <- Res];
-    _ ->
-      Res
+  if
+    CSV == []; Columns == all, Mode == binary ->
+      CSV;
+    Columns == all, Mode == list ->
+      [[binary_to_list(B) || B <- Row] || Row <- CSV];
+    true ->
+      [HD|_]  = CSV,
+      BitMask = list_to_tuple([lists:member(I, Columns) || I <- HD]),
+      [element(1, lists:foldr(
+         fun(V, {A,I}) ->
+           case element(I,BitMask) of
+             true when Mode == binary ->
+               {[V|A], I-1};
+             true  ->
+               {[binary_to_list(V)|A], I-1};
+             false ->
+               {A, I-1}
+           end
+         end, {[], tuple_size(BitMask)}, Row)) || Row <- CSV]
   end.
 
 parse_csv_file(F, _, eof, Done) ->
@@ -351,11 +374,11 @@ scan_mlt2([], Acc) ->
 %% MySQL database connection returned by `mysql:start_link/1'.
 %% The data in the table is replaced according to `{import_type, Type}':
 %% <ul>
-%% <li>`recreate' - The data from the file is loaded atomically - i.e. either
+%% <li>`recreate' - The table is entirely replaced with the data from file.
+%% The data from the file is loaded atomically - i.e. either
 %% the whole file loading succeeds or fails.  This is accomplished by first
 %% loading data to a temporary table, and then using the database's ACID
-%% properties to replace the target table with the temporary table.
-%% The table is entirely replaced with the data from file.</li>
+%% properties to replace the target table with the temporary table.</li>
 %% <li>`replace'     - Use "REPLACE INTO" instead of "INSERT INTO" existing
 %% table</li>
 %% <li>`ignore_dups' - The insert in the existing table is performed and the
@@ -501,12 +524,16 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
       ok    = file:write_file(SQLF, CrTab)
   end,
 
-  Verbose > 0 andalso io:format(standard_error, "SQL:\n====\n~s\n", [CrTab]),
+  if CrTab == [] ->
+    ok;
+  true ->
+    Verbose > 0 andalso io:format(standard_error, "SQL:\n====\n~s\n", [CrTab]),
 
-  case mysql:query(MySqlPid, CrTab) of
-    ok -> ok;
-    {error, {Code, _, Msg}} ->
-      throw({error_creating_table, Code, binary_to_list(Msg), CrTab})
+    case mysql:query(MySqlPid, CrTab) of
+      ok -> ok;
+      {error, {Code, _, Msg}} ->
+        throw({error_creating_table, Code, binary_to_list(Msg), CrTab})
+    end
   end,
 
   %% Remove NOT NULL constraints from all columnts
@@ -826,7 +853,58 @@ parse_test() ->
            [<<"x">>,<<"y">>],
            [<<"z">>]
           ],
+
   ?assertEqual(Res, CSV).
+
+parse2_test_() ->
+  Name = case os:type() of
+           {unix, _} -> "/tmp/csv.test.tmp";
+           {win32,_} -> os:getenv("TEMP") ++ "/csv.test.tmp"
+         end,
+  {setup,
+    %% Setup
+    fun() ->
+      ok = file:write_file(Name, "a,b,c\nr11,r12,r13\nr21,r22,r23\n"),
+      Name
+    end,
+    %% Cleanup
+    fun(_Name) ->
+      file:delete(_Name)
+    end,
+    %% Tests
+    [
+     ?_assertEqual([[<<"a">>,<<"b">>,<<"c">>],
+                    [<<"r11">>,<<"r12">>,<<"r13">>],
+                    [<<"r21">>,<<"r22">>,<<"r23">>]
+                   ],
+                   parse(Name, [])),
+     ?_assertEqual([[<<"a">>,<<"b">>],
+                    [<<"r11">>,<<"r12">>],
+                    [<<"r21">>,<<"r22">>]
+                   ],
+                   parse(Name, [{columns, ["a","b"]}])),
+     ?_assertEqual([[<<"a">>,<<"c">>],
+                    [<<"r11">>,<<"r13">>],
+                    [<<"r21">>,<<"r23">>]
+                   ],
+                   parse(Name, [{columns, ["a","c"]}])),
+     ?_assertEqual([[<<"b">>,<<"c">>],
+                    [<<"r12">>,<<"r13">>],
+                    [<<"r22">>,<<"r23">>]
+                   ],
+                   parse(Name, [{columns, ["b","c"]}])),
+     ?_assertEqual([["a","b","c"],
+                    ["r11","r12","r13"],
+                    ["r21","r22","r23"]
+                   ],
+                   parse(Name, [list])),
+     ?_assertEqual([["a","b"],
+                    ["r11","r12"],
+                    ["r21","r22"]
+                   ],
+                   parse(Name, [list, {columns, ["a","b"]}]))
+    ]
+  }.
 
 max_lens_test() ->
   Lines = [[<<"a">>,   <<"bb">>,   <<"ccc">>],
