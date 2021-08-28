@@ -14,6 +14,8 @@
 -export([parse/1, parse/2, parse_line/1]).
 -export([max_field_lengths/2, guess_data_types/2, guess_data_type/1, load_to_mysql/4]).
 
+-import(mapreduce, [foldl/3, foldr/3]).
+
 -type load_options() ::
   [{load_type,        recreate|replace|ignore_dups|update_dups}|
    {col_types,        #{binary() => ColType::atom() | {ColType::atom(), ColLen::integer()}}}|
@@ -97,12 +99,16 @@ parse(File) when is_list(File); is_binary(File) ->
 %%   <dt>binary</dt><dd>Return fields as binaries (default)</dd>
 %%   <dt>list</dt><dd>Return fields as lists</dd>
 %%   <dt>{columns, Names}</dt><dd>Return data only in given columns</dd>
+%%   <dt>{converters, [{Col, fun((V0) -> V)]}</dt><dd>Data format converter</dd>
 %% </dl>
 %% @end
 %%------------------------------------------------------------------------------
 -spec parse(binary()|string(), [fix_lengths | binary | list |
                                 {open, Opts::list()} |
-                                {columns, [binary()|string()]}]) -> [[string()]].
+                                {columns, [binary()|string()]}|
+                                {converters, [{binary()|string(),
+                                               fun((binary()) -> binary())}]}
+                               ]) -> [[string()]].
 parse(File, Opts) when is_binary(File) ->
   parse(binary_to_list(File), Opts);
 parse(File, Opts) when is_list(File), is_list(Opts) ->
@@ -115,7 +121,15 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
              end,
   Columns  = case proplists:get_value(columns, Opts, all) of
                all   -> all;
-               L     -> [to_binary(I) || I <- L]
+               L0    -> [to_binary(I) || I <- L0]
+             end,
+  Converts = case proplists:get_value(converters, Opts, none) of
+               L1 when is_list(L1) ->
+                 lists:map(fun({I, F}) when is_function(F, 1) ->
+                              {to_binary(I), F}
+                           end, L1);
+               none ->
+                 []
              end,
   {ok, F}  = file:open(File, [read, raw, binary]++FileOpts),
   FstLine  = case file:read_line(F) of
@@ -138,21 +152,33 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
     CSV == []; Columns == all, Mode == binary ->
       CSV;
     Columns == all, Mode == list ->
-      [[binary_to_list(B) || B <- Row] || Row <- CSV];
+      [HD|Rows] = CSV,
+      CvtMask = list_to_tuple([proplists:get_value(I, Converts) || I <- HD]),
+      H = [binary_to_list(B) || B <- HD],
+      D = [foldr(fun(I, V, S) -> [binary_to_list(convert(CvtMask, I, V)) | S] end, [], Row)
+           || Row <- Rows],
+      [H | D];
     true ->
       [HD|_]  = CSV,
-      BitMask = list_to_tuple([lists:member(I, Columns) || I <- HD]),
-      [element(1, lists:foldr(
-         fun(V, {A,I}) ->
+      BitMask = list_to_tuple([lists:member(I, Columns)         || I <- HD]),
+      CvtMask = list_to_tuple([proplists:get_value(I, Converts) || I <- HD]),
+      [foldr(
+         fun(I, V, A) ->
            case element(I,BitMask) of
              true when Mode == binary ->
-               {[V|A], I-1};
+               [convert(CvtMask, I, V)|A];
              true  ->
-               {[binary_to_list(V)|A], I-1};
+               [binary_to_list(convert(CvtMask, I, V))|A];
              false ->
-               {A, I-1}
+               A
            end
-         end, {[], tuple_size(BitMask)}, Row)) || Row <- CSV]
+         end, [], Row) || Row <- CSV]
+  end.
+
+convert(CvtMask, I, V) ->
+  case element(I, CvtMask) of
+    undefined -> V;
+    Fun       -> Fun(V)
   end.
 
 parse_csv_file(F, _, eof, Done) ->
@@ -902,7 +928,15 @@ parse2_test_() ->
                     ["r11","r12"],
                     ["r21","r22"]
                    ],
-                   parse(Name, [list, {columns, ["a","b"]}]))
+                   parse(Name, [list, {columns, ["a","b"]}])),
+     ?_assertEqual([["a","b"],
+                    ["r11","X"],
+                    ["r21","r22"]
+                   ],
+                   parse(Name, [list, {columns,   ["a","b"]},
+                                      {converters,[{"b", fun(<<"r1", _/binary>>) -> <<"X">>;
+                                                           (V) -> V
+                                                         end}]}]))
     ]
   }.
 
