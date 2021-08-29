@@ -14,8 +14,6 @@
 -export([parse/1, parse/2, parse_line/1]).
 -export([max_field_lengths/2, guess_data_types/2, guess_data_type/1, load_to_mysql/4]).
 
--import(mapreduce, [foldl/3, foldr/3]).
-
 -type load_options() ::
   [{load_type,        recreate|replace|ignore_dups|update_dups}|
    {col_types,        #{binary() => ColType::atom() | {ColType::atom(), ColLen::integer()}}}|
@@ -99,14 +97,17 @@ parse(File) when is_list(File); is_binary(File) ->
 %%   <dt>binary</dt><dd>Return fields as binaries (default)</dd>
 %%   <dt>list</dt><dd>Return fields as lists</dd>
 %%   <dt>{columns, Names}</dt><dd>Return data only in given columns</dd>
-%%   <dt>{converters, [{Col, fun((V0) -> V)]}</dt><dd>Data format converter</dd>
+%%   <dt>{converters, [{Col, fun((V0) -> V)]}</dt>
+%%     <dd>Data format converter.
+%%       If `Col' is `all', the same converting function is used for all
+%%       columns.</dd>
 %% </dl>
 %% @end
 %%------------------------------------------------------------------------------
 -spec parse(binary()|string(), [fix_lengths | binary | list |
                                 {open, Opts::list()} |
                                 {columns, [binary()|string()]}|
-                                {converters, [{binary()|string(),
+                                {converters, [{binary()|string()|all,
                                                fun((binary()) -> binary())}]}
                                ]) -> [[string()]].
 parse(File, Opts) when is_binary(File) ->
@@ -122,14 +123,6 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
   Columns  = case proplists:get_value(columns, Opts, all) of
                all   -> all;
                L0    -> [to_binary(I) || I <- L0]
-             end,
-  Converts = case proplists:get_value(converters, Opts, none) of
-               L1 when is_list(L1) ->
-                 lists:map(fun({I, F}) when is_function(F, 1) ->
-                              {to_binary(I), F}
-                           end, L1);
-               none ->
-                 []
              end,
   {ok, F}  = file:open(File, [read, raw, binary]++FileOpts),
   FstLine  = case file:read_line(F) of
@@ -148,37 +141,51 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
                LL ->
                  LL
              end,
-  if
-    CSV == []; Columns == all, Mode == binary ->
-      CSV;
-    Columns == all, Mode == list ->
-      [HD|Rows] = CSV,
-      CvtMask = list_to_tuple([proplists:get_value(I, Converts) || I <- HD]),
-      H = [binary_to_list(B) || B <- HD],
-      D = [foldr(fun(I, V, S) -> [binary_to_list(convert(CvtMask, I, V)) | S] end, [], Row)
-           || Row <- Rows],
-      [H | D];
-    true ->
-      [HD|_]  = CSV,
-      BitMask = list_to_tuple([lists:member(I, Columns)         || I <- HD]),
-      CvtMask = list_to_tuple([proplists:get_value(I, Converts) || I <- HD]),
-      [foldr(
-         fun(I, V, A) ->
-           case element(I,BitMask) of
-             true when Mode == binary ->
-               [convert(CvtMask, I, V)|A];
-             true  ->
-               [binary_to_list(convert(CvtMask, I, V))|A];
-             false ->
-               A
-           end
-         end, [], Row) || Row <- CSV]
+  % Get converters, which are in the form {ColName|all, fun((V) -> NewV)}.
+  Converts = 
+    case {CSV, proplists:get_value(converters, Opts, none)} of
+      {[], _} ->
+        [];
+      {[Headers|_], none} ->
+        list_to_tuple(lists:duplicate(length(Headers), undefined));
+      {[Headers|_], L1} when is_list(L1) ->
+        L2 = [{if H==all -> all; true -> to_binary(H) end, Fun} || {H,Fun} <- L1],
+        list_to_tuple([case proplists:get_value(I, L2, proplists:get_value(all, L2)) of
+                         Fun when is_function(Fun,1) ->
+                           Fun;
+                         undefined ->
+                           undefined
+                       end || I <- Headers])
+    end,
+
+  case CSV of
+    [] ->
+      [];
+    [HD|Rows] ->
+      BitMask = list_to_tuple([Columns==all orelse lists:member(I, Columns) || I <- HD]),
+      %% Get resulting column headers
+      H = foldr(fun(I, Col, S) ->
+                  case element(I, BitMask) of
+                    true  -> [if Mode==list -> binary_to_list(Col); true -> Col end | S];
+                    false -> S
+                  end
+                end, [], HD),
+      %% Get resulting data rows
+      D = [foldr(fun(I, V, A) ->
+                   case element(I,BitMask) of
+                     true  -> [convert(Converts, I, V, Mode)|A];
+                     false -> A
+                   end
+                 end, [], Row) || Row <- Rows],
+      [H | D]
   end.
 
-convert(CvtMask, I, V) ->
-  case element(I, CvtMask) of
-    undefined -> V;
-    Fun       -> Fun(V)
+convert(CvtMask, I, V, Mode) ->
+  case {element(I, CvtMask), Mode} of
+    {undefined, list} -> binary_to_list(V);
+    {undefined, _}    -> V;
+    {Fun,       list} -> binary_to_list(Fun(V));
+    {Fun,       _}    -> Fun(V)
   end.
 
 parse_csv_file(F, _, eof, Done) ->
@@ -833,6 +840,12 @@ def_type(V) ->
   {string, V, V}.
 
 i(C) -> C - $0.
+
+-spec foldr(fun((Position::integer(), Item::term(), Acc::term()) -> NewAcc::term()),
+            Init::term(), list()) -> term().
+foldr(Fun, Init, List) ->
+  N = length(List),
+  element(2, lists:foldr(fun(V, {I, S}) -> R = Fun(I, V, S), {I-1, R} end, {N, Init}, List)).
 
 %%------------------------------------------------------------------------------
 %% Tests
