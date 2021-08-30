@@ -77,6 +77,34 @@
 %% </dl>
 -export_type([load_options/0]).
 
+-type parse_options() ::
+  [fix_lengths            |
+   binary                 |
+   list                   |
+   {open,       list()}   |
+   {columns,    [binary() |string()]}|
+   {converters, [{binary()|string()|all, fun((binary(), binary()) -> binary())|
+                                         {rex, binary(), binary()}}]}
+  ].
+%% CSV Parsing Options.
+%% <dl>
+%%   <dt>fix_lengths</dt><dd>if a record has a column count
+%%       greater than what's found in the header row, those extra columns will be
+%%       dropped, and if a row has fewer columns, empty columns will be added.</dd>
+%%   <dt>binary</dt><dd>Return fields as binaries (default)</dd>
+%%   <dt>list</dt><dd>Return fields as lists</dd>
+%%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
+%%   <dt>{columns, Names}</dt><dd>Return data only in given columns</dd>
+%%   <dt>{converters, [{Col, fun((ColName, Value) -> NewValue)|
+%%                           {rex, RegEx, Replace}]}</dt>
+%%     <dd>Data format converter.
+%%       If `Col' is `all', the same converting function is used for all
+%%       columns. If the converter is a `{rex, RegEx, Replace}' then
+%%       the regular expression replacement will be run on a value in the
+%%       requested column.</dd>
+%% </dl>
+-export_type([parse_options/0]).
+
 %%------------------------------------------------------------------------------
 %% CSV parsing
 %%------------------------------------------------------------------------------
@@ -87,29 +115,9 @@ parse(File) when is_list(File); is_binary(File) ->
 
 %%------------------------------------------------------------------------------
 %% @doc Parse a given CSV file.
-%% Options:
-%% <dl>
-%%   <dt>fix_lengths</dt><dd>if a record has a column count
-%% greater than what's found in the header row, those extra columns will be
-%% dropped, and if a row has fewer columns, empty columns will be added.</dd>
-%%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
-%%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
-%%   <dt>binary</dt><dd>Return fields as binaries (default)</dd>
-%%   <dt>list</dt><dd>Return fields as lists</dd>
-%%   <dt>{columns, Names}</dt><dd>Return data only in given columns</dd>
-%%   <dt>{converters, [{Col, fun((V0) -> V)]}</dt>
-%%     <dd>Data format converter.
-%%       If `Col' is `all', the same converting function is used for all
-%%       columns.</dd>
-%% </dl>
 %% @end
 %%------------------------------------------------------------------------------
--spec parse(binary()|string(), [fix_lengths | binary | list |
-                                {open, Opts::list()} |
-                                {columns, [binary()|string()]}|
-                                {converters, [{binary()|string()|all,
-                                               fun((binary()) -> binary())}]}
-                               ]) -> [[string()]].
+-spec parse(binary()|string(), parse_options()) -> [[string()]].
 parse(File, Opts) when is_binary(File) ->
   parse(binary_to_list(File), Opts);
 parse(File, Opts) when is_list(File), is_list(Opts) ->
@@ -149,9 +157,16 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
       {[Headers|_], none} ->
         list_to_tuple(lists:duplicate(length(Headers), undefined));
       {[Headers|_], L1} when is_list(L1) ->
-        L2 = [{if H==all -> all; true -> to_binary(H) end, Fun} || {H,Fun} <- L1],
+        L2 = [{if H==all -> all; true -> to_binary(H) end,
+               if is_function(Fun,2) ->
+                    Fun;
+                  element(1,Fun)==rex ->
+                    Fun;
+                  true ->
+                    throw("Invalid converter type for column: " ++ to_string(H))
+               end} || {H,Fun} <- L1],
         list_to_tuple([case proplists:get_value(I, L2, proplists:get_value(all, L2)) of
-                         Fun when is_function(Fun,1) ->
+                         Fun when is_function(Fun,2); element(1,Fun)==rex ->
                            Fun;
                          undefined ->
                            undefined
@@ -171,21 +186,37 @@ parse(File, Opts) when is_list(File), is_list(Opts) ->
                   end
                 end, [], HD),
       %% Get resulting data rows
-      D = [foldr(fun(I, V, A) ->
-                   case element(I,BitMask) of
-                     true  -> [convert(Converts, I, V, Mode)|A];
-                     false -> A
-                   end
-                 end, [], Row) || Row <- Rows],
+      {D,_} = lists:mapfoldl(
+            fun(Row, RowNum) ->
+              NewRow = foldr(fun(I, V, A) ->
+                               case element(I,BitMask) of
+                                 true  -> [convert(Converts, RowNum, I, V, Mode)|A];
+                                 false -> A
+                               end
+                             end, [], Row),
+              {NewRow, RowNum+1}
+            end,
+            1,
+            Rows),
       [H | D]
   end.
 
-convert(CvtMask, I, V, Mode) ->
-  case {element(I, CvtMask), Mode} of
-    {undefined, list} -> binary_to_list(V);
-    {undefined, _}    -> V;
-    {Fun,       list} -> binary_to_list(Fun(V));
-    {Fun,       _}    -> Fun(V)
+convert(CvtMask, RowNum, I, V, Mode) ->
+  case element(I, CvtMask) of
+    undefined ->
+      if Mode == list -> binary_to_list(V);
+         true         -> V
+      end;
+    Fun when is_function(Fun, 2) ->
+      if Mode == list ->
+        binary_to_list(Fun(V, RowNum));
+      true ->
+        Fun(V, RowNum)
+      end;
+    {rex, RegEx, Replace} ->
+      re:replace(V, RegEx, Replace, [{return,Mode}]);
+    {rex, RegEx, Replace, Options} ->
+      re:replace(V, RegEx, Replace, [{return,Mode}|Options])
   end.
 
 parse_csv_file(F, _, eof, Done) ->
@@ -748,7 +779,8 @@ encoding3(Other) ->
   ["SET CHARACTER SET ", Other].
 
 to_string(L) when is_binary(L) -> binary_to_list(L);
-to_string(L) when is_list(L)   -> L.
+to_string(L) when is_list(L)   -> L;
+to_string(L) when is_atom(L)   -> atom_to_list(L).
 
 to_binary(I) when is_binary(I) -> I;
 to_binary(L) when is_list(L)   -> list_to_binary(L).
@@ -942,13 +974,15 @@ parse2_test_() ->
                     ["r21","r22"]
                    ],
                    parse(Name, [list, {columns, ["a","b"]}])),
+     %% Test column converters based on a function and a regex:
      ?_assertEqual([["a","b"],
-                    ["r11","X"],
-                    ["r21","r22"]
+                    ["XX11","Row1"],
+                    ["XX21","Row2"]
                    ],
                    parse(Name, [list, {columns,   ["a","b"]},
-                                      {converters,[{"b", fun(<<"r1", _/binary>>) -> <<"X">>;
-                                                           (V) -> V
+                                      {converters,[{"a", {rex, "r(\\d\\d)", "XX\\1"}},
+                                                   {"b", fun(_, RowNum) ->
+                                                           <<"Row", (integer_to_binary(RowNum))/binary>>
                                                          end}]}]))
     ]
   }.

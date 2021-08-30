@@ -127,7 +127,8 @@ in_list_ordered {
 # Print titles
 /^#/ && !in_code {
   match($0, /^#+/)
-  n = RLENGTH
+  n = RLENGTH-1
+  if (n < 1) n = 1
 
   gsub(/^#+/, "")
   gsub(/#+$/, "")
