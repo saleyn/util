@@ -96,13 +96,15 @@ github-docs gh-pages: LOCAL_GVER=$(notdir $(GVER))
 github-docs gh-pages:
 	@# The git config params must be set when this target is executed by a GitHub workflow
 	@[ -z "$(git config user.name)" ] && \
-		git config user.name  github-actions
+		git config user.name  github-actions && \
 		git config user.email github-actions@github.com
 	@if git branch | grep -q gh-pages ; then \
 		git checkout gh-pages; \
 	else \
 		git checkout -b gh-pages; \
 	fi
+	@echo "Git root: $(git rev-parse --show-toplevel)"
+	ls -l $(git rev-parse --show-toplevel)/.git/refs/heads/master
 	rm -f rebar.lock
 	git checkout $(MASTER) -- src $(shell [ -d include ] && echo include)
 	git checkout $(MASTER) -- Makefile rebar.* README.md $(GH_PAGES_FILES)
