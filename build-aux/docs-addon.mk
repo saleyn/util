@@ -1,4 +1,5 @@
-MASTER=$(shell [ -f $(git rev-parse --show-toplevel)/.git/refs/heads/master ] && echo master || echo main)
+GIT_ROOT=$(shell A=$$(git rev-parse --show-toplevel); [ -z $$A ] && echo ".git" || echo "$$A/.git")
+MASTER=$(shell [ -f $(GIT_ROOT)/refs/heads/master ] && echo master || echo main)
 
 info::
 	@echo "make docs                                  - Generate documentation"
@@ -104,7 +105,7 @@ github-docs gh-pages:
 		git checkout -b gh-pages; \
 	fi
 	@echo "Git root: $(git rev-parse --show-toplevel)"
-	ls -l $(git rev-parse --show-toplevel)/.git/refs/heads/master
+	@echo "Main branch: $(MASTER)"
 	rm -f rebar.lock
 	git checkout $(MASTER) -- src $(shell [ -d include ] && echo include)
 	git checkout $(MASTER) -- Makefile rebar.* README.md $(GH_PAGES_FILES)

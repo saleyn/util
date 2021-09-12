@@ -20,15 +20,15 @@ jobs:
       with:
         # Checkout all history for all branches and tags
         fetch-depth: 0
+    - name: Current Directory
+      run:  pwd
+    - name: Git
+      run:  ls -l .git/refs/heads/*
     - name: Install gawk
       run:  apt update && apt install sudo && sudo apt-get install gawk
     - name: Compile
       run:  make
     - name: Run tests
       run:  make eunit
-    - name: Current Directory
-      run:  pwd
-    - name: Git
-      run:  ls -l .git*
     - name: Make documentation
       run:  make gh-pages
