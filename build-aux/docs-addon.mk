@@ -1,4 +1,11 @@
-MASTER=$(shell [ -f .git/refs/heads/master ] && echo master || echo main)
+MASTER=$(shell [ -f $(git rev-parse --show-toplevel)/.git/refs/heads/master ] && echo master || echo main)
+
+info::
+	@echo "make docs                                  - Generate documentation"
+	@echo "make get-version                           - Get version of $(PROJECT)"
+	@echo "make set-version version=X.Y.Z             - Set version of $(PROJECT)"
+	@echo "make gh-pages                              - Generate and push Github pages"
+	@echo "make clean-docs                            - Delete generated documentation"
 
 docs::
 	@mkdir -p build-aux
@@ -10,7 +17,7 @@ docs::
       curl -s -o build-aux/$$f https://raw.githubusercontent.com/saleyn/util/master/build-aux/$$f; \
 		fi; \
    done
-	@sh build-aux/md-to-edoc.sh README.md > build-aux/overview.edoc
+	@sh build-aux/md-to-edoc.sh $(if $(overview),$(overview),README).md > build-aux/overview.edoc
 docs:: BG=$(shell sed -n '/background-color:/{s/[^#]\+#\([^;]\+\);.*/\1/p;q}' build-aux/edoc.css)
 docs:: TITLE=$(shell sed -n 's/.*{title, *"\([^"]\+\)" *},.*$$/\1/p' rebar.config)
 docs:: KEYWORDS=$(shell sed -n '/{keywords, *"/,/"}/{s/[ \t\r\n]\+/ /g; s/"}.*$$//; s/.*{keywords, *"//p;}' rebar.config)

@@ -56,6 +56,7 @@
         | {domain, Domain::string()}
         | {timeout, Millisec::integer()}
         | {verbose, debug}
+        | {ssl, SSLOpts::list()}
         | {attachments, [
              Filename::string() |
              {Filename::string(), ContentType::string()} |
@@ -71,6 +72,7 @@
 %%      <li>Timeout - timeout to use (default 10000)</li>
 %%      <li>Verbose - controls debugging printout</li>
 %%      <li>Attachments - list of files to attach</li>
+%%      <li>SSLOpts - additional SSL options if using SSL protocol</li>
 %%     </ul>
 
 %%-------------------------------------------------------------------------
@@ -257,13 +259,16 @@ send_attachment(Mod, Port, Boundary, FileName, ContentType, Data) ->
     B64 = sting2base64(Data),
     Mod:send(Port, B64).
 
-def_port_and_opts(gen_tcp) ->
+def_port_and_opts(gen_tcp, _Opts) ->
     {25, [{active, false}, {reuseaddr,true}, {packet, line}, binary]};
-def_port_and_opts(ssl) ->
-    {465,[{active, false}, {depth, 0}, {packet, line}, {ssl_imp, new}, binary]}.
+def_port_and_opts(ssl, Opts) ->
+    SSLOpts = proplists:get_value(ssl, Opts, []),
+    {465, SSLOpts ++ [{active, false}, {depth, 0}, {packet, line}, {ssl_imp, new}, binary]}.
 
+connect(gen_tcp, Server, _Verbose, _Options) when is_port(Server) ->
+    Server;
 connect(Mod, Server, Verbose, Options) ->
-    {DefPort, SockOpts} = def_port_and_opts(Mod),
+    {DefPort, SockOpts} = def_port_and_opts(Mod, Options),
     % For ssl make sure applications crypto, public_key and ssl are started
     if is_port(Server) ->
         case Mod:connect(Server, SockOpts) of
@@ -271,11 +276,11 @@ connect(Mod, Server, Verbose, Options) ->
         {error, Why} -> throw(Why)
         end;
     true ->
-        Port = proplists:get_value(port, Options, DefPort),
+        Port    = proplists:get_value(port, Options, DefPort),
         Timeout = proplists:get_value(timeout, Options, 10000),
         print(Verbose, "Connecting to: ~w://~s:~w\n", [Mod, Server, Port]),
         case Mod:connect(Server, Port, SockOpts, Timeout) of
-        {ok, Sock}   -> Sock;
+        {ok,   Sock} -> Sock;
         {error, Why} -> throw(Why)
         end
     end.
@@ -417,7 +422,7 @@ smtp_init(Mod, Server, From, Recipients, Verbose, Options) ->
     smtp_expect(Mod, <<"220">>, Port, "SMTP server does not respond"),
     Domain = domain(Options),
     {ok, Extensions} = try_HELO(Mod, Port, Domain),
-    print(debug, "Extensions: ~p\n", [Extensions]),
+    print(Verbose, "Extensions: ~p\n", [Extensions]),
     {Port2, Extensions2} = smtp_STARTTLS(Mod, Port, Options, Extensions, Domain, Verbose),
     {_Auth, Username} =
         try_AUTH(Mod, Port, Options, proplists:get_value(<<"AUTH">>, Extensions2), Verbose),
@@ -490,8 +495,10 @@ smtp_expect(Mod, Code, Port, ErrorMsg, N, Acc) when is_binary(Code) ->
         throw(Other);
     {ok, _Other} ->
         throw(ErrorMsg);
+    {error, closed} ->
+        throw("Socket closed unexpectedly");
     {error, Reason} ->
-        throw(lists:flatten(inet:format_error(Reason)))
+        throw({Mod, recv, Reason, lists:flatten(inet:format_error(Reason))})
     end.
 
 parse_extension(Bin, Acc) ->
@@ -527,7 +534,7 @@ trim_nl(Bin) ->
     end.
 
 print(debug, Fmt, Args) ->
-    io:format(Fmt, Args);
+    io:format("SMTP: " ++ Fmt, Args);
 print(_, _Fmt, _Args) ->
     ok.
 

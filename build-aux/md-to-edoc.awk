@@ -165,27 +165,13 @@ in_list_ordered {
   n = -1
 
   # display unordered lists
-  if(match($0,/^ *[-\*] /)) {
-    n  = RSTART+RLENGTH
-    $0 = substr($0, n)
-    if (n > li_offset) {
-      # New unordered list
-      list_push(n, "ul")
-      printf "%*s<ul>\n", n-2, " "
-    }
-    printf "%*s<li>", n, " "
-
+  if(/^ *[-\*] /) {
+    match($0,/[-\*] /)
+    update_and_maybe_push_list("ul")
   # display ordered lists
-  } else if(match($0,/^ *[0-9]+\. /)) {
-    match($0, /[0-9]+\. /)
-    n  = RSTART+RLENGTH
-    $0 = substr($0, n)
-    if (n > li_offset) {
-      # New ordered list
-      list_push(n, "ol")
-      printf "%*s<ol>\n", n-2, " "
-    }
-    printf "%*s<li>", n, " "
+  } else if(/^ *[0-9]+\. /) {
+    match($0,/[0-9]+\. /)
+    update_and_maybe_push_list("ol")
   }
 }
 
@@ -222,6 +208,21 @@ END {
   pop_all_lists()
 }
 
+function update_and_maybe_push_list(li) {
+  n  = RSTART+RLENGTH
+  $0 = substr($0, n)
+  style = ""
+  if (match($0, /^\[.\] /)) {
+    style = " type=\"squares\""
+    $0    = substr($0, RLENGTH) 
+  }
+  if (n > li_offset) {
+    # New unordered list
+    list_push(n, li)
+    printf "%*s<%s>\n", n-2, " ", li
+  }
+  printf "%*s<li>", n, " "
+}
 function list_push(offset, type) {
   i = list_pos++
   list_offsets[i]   = offset
