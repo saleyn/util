@@ -17,6 +17,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      fetch-depth: 0
     - name: Install gawk
       run:  apt update && apt install sudo && sudo apt-get install gawk
     - name: Compile
