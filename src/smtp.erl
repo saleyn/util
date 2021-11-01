@@ -263,21 +263,21 @@ def_port_and_opts(gen_tcp, _Opts) ->
     {25, [{active, false}, {reuseaddr,true}, {packet, line}, binary]};
 def_port_and_opts(ssl, Opts) ->
     SSLOpts = proplists:get_value(ssl, Opts, []),
-    {465, SSLOpts ++ [{active, false}, {depth, 0}, {packet, line}, {ssl_imp, new}, binary]}.
+    {465, SSLOpts ++ [{active, false}, {depth, 3}, {packet, line}, {ssl_imp, new}, binary]}.
 
 connect(gen_tcp, Server, _Verbose, _Options) when is_port(Server) ->
     Server;
 connect(Mod, Server, Verbose, Options) ->
     {DefPort, SockOpts} = def_port_and_opts(Mod, Options),
+    Timeout             = proplists:get_value(timeout, Options, 10000),
     % For ssl make sure applications crypto, public_key and ssl are started
     if is_port(Server) ->
-        case Mod:connect(Server, SockOpts) of
+        case Mod:connect(Server, SockOpts, Timeout) of
         {ok, Sock}   -> Sock;
         {error, Why} -> throw(Why)
         end;
     true ->
-        Port    = proplists:get_value(port, Options, DefPort),
-        Timeout = proplists:get_value(timeout, Options, 10000),
+        Port = proplists:get_value(port, Options, DefPort),
         print(Verbose, "Connecting to: ~w://~s:~w\n", [Mod, Server, Port]),
         case Mod:connect(Server, Port, SockOpts, Timeout) of
         {ok,   Sock} -> Sock;
@@ -295,6 +295,8 @@ domain(Options) ->
         list_to_binary(Domain)
     end.
 
+smtp_STARTTLS(ssl, Port, _Options, Extensions, _Domain, _Verbose) ->
+    {Port, Extensions};
 smtp_STARTTLS(Mod, Port, Options, Extensions, Domain, Verbose) ->
     case {proplists:get_value(tls, Options), proplists:get_value(<<"STARTTLS">>, Extensions)} of
     {always, true} ->
@@ -315,7 +317,7 @@ do_STARTTLS(Mod, Port, Extensions, Verbose, Options, Domain) ->
     ssl ->
         {Port, Extensions};
     gen_tcp ->
-        Sock = connect(Mod, Port, Verbose, Options),
+        Sock = connect(ssl, Port, Verbose, Options),
         {ok, Extensions2} = try_HELO(Mod, Port, Domain),
         {Sock, Extensions2}
     end.
