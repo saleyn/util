@@ -80,7 +80,7 @@ endif
 clean-docs::
 	@rm -f doc/*.{css,html,png} doc/edoc-info
 
-get-version set-version: APPFILE:=$(shell find -name $(PROJECT).app.src)
+get-version set-version: APPFILE:=$(shell find . -name $(PROJECT).app.src)
 get-version set-version: PROJECT:=$(if $(PROJECT),$(PROJECT),$(notdir $(PWD)))
 get-version:
 	@echo   "App file: $(APPFILE)"
