@@ -68,7 +68,7 @@ This will add the following targets to your `Makefile`:
 To add functions from `user_default.erl` to Elixir's `iex` shell, add `~/.iex.exs` file
 containing:
 ```
-import IEx.Extensions
+import :user_default
 ```
 
 ## Download
