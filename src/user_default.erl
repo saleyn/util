@@ -59,8 +59,7 @@ help() ->
   format("tc(N,F)       -- evaluate F N times and return {MkSecs, MkSecs/call, Result}\n"),
   true.
 
-%% these are in alphabetic order it would be nice if they
-%% were to *stay* so!
+%% These are in alphabetic order it would be nice if they were to *stay* so!
 
 dbg() ->
   R = debugger:start(),

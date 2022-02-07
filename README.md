@@ -63,6 +63,13 @@ This will add the following targets to your `Makefile`:
 - `set-version` - Set the version number for the above `(make set-version version=X.Y.Z)`
 - `clean-docs`  - Remove the generated files in the `doc` directory
 
+## Elixir
+
+To add functions from `user_default.erl` to Elixir's `iex` shell, add `~/.iex.exs` file
+containing:
+```
+import IEx.Extensions
+```
 
 ## Download
 
