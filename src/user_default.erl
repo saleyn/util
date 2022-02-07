@@ -55,8 +55,8 @@ help() ->
   format("dbgoff()      -- disable dbg tracer (calls dbg:stop/0)\n"),
   format("p(Term)       -- print term using io:format(\"~s\\n\", [Term])\n", ["~p"]),
   format("nl()          -- load all changed modules on all known nodes\n"),
-  format("tc(N,M,F,A)   -- evaluate {M,F,A} N times and return {TotMkSecs, MkSecs/call, Result}\n"),
-  format("tc(N,F)       -- evaluate F N times and return {MkSecs, MkSecs/call, Result}\n"),
+  format("tc(N,M,F,A)   -- evaluate {M,F,A} N times and return {MkSecs/call, Result}\n"),
+  format("tc(N,F)       -- evaluate F N times and return {MkSecs/call, Result}\n"),
   true.
 
 %% These are in alphabetic order it would be nice if they were to *stay* so!
@@ -179,5 +179,5 @@ call(N, X, M, F, A, Time1) ->
 
 return(N, Res, Time1, Time2) ->
   Int   = Time2 - Time1,
-  {Int, Int / N, Res}.
+  {Int / N, Res}.
 
