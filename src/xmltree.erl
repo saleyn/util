@@ -73,8 +73,9 @@ xml(#xmlElement{name = N, attributes = A, content = C}, {N, AttrRules, ChildRule
   {N, process_attributes(A, AttrRules), xml(C, ChildRules)};
 xml([#xmlElement{name = N} = E | T], ChildRules) ->
   case lists:keyfind(N, 1, ChildRules) of
-    false -> throw({no_rule_for_element, N});
-    Rule  -> [xml(E, Rule) | xml(T, ChildRules)]
+    false          -> throw({no_rule_for_element, N, E});
+    {F, A}         -> [xml(E, {F,A,[]}) | xml(T, ChildRules)];
+    {_,_,_} = Rule -> [xml(E, Rule)     | xml(T, ChildRules)]
   end;
 xml([#xmlComment{} | T], ChildRules) ->
   xml(T, ChildRules);
@@ -97,14 +98,16 @@ process_attributes([], _) ->
   [].
 
 
-process_value(Value, Fun) when is_function(Fun ,1) -> Fun(Value);
-process_value(Value, atom)    -> list_to_atom   (Value);
-process_value(Value, boolean) -> A = list_to_existing_atom(Value),
-                                 if is_boolean(A) -> A;
-                                    true          -> throw({value_is_not_boolean, Value})
-                                 end;
-process_value(Value, integer) -> list_to_integer(Value);
-process_value(Value, float)   -> list_to_float  (Value);
-process_value(Value, binary)  -> list_to_binary (Value);
-process_value(Value, string)  -> Value;
-process_value(Value, _)       -> unicode:characters_to_binary(Value, utf8).
+process_value(Value,   Fun) when is_function(Fun ,1) -> Fun(Value);
+process_value(Value,   atom)    -> list_to_atom   (Value);
+process_value("Y",     boolean) -> true;
+process_value("N",     boolean) -> false;
+process_value(Value,   boolean) -> A = list_to_existing_atom(Value),
+                                   if is_boolean(A) -> A;
+                                      true          -> throw({value_is_not_boolean, Value})
+                                   end;
+process_value(Value,   integer) -> list_to_integer(Value);
+process_value(Value,   float)   -> list_to_float  (Value);
+process_value(Value,   binary)  -> list_to_binary (Value);
+process_value(Value,   string)  -> Value;
+process_value(Value,   _)       -> unicode:characters_to_binary(Value, utf8).
