@@ -11,14 +11,15 @@ encrypt(Text, KeyPlainText) when (is_list(Text) orelse is_binary(Text)), is_list
   {encrypt(Text, Key), Key};
 
 encrypt(Text, Key) when (is_list(Text) orelse is_binary(Text)), is_binary(Key), byte_size(Key) =:= 32 ->
-  IV = crypto:strong_rand_bytes(16), % create random Initialisation Vector
-  {Ciphertext, Tag} = crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, Text, ?AAD, true),
-  Time = erlang:system_time(microsecond),
-  <<IV/binary, Tag/binary, Time:64/integer, Ciphertext/binary>>. % "return" iv with the cipher tag & ciphertext
+  Data = iolist_to_binary([<<(erlang:system_time(microsecond)):64/integer>>, Text]),
+  IV   = crypto:strong_rand_bytes(16), % create random Initialisation Vector
+  {Ciphertext, Tag} = crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, Data, ?AAD, true),
+  <<IV/binary, Tag/binary, Ciphertext/binary>>. % "return" iv with the cipher tag & ciphertext
 
-decrypt(Encrypted, Key) when is_binary(Encrypted), is_binary(Key), byte_size(Key) =:= 32 ->
-  <<IV:16/binary, Tag:16/binary, _Time:64/integer, Ciphertext/binary>> = Encrypted,
-  crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, Ciphertext, ?AAD, Tag, false).
+decrypt(_Encrypted = <<IV:16/binary, Tag:16/binary, Cipher/binary>>, Key) when byte_size(Key) =:= 32 ->
+  <<_Time:64/integer, Text/binary>> =
+    crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, Cipher, ?AAD, Tag, false),
+  Text.
 
 make_key(PlainKey) when is_list(PlainKey); is_binary(PlainKey) ->
   crypto:hash(sha256, PlainKey).
