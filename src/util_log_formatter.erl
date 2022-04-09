@@ -63,6 +63,8 @@
 -export([format/2]).
 -export([check_config/1]).
 
+-compile({no_auto_import, [atom_to_list/1]}).
+
 -include_lib("kernel/src/logger_internal.hrl").
 
 %%%-----------------------------------------------------------------
@@ -270,6 +272,12 @@ format_regname(Key,Pid,Data) ->
         {_, Name} -> atom_to_list(Name);
         _         -> pid_to_list(Pid,true)
     end.
+
+atom_to_list(Atom) ->
+  case atom_to_list(Atom) of
+    "Elixir." ++ L -> L;
+    Other          -> Other
+  end.
 
 pid_to_list(Pid,false) ->
     pid_to_list(Pid);
@@ -789,5 +797,5 @@ level_to_chr(warning)    -> $W;
 level_to_chr(error)      -> $E;
 level_to_chr(critical)   -> $C;
 level_to_chr(alert)      -> $A;
-level_to_chr(emergency)  -> $M;
+level_to_chr(emergency)  -> $!;
 level_to_chr(none)       -> $ .
