@@ -21,9 +21,9 @@ jobs:
         # Checkout all history for all branches and tags
         fetch-depth: 0
     - uses: actions/setup-elixir@v1
-        with:
-          otp-version: '24.0'
-          elixir-version: '1.13.2'
+      with:
+        otp-version: '24.0'
+        elixir-version: '1.13.2'
     - name: Current Directory
       run:  pwd
     - name: Git
