@@ -18,8 +18,13 @@ empty   :=
 space   := $(empty) $(empty)
 delim   := $(empty),\n        $(empty)
 
-all:
+all: compile
+
+compile:
 	@$(REBAR) compile
+	@if which elixirc &>/dev/null; then \
+	 	for f in src/*.ex; do elixirc -o ebin --ignore-module-conflict $$f; done; \
+	fi
 
 test eunit:
 	@$(REBAR) eunit

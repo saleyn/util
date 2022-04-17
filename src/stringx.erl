@@ -23,6 +23,7 @@
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
 -export([align_rows/1, align_rows/2, aligned_format/2, aligned_format/3]).
 
+-export([format/2, format_binary/2]).
 -export([format_integer/1, format_integer/2, format_number/3, format_number/4]).
 -export([format_price/1, format_price/2, format_price/3]).
 -export([round_price/1, round_number/2, binary_join/2]).
@@ -607,6 +608,19 @@ guess_type(V)     when is_integer(V)   -> number;
 guess_type(V)     when is_float(V)     -> number;
 guess_type(_)                          -> string.
 
+%% @doc Convert format and arguments to binary/list shortening .
+%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2`
+-spec format(binary()|string(), list()) -> binary()|string().
+format(Fmt, Args) when is_list(Args) ->
+  Res = io_lib:format(Fmt, Args),
+  format1(Res).
+
+%% @doc Convert format and arguments to binary/list shortening .
+%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2`
+-spec format_binary(binary()|string(), list()) -> binary().
+format_binary(Fmt, Args) when is_binary(Fmt) or is_list(Fmt) ->
+  iolist_to_binary(format(Fmt, Args)).
+
 -define(DEFAULT_PRICE_PRECISION, 2).
 -define(DEFAULT_PRICE_DECIMALS, 2).
 -define(THOUSANDS_SEP, <<"">>).
@@ -706,6 +720,32 @@ round_number(Number, Precision) ->
 %%%------------------------------------------------------------------------------
 %%%   Internal functions
 %%%------------------------------------------------------------------------------
+
+till_quote([$\\, $' | T], Acc) -> till_quote(T, [$', $\\ | Acc]);
+till_quote([$'      | T], Acc) -> {lists:reverse(Acc), T};
+till_quote([C       | T], Acc) -> till_quote(T, [C | Acc]);
+till_quote([],            Acc) -> {lists:reverse(Acc), []}.
+
+append_after_next_word([32|T],S,false)    -> [S, 32 | T];
+append_after_next_word([32|T],S,true)     -> [32 | append_after_next_word(T,S,true)];
+append_after_next_word([$'|T],S,false)    -> [$' | append_after_next_word(T,S,true)];
+append_after_next_word([$\\,$'|T],S,true) -> [$\\,$' | append_after_next_word(T,S,true)];
+append_after_next_word([$'|T],S,true)     -> [$',S | T];
+append_after_next_word([$"|T],S,false)    -> [$" | append_after_next_word(T,S,true)];
+append_after_next_word([$\\,$"|T],S,true) -> [$\\,$' | append_after_next_word(T,S,true)];
+append_after_next_word([$"|T],S,true)     -> [$",S | T];
+append_after_next_word([H|T],S,X)         -> [H, 32 | append_after_next_word(T, S, X)];
+append_after_next_word([],S,_)            -> S.
+
+format1(["'Elixir."++R|T])        -> {S,T1} = till_quote(R, []), [[S], format1(T1) | format1(T)];
+format1([$'|T])                   -> {S,T1} = till_quote(T, []), [[S], format1(T1)];
+format1("#{__struct__ => " ++ T)  -> T1 = string:trim(T, leading),
+                                     T2 = append_after_next_word(T1, ${, false),
+                                     format1(T2);
+format1([H|T]) when is_integer(H) -> [H          | format1(T)];
+format1([H|T]) when is_list(H)    -> [format1(H) | format1(T)];
+format1([H|T])                    -> [H          | format1(T)];
+format1([])                       -> [].
 
 %% do_format_number/3
 -spec do_format_number(number(), decimals(), format_number_opts()) -> formatted_number().
