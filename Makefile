@@ -49,8 +49,8 @@ clean:
 doc ebin:
 	mkdir -p $@
 
-publish:
-	$(REBAR) hex publish $(if $(replace),--replace)
+publish cut:
+	$(REBAR) hex $@ $(if $(replace),--replace)
 
 tar:
 	@rm -f $(TARBALL).tgz; \
