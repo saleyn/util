@@ -609,14 +609,14 @@ guess_type(V)     when is_float(V)     -> number;
 guess_type(_)                          -> string.
 
 %% @doc Convert format and arguments to binary/list shortening .
-%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2`
+%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2'
 -spec format(binary()|string(), list()) -> binary()|string().
 format(Fmt, Args) when is_list(Args) ->
   Res = io_lib:format(Fmt, Args),
   format1(Res).
 
 %% @doc Convert format and arguments to binary/list shortening .
-%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2`
+%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2'
 -spec format_binary(binary()|string(), list()) -> binary().
 format_binary(Fmt, Args) when is_binary(Fmt) or is_list(Fmt) ->
   iolist_to_binary(format(Fmt, Args)).
