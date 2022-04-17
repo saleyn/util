@@ -22,7 +22,7 @@ all: compile
 
 compile:
 	@$(REBAR) compile
-	@if which elixirc &>/dev/null; then \
+	@if [ -n $(shell which elixircx &>/dev/null && echo "elixir" || echo "") ]; then \
 	 	for f in src/*.ex; do elixirc -o ebin --ignore-module-conflict $$f; done; \
 	else \
 		true; \
