@@ -27,6 +27,12 @@
 | user_default              | extending shell with useful debugging and profiling commands                         |
 | build-aux/md-to-edoc.awk  | AWK script for converting `README.md` files to `overview.edoc`                       |
 
+Additionally, the following Elixir modules are included:
+
+| Module       | File             | Description                                                                    |
+|--------------|------------------| -------------------------------------------------------------------------------|
+| CompileTime  | compile_time.ex  | Evaluate lambdas at compile time                                               |
+
 ## Documentation
 
 * See [project documentation](https://saleyn.github.io/util)
