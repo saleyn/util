@@ -24,6 +24,8 @@ compile:
 	@$(REBAR) compile
 	@if which elixirc &>/dev/null; then \
 	 	for f in src/*.ex; do elixirc -o ebin --ignore-module-conflict $$f; done; \
+	else; \
+		true; \
 	fi
 
 test eunit:
