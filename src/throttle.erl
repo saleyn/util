@@ -4,11 +4,11 @@
 %% Implementation uses time spacing reservation algorithm where each
 %% allocation of samples reserves a fraction of space in the throttling
 %% window. The reservation gets freed as the time goes by.  No more than
-%% the "rate()" number of samples are allowed to fit in the "window_msec()"
-%% window.
+%% the `Rate' number of samples are allowed to fit in the milliseconds `Window'.
 %%
-%% This is an Erlang implementation of the throttling algorithm from the
-%% [utxx library](https://github.com/saleyn/utxx/blob/master/include/utxx/rate_throttler.hpp)
+%% This is an Erlang implementation of the throttling algorithm from the utxx
+%% library found at this URL:
+%% [https://github.com/saleyn/utxx/blob/master/include/utxx/rate_throttler.hpp]
 %%
 %% @author Serge Aleynikov <saleyn at gmail dot com>
 %% @end
@@ -54,30 +54,39 @@
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
+%% @doc Create a new throttle given the `Rate' per second.
+-spec new(non_neg_integer()) -> throttle().
 new(Rate) ->
-  new(Rate, 1).
+  new(Rate, 1000).
 
+%% @see new/3
+-spec new(non_neg_integer(), non_neg_integer()) -> throttle().
 new(Rate, Window) ->
   new(Rate, Window, now()).
 
 %% @doc Create a new throttle given the `Rate' per `Window' milliseconds.
+%%      `Now' is expressesed in microseconds since epoch using `now()'.
 -spec new(non_neg_integer(), non_neg_integer(), time()) -> throttle().
 new(Rate, Window, Now) when is_integer(Rate), is_integer(Window), is_integer(Now) ->
   Win  = Window * 1000,
   Step = if Rate == 0 -> 0; true -> Win div Rate end,
   #throttle{rate = Rate, window = Win, step = Step, next_ts = Now}.
 
+%% @see reset/2
 reset(#throttle{} = T) ->
   reset(T, now()).
 
 %% @doc Reset the throttle request counter
-reset(#throttle{} = T, Now) ->
+reset(#throttle{} = T, Now) when is_integer(Now) ->
   T#throttle{next_ts = Now}.
 
+%% @doc Add one sample to the throttle
 add(T)          -> add(T, 1).
+
+%% @doc Add `Samples' to the throttle
 add(T, Samples) -> add(T, Samples, now()).
 
-%% @doc Add `Samples' to the throtlle's counter.
+%% @doc Add `Samples' to the throtlle.
 %% Return `{FitSamples, State}', where `FitSamples' are the number of samples
 %% that fit in the throttling window. 0 means that the throttler is fully
 %% congested, and more time needs to elapse before the throttles gets reset
@@ -102,7 +111,7 @@ add(#throttle{next_ts = TS, step = Step, window = Win} = T, Samples, Now) ->
 %% @see available/2
 available(T) -> available(T, now()).
 
-%% @doc Return the number of available samples given `a_now' current time.
+%% @doc Return the number of available samples given `Now' current time.
 available(#throttle{rate=0}=T,_Now) -> T#throttle.window;
 available(#throttle{}      =T, Now) -> calc_available(T, Now).
 
