@@ -4,7 +4,17 @@
 
 **Author** Serge Aleynikov <serge(at)gmail.com>
 
-## Content:
+## Installation
+
+- Add dependency in `rebar.config`:
+```erlang
+{deps,
+ [% ...
+  {util, "~> 1.0"}
+ ]}.
+```
+
+## Content
 
 | Module                    | Description                                                                          |
 | ------------------------- | ------------------------------------------------------------------------------------ |

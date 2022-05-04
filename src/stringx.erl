@@ -339,14 +339,6 @@ align_rows(Rows) ->
 %%      If some row doesn't need to be aligned, pass its value as a binary.
 %% `Options' can be:
 %%
--spec align_rows(Rows    :: [tuple()|binary()|list()],
-                 Options :: [{pad,    Dir::[trailing|leading|both|
-                                            {Pos::integer()|last,trailing|leading|both|none}]} |
-                             {exclude,Cols::[integer()]} |
-                             {return, Ret::tuple|list}   |
-                             {prefix,       string()}    |
-                             {ignore_empty, boolean()}]) ->
-       [AlignedRow::tuple()|list()].
 %% `Rows' is a list. All rows must have the same arity except if a row is
 %%  a binary.
 %% `Options' contain:
@@ -366,6 +358,16 @@ align_rows(Rows) ->
 %% </dt>
 %% @end
 %%-------------------------------------------------------------------------
+-spec align_rows(
+        Rows    :: [tuple()|binary()|list()],
+        Options :: [{pad,    Dir::[trailing|leading|both|
+                                   {Pos::integer()|last,
+                                     trailing|leading|both|none}]} |
+                   {exclude,Cols::[integer()]} |
+                   {return, Ret::tuple|list}   |
+                   {prefix,       string()}    |
+                   {ignore_empty, boolean()}]) ->
+       [AlignedRow::tuple()|list()].
 align_rows([], _Options) ->
   [];
 align_rows(Rows, Options) when is_list(Rows), is_list(Options) ->

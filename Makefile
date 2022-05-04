@@ -11,7 +11,7 @@ endif
 PROJECT := $(notdir $(PWD))
 TARBALL := $(PROJECT)
 
-REBAR   := $(which rebar3 2> /dev/null)
+REBAR   := $(shell which rebar3 2> /dev/null)
 REBAR   := $(if $(REBAR),$(REBAR),rebar)$(EXT)
 
 empty   :=
