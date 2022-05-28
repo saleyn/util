@@ -1,9 +1,0 @@
-{application, gen_timed_server,
-    [{description,"Process run-time scheduling supervisor"},
-     {vsn, git},
-     {modules,[]},
-     {registered,[]},
-     {applications,[kernel,stdlib]},
-     {env,[]}
-    ]
-}.
