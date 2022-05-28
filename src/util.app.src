@@ -1,6 +1,6 @@
 {application,util,
              [{description,"Miscellaneous utility modules"},
-              {vsn,"1.0.3"},
+              {vsn,"1.0.4"},
               {modules,[]},
               {registered,[]},
               {applications,[kernel,stdlib]},
