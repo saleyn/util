@@ -355,7 +355,7 @@ align_rows(Rows) ->
 %%     <dd>Don't pad trailing empty columns if this option is true</dd>
 %% <dt>{exclude, [integer()]}</dt>
 %%     <dd>Exclude given column numbers</dd>
-%% </dt>
+%% </dl>
 %% @end
 %%-------------------------------------------------------------------------
 -spec align_rows(
