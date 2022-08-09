@@ -137,7 +137,7 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
 %% <dt>tr_sep</dt>
 %%      <dd>Row separator (default `"-"')</dd>
 %% <dt>tr_sep_td</dt>
-%%      <dd>Column delimiter used in separating rows (`"+"`)</dd>
+%%      <dd>Column delimiter used in separating rows (`"+"')</dd>
 %% <dt>prefix</dt>
 %%      <dd>Prepend each row with this string</dd>
 %% <dt>td_formats</dt>
