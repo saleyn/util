@@ -44,8 +44,7 @@
 
 -type pretty_print_opts() :: #{
   number_pad => char(),    % Padding character for numbers
-  out_header => boolean(), % Output header row
-  out_sep    => boolean(), % Output separator rows
+  header     => boolean(), % Output header row
   th_dir     => both|leading|trailing, % table header padding dir
   td_dir     => both|leading|trailing, % table row    padding dir
   td_start   => integer(), % Start printing from this field number
@@ -71,6 +70,7 @@
 -export_type([format_number_opts/0, pretty_print_opts/0]).
 
 -include("stringx.hrl").
+-include("iif.hrl").
 
 %%%------------------------------------------------------------------------
 %%% External API
@@ -110,6 +110,14 @@ pretty_table([Map|_] = LofMaps0) when is_map(Map) ->
 pretty_table(HeaderRowKeys, Rows) ->
   pretty_table(HeaderRowKeys, Rows, #opts{}).
 
+-spec pretty_table([string()|atom()]|tuple(), [Row :: tuple()|list()|map()],
+                   Opts::map()|#opts{}) -> list().
+pretty_table(HeaderRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
+  pretty_table0(HeaderRowKeys, Rows, MapOpts);
+
+pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
+  pretty_table1(HeaderRowKeys, Rows, Opts).
+
 %%-------------------------------------------------------------------------
 %% @doc Pretty print table of lists/tuples/maps to list.
 %% The following options control formatting behavior:
@@ -142,6 +150,17 @@ pretty_table(HeaderRowKeys, Rows) ->
 %%          This three argument function can perform calculation of the field
 %%          value based on values of other fields in the `Row'.
 %%      </dd>
+%% <dt>unicode</dt>
+%%      <dd>Use unicode outline characters</dd>
+%% <dt>outline</db>
+%%      <dd>Draw top, left and line box outline (by default only the bottom one is drawn).
+%%          Values:
+%%          <ul>
+%%          <li>`none' - on outline box</li>
+%%          <li>`full' - outline box on all 4 sides</li>
+%%          <li>`[top, left, bottom, right]' - outline box on given sides</li>
+%%          </ul>
+%%      </dd>
 %% </dl>
 %% Example:
 %% ```
@@ -159,13 +178,6 @@ pretty_table(HeaderRowKeys, Rows) ->
 %% '''
 %% @end
 %%-------------------------------------------------------------------------
--spec pretty_table([string()], [Row :: tuple()|list()|map()], Opts::map()) -> list().
-pretty_table(HeaderRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
-  pretty_table0(HeaderRowKeys, Rows, MapOpts);
-
-pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
-  pretty_table1(HeaderRowKeys, Rows, Opts).
-
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
   io:put_chars(pretty_table1(lists:sort(maps:keys(Map)), LofMaps0, #opts{})).
 
@@ -244,37 +256,40 @@ filter_out([H|T1], []) ->         [H|filter_out(T1, [])].
 pretty_table0(HdrRowKeys, Rows, #opts{} = Opts) ->
   pretty_table1(HdrRowKeys, Rows, Opts);
 pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
-  DefOpts = maps:from_list(lists:zip(record_info(fields, opts), tl(tuple_to_list(#opts{})))),
+  DefTup  = #opts{},
+  DefOpts = maps:from_list(lists:zip(record_info(fields, opts), tl(tuple_to_list(DefTup)))),
   MOpts   = maps:merge(DefOpts, MapOpts),
-  #{number_pad:=NP, out_header:=OH, out_sep:=OS, th_dir:=THD, td_dir:=TDD,
-    td_start:=TDST, td_exclude:=TDE, td_sep:=TDS,tr_sep:=TRS, tr_sep_td:=TRSTD,
-    prefix:=Prf,    translate :=TR,  footer_rows:=FR,         td_formats:=TDF,
-    thousands:=THS, ccy_sym:=CCY, ccy_sep    :=CS, ccy_pos:=CP} = MOpts,
+  #{number_pad:=NP, header:=OH,      th_dir:=THD, td_dir:=TDD,
+    td_start:=TDST, td_exclude:=TDE, td_sep:=TDS, tr_sep:=TRS, tr_sep_td:=TRSTD,
+    prefix:=Prf,    translate :=TR,  footer_rows:=FR,          td_formats:=TDF,
+    thousands:=THS, ccy_sym:=CCY,    ccy_sep    :=CS,          ccy_pos:=CP,
+    unicode  :=UNI, outline:=OUTLINE} = MOpts,
   Opts = #opts{
     number_pad = NP,
-    out_header = OH,
-    out_sep    = OS,
+    header     = OH,
     th_dir     = THD,
     td_dir     = TDD,
     td_start   = TDST,
     td_exclude = TDE,
-    td_sep     = TDS,
-    tr_sep     = TRS,
-    tr_sep_td  = TRSTD,
+    td_sep     = ?IIF(UNI andalso TDS   == DefTup#opts.td_sep,   " │ ", TDS),
+    tr_sep     = ?IIF(UNI andalso TRS   == DefTup#opts.tr_sep,   "─",   TRS),
+    tr_sep_td  = ?IIF(UNI andalso TRSTD == DefTup#opts.tr_sep_td,"┼",   TRSTD),
     prefix     = Prf,
     translate  = TR,
     footer_rows= FR,
     td_formats = TDF,
     thousands  = THS,
-    ccy_sym = CCY,
+    ccy_sym    = CCY,
     ccy_sep    = CS,
-    ccy_pos    = CP
+    ccy_pos    = CP,
+    outline    = OUTLINE,
+    unicode    = UNI
   },
   pretty_table1(HdrRowKeys, Rows, Opts).
 
-pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_tuple(Keys0) ->
+pretty_table1(Keys0, Rows0, Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
-pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) ->
+pretty_table1(Keys0, Rows0, #opts{unicode = Uni} = Opts) when is_list(Keys0), is_list(Rows0) ->
   Exclude = translate_excludes(Keys0, Opts#opts.td_exclude, Opts#opts.td_start),
   KeyStrs = take_nth(Opts#opts.td_start, [element(2, to_string(Key)) || Key <- Keys0]),
   Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts)) || V <- Rows0],
@@ -289,28 +304,43 @@ pretty_table1(Keys0, Rows0, #opts{} = Opts) when is_list(Keys0), is_list(Rows0) 
               ({_,_Str}, {_, _Width}) ->
                 throw({invalid_option, td_dir, Opts#opts.td_dir})
             end,
+  #{top:=BoxT, bottom:=BoxB, left:=BoxL,right:=BoxR} = to_outline(Opts#opts.outline),
+  {BoxTL,BoxTR,BoxBHL,BoxEHL,BoxBOL,BoxEOL,BoxBL,BoxBR,BoxTC,BoxBC} =
+    case {BoxT or BoxB or BoxL or BoxR, Uni} of
+      {false,_} -> {"", "", "",  "", "",  "", "", "",  "", "|"};
+      {_, true} -> {?IIF(BoxT and BoxL,"┌─",""),  ?IIF(BoxT and BoxR,"─┐",""),
+                    ?IIF(BoxL,"├─",""), ?IIF(BoxR,"─┤",""),
+                    ?IIF(BoxL,"│ ",""), ?IIF(BoxR," │",""), ?IIF(BoxB and BoxL,"└─",""),
+                    ?IIF(BoxB and BoxR,"─┘",""),
+                    ?IIF(BoxT,"┬",""),  ?IIF(BoxB,"┴","")};
+      {_,false} -> {?IIF(BoxT and BoxL, "+-",""), ?IIF(BoxT and BoxR,"-+",""),
+                    ?IIF(BoxL,"+-",""), ?IIF(BoxR,"-+",""),
+                    ?IIF(BoxL,"| ",""), ?IIF(BoxR," |",""), ?IIF(BoxB and BoxL,"+-",""),
+                    ?IIF(BoxB and BoxR,"-+",""),
+                    ?IIF(BoxT, "+",""), ?IIF(BoxB,"+","")}
+    end,
   AddSpLn = length([C || C <- Opts#opts.td_sep, C == $\s]),
   AddSpH  = string:copies(Opts#opts.tr_sep, AddSpLn div 2),
   AddSpT  = string:copies(Opts#opts.tr_sep, AddSpLn - (AddSpLn div 2)),
   Row     = fun(Row) ->
               R0 = filter_out([Col(Str, W) || {Str,W} <- lists:zip(Row, Ws)], Exclude),
-              [Opts#opts.prefix, lists:join(Opts#opts.td_sep, R0)]
+              [Opts#opts.prefix, BoxBOL, lists:join(Opts#opts.td_sep, R0), BoxEOL, $\n]
             end,
   Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.tr_sep, W)}
               || {Str,{_,W}} <- lists:zip(KeyStrs, Ws)],
-  Header  = if Opts#opts.out_header ->
-              [lists:join(Opts#opts.td_sep, filter_out([H || {H,_} <- Header0], Exclude)),$\n];
-            true ->
-              []
-            end,
-  Delim   = if Opts#opts.out_sep ->
-              [lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT,
-                filter_out([T || {_,T} <- Header0], Exclude)),$\n];
-            true ->
-              []
-            end,
-  [Opts#opts.prefix, Header, Delim, string:join(filter_out([Row(R) || R <- Rows], Exclude), "\n"),
-   if Delim==[] -> ""; true -> "\n" end, Delim].
+  Top     = ?IIF(BoxT, [Opts#opts.prefix, BoxTL, lists:join(AddSpH ++ BoxTC ++ AddSpT,
+                        filter_out([T || {_,T} <- Header0], Exclude)), BoxTR, $\n], ""),
+  Header  = ?IIF(Opts#opts.header,
+              [Opts#opts.prefix, BoxBOL,
+               lists:join(Opts#opts.td_sep, filter_out([H || {H,_} <- Header0], Exclude)),
+               BoxEOL, $\n], ""),
+  Delim   = ?IIF(Opts#opts.header,
+              [Opts#opts.prefix, BoxBHL, lists:join(AddSpH ++ [Opts#opts.tr_sep_td] ++ AddSpT,
+                filter_out([T || {_,T} <- Header0], Exclude)), BoxEHL, $\n], ""),
+  Footer  = ?IIF(BoxB,
+              [Opts#opts.prefix, BoxBL, lists:join(AddSpH ++ BoxBC ++ AddSpT,
+                filter_out([T || {_,T} <- Header0], Exclude)), BoxBR, $\n], ""),
+  [Top, Header, Delim, filter_out([Row(R) || R <- Rows], Exclude), Footer].
 
 aligned_format(Fmt, Rows) ->
   {match, FF} = re:run(Fmt, "(~-?s)", [global, {capture, [1], list}]),
@@ -531,6 +561,8 @@ type(T, T)         -> T;
 type(_, _)         -> string.
 
 to_strings(Keys, Values, undefined) ->
+  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), #opts{});
+to_strings(Keys, Values, #opts{td_formats=undefined}) ->
   to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), #opts{});
 to_strings(Keys, Values, #opts{td_formats=Formats}=O) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
   to_strings1(Keys, Values, tuple_to_list(Formats), O);
@@ -868,6 +900,20 @@ batch_split(N, 0, L, A, Out) ->
 batch_split(N, I, [H|T], A, Out) ->
   batch_split(N, I-1, T, [H|A], Out).
 
+to_outline(none) -> #{top=>false,bottom=>false,left=>false,right=>false};
+to_outline(full) -> #{top=>true, bottom=>true, left=>true, right=>true};
+to_outline(L) when is_list(L) ->
+  (L -- [top,bottom,left,right] /= []) andalso erlang:error({invalid_outline, L}),
+  #{top   =>lists:member(top,   L),
+    bottom=>lists:member(bottom,L),
+    left  =>lists:member(left,  L),
+    right =>lists:member(right, L)};
+to_outline(#{} = M) ->
+  #{top   =>maps:get(top,   M, false),
+    bottom=>maps:get(bottom,M, false),
+    left  =>maps:get(left,  M, false),
+    right =>maps:get(right, M, false)}.
+
 %%--------------------------------------------------------------------
 %% Tests
 %%--------------------------------------------------------------------
@@ -912,6 +958,71 @@ pretty_table_test() ->
              (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])} end,
           "~w",
           undefined}}))).
+
+pretty_table_unicode_test() ->
+  ?assertEqual(
+    "a  | b  |  c  \n"
+    "---+----+-----\n"
+    "10 | 20 |    0\n"
+    "30 | 40 | 1000\n"
+    "---+----+-----\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => false}))),
+  ?assertEqual(
+    "a  │ b  │  c  \n"
+    "───┼────┼─────\n"
+    "10 │ 20 │    0\n"
+    "30 │ 40 │ 1000\n"
+    "───┴────┴─────\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => true}))),
+  ?assertEqual(
+    "───┬────┬─────\n"
+    "a  │ b  │  c  \n"
+    "───┼────┼─────\n"
+    "10 │ 20 │    0\n"
+    "30 │ 40 │ 1000\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => true, outline => [top]}))),
+  ?assertEqual(
+    "a  │ b  │  c  \n"
+    "───┼────┼─────\n"
+    "10 │ 20 │    0\n"
+    "30 │ 40 │ 1000\n"
+    "───┴────┴─────\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => true, outline => [bottom]}))),
+  ?assertEqual(
+    "│ a  │ b  │  c  \n"
+    "├────┼────┼─────\n"
+    "│ 10 │ 20 │    0\n"
+    "│ 30 │ 40 │ 1000\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => true, outline => [left]}))),
+  ?assertEqual(
+    "a  │ b  │  c   │\n"
+    "───┼────┼──────┤\n"
+    "10 │ 20 │    0 │\n"
+    "30 │ 40 │ 1000 │\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => true, outline => [right]}))),
+  ?assertEqual(
+    "───┬────┬─────\n"
+    "a  │ b  │  c  \n"
+    "───┼────┼─────\n"
+    "10 │ 20 │    0\n"
+    "30 │ 40 │ 1000\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => true, outline => [top]}))),
+  ?assertEqual(
+    "┌────┬────┬──────┐\n"
+    "│ a  │ b  │  c   │\n"
+    "├────┼────┼──────┤\n"
+    "│ 10 │ 20 │    0 │\n"
+    "│ 30 │ 40 │ 1000 │\n"
+    "└────┴────┴──────┘\n",
+    lists:flatten(stringx:pretty_table(
+      {a,b,c}, [{10, 20, 0}, {30, 40, 1000}], #{unicode => true, outline => full}))).
 
 pretty_table_ccy_thousands_test() ->
   ?assertEqual(
