@@ -152,7 +152,7 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
 %%      </dd>
 %% <dt>unicode</dt>
 %%      <dd>Use unicode outline characters</dd>
-%% <dt>outline</db>
+%% <dt>outline</dt>
 %%      <dd>Draw top, left and line box outline (by default only the bottom one is drawn).
 %%          Values:
 %%          <ul>
