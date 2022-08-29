@@ -234,8 +234,8 @@ dropws1(L     ) -> L.
 dropws2([],   Acc) -> dropws1(Acc);
 dropws2(Word, Acc) -> Word ++ Acc.
 
-translate_excludes(_, I, _) when I==undefined; I==[] ->
-  [];
+translate_excludes(_,  I, _) when I==undefined; I==[] -> [];
+translate_excludes([], _, _)                          -> [];
 translate_excludes(ColNames, ExcludeNamesAndPos, StartPos) ->
   {IDs, Names} = lists:partition(fun(I) -> is_integer(I) end, ExcludeNamesAndPos),
   Cols         = if is_tuple(ColNames) -> ColNames; true -> list_to_tuple(ColNames) end,
