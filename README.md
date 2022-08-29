@@ -34,6 +34,7 @@
 | sntp                      | simple SNTP client                                                                   |
 | str                       | stringification functions including `str/1` and `str/2` parse transforms             |
 | stringx                   | miscelaneous string functions                                                        |
+| throttle                  | implements a rate limitting algorithm                                                |
 | user_default              | extending shell with useful debugging and profiling commands                         |
 | build-aux/md-to-edoc.awk  | AWK script for converting `README.md` files to `overview.edoc`                       |
 
