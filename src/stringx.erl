@@ -18,7 +18,7 @@
 -author('saleyn@gmail.com').
 
 %% External API
--export([titlecase/1, wordwrap/2]).
+-export([titlecase/1, wordwrap/2, wordwrap/3]).
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
 -export([align_rows/1, align_rows/2, aligned_format/2, aligned_format/3]).
@@ -62,7 +62,7 @@
                                         {number, Decimals::integer(), ColVal::number()}|
                                         {ccy,    number()}),  % Optional tuple containing value format for columns
   thousands  => string()|binary(),       % Number thousands separator
-  ccy_sym => string()|binary(),       % Currency prefix/suffix
+  ccy_sym    => string()|binary(),       % Currency prefix/suffix
   ccy_sep    => string()|binary(),       % Currency symbol separator
   ccy_pos    => left|right               % Currency symbol position
 }.
@@ -92,6 +92,20 @@ titlecase(S) when is_list(S) ->
 wordwrap(S, Margin) when is_list(S), is_integer(Margin) ->
   wordwrap(S, [], [], 0, Margin).
 
+%%-------------------------------------------------------------------------
+%% @doc Wrap words words in a string to multiple lines that fit the margin
+%% Example:
+%% <code>
+%% 1> stringx:wordwrap(["abc", "efg", "exdf"], 8, ",").
+%% ["abc,efg,","exdf"]
+%% </code>
+%% @end
+%%-------------------------------------------------------------------------
+-spec wordwrap([Word], integer(), Word) -> [string()|binary()]
+        when Word :: string()|binary().
+wordwrap(Words, Margin, Delim) ->
+  wrap(Words, [[]], Margin, Delim).
+ 
 %%-------------------------------------------------------------------------
 %% @doc Pretty print list of maps to list.
 %% @see pretty_table/3.
@@ -226,6 +240,43 @@ wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin)
 wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin) ->
   wordwrap(Rest, Acc, [C | WordAcc], LineLen, Margin).
 
+
+% * All done, return the result
+wrap([], Result, _Margin, _Delim) ->
+  lists:map(fun
+    ([])  -> [];
+    ([L]) -> [L];
+    (L)   -> lists:flatten(L)
+  end, lists:reverse(Result));
+
+wrap([Word | Rest], [CurrLine | PrevLines], Margin, Delim) ->
+  Width = iolist_size(Word) + iolist_size(CurrLine) + iolist_size(Delim),
+  Fits  = Width =< Margin,
+  if
+    % Adding word(s) to an empty line
+    CurrLine == [], Rest == [] ->
+      % This is the last word
+      wrap([],   [Word | PrevLines], Margin, Delim);
+    CurrLine == [] ->
+      wrap(Rest, [[Word, Delim] | PrevLines], Margin, Delim);
+
+    % Adding to a partially filled line, where the word fits the margin?
+    Fits, Rest == [] ->
+      % This is the last word
+      wrap([],   [[CurrLine, Word] | PrevLines], Margin, Delim);
+    Fits ->
+      wrap(Rest, [[CurrLine, Word, Delim] | PrevLines], Margin, Delim);
+
+    % The word does not fit the line, append it to the new one.
+    not Fits, Rest == [] ->
+      % This is the last word
+      wrap([],   [Word, CurrLine | PrevLines], Margin, Delim);
+    not Fits ->
+      wrap(Rest, [[Word, Delim], CurrLine | PrevLines], Margin, Delim);
+    true ->
+      erlang:raise(logic_error)
+  end.
+ 
 dropws(Word, Acc) -> dropws2(dropws1(Word), Acc).
 
 dropws1([$ |T]) -> dropws1(T);
@@ -919,6 +970,10 @@ to_outline(#{} = M) ->
 %%--------------------------------------------------------------------
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+
+word_wrap_test() ->
+  ?assertEqual(["abc,efg,","exdf"],
+    stringx:wordwrap(["abc", "efg", "exdf"], 8, ",")).
 
 align_rows_test() ->
   ?assertEqual(
