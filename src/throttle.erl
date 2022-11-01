@@ -36,6 +36,7 @@
 %%------------------------------------------------------------------------------
 -module(throttle).
 -export([new/1, new/2, new/3, available/1, available/2, used/1, used/2]).
+-export([wait_next/1, call/4, call/5]).
 -export([now/0, reset/1, reset/2, add/1, add/2, add/3, curr_rps/1, curr_rps/2]).
 
 -compile({no_auto_import,[now/0]}).
@@ -80,6 +81,37 @@ reset(#throttle{} = T) ->
 reset(#throttle{} = T, Now) when is_integer(Now) ->
   T#throttle{next_ts = Now}.
 
+%% @doc Call M,F,A, ensuring that it's not called more frequently than the
+%% throttle would allow.
+%%
+%% Example:
+%% <code>
+%% 1> T = throttle:new(10, 1000).
+%% 2> lists:foldl(fun(_,{T1,A}) ->
+%%      {T2,R} = throttle:call(T1, http, get, ["google.com"]),
+%%      {T2, [R|A]}
+%%    end, {T,[]}, lists:seq(1, 100)).
+%% </code>
+call(T, M,F,A) ->
+  call(T, M,F,A, now()).
+
+%% @doc Call M,F,A, ensuring that it's not called more frequently than the
+%% throttle would allow.
+-spec call(#throttle{}, atom(), atom(), [any()], non_neg_integer()) ->
+  {#throttle{}, any()}.
+call(#throttle{} = T, M,F,A, Now) when is_integer(Now) ->
+  case wait_next(T, Now) of
+    0 ->
+      {1, T1} = add(T, 1, Now),
+      {T1, apply(M,F,A)};
+    WaitMS ->
+      receive
+        '$$$undef' -> ok
+      after WaitMS -> ok
+      end,
+      call(T, M,F,A, now())
+  end.
+
 %% @doc Add one sample to the throttle
 add(T)          -> add(T, 1).
 
@@ -122,6 +154,20 @@ used(T) -> used(T, now()).
 used(#throttle{rate = 0},     _Now) -> 0;
 used(#throttle{rate = R} = T,  Now) -> R-calc_available(T, Now).
 
+%% @doc Return the number of milliseconds to wait until the throttling
+%% threshold is satisfied to fit another sample.
+wait_next(T) -> wait_next(T, now()).
+wait_next(#throttle{next_ts = TS, step = Step, window = Win}, Now) ->
+  NextTS    = TS     + Step,
+  NowNextTS = Now    + Win,
+  Diff      = NextTS - NowNextTS,
+  if
+    Diff =< 0 ->
+      0;
+    true ->
+      ceil(Diff / 1000)
+  end.
+  
 %% @see curr_rps/2
 curr_rps(T) -> curr_rps(T, now()).
 
@@ -179,6 +225,17 @@ all_test() ->
   ?assertEqual(1, N1),
   ?assertEqual(9, throttle:available(T2, Now3)),
   ?assertEqual(1, throttle:used(T2, Now3)),
+
+  TT = throttle:new(5, 1000),
+  Now4 = now(),
+  {_,RR} = lists:foldl(fun(_,{TT1,A}) ->
+    {TT2, R} = throttle:call(TT1, erlang, system_time, [millisecond]),
+    {TT2, [R|A]}
+  end, {TT, []}, lists:seq(1, 15)),
+  Now5 = now(),
+
+  ?assertEqual(15, length(RR)),
+  ?assert(Now5 - Now4 >= 2000000),
 
   ok.
 
