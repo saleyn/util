@@ -36,7 +36,7 @@
 %%------------------------------------------------------------------------------
 -module(throttle).
 -export([new/1, new/2, new/3, available/1, available/2, used/1, used/2]).
--export([wait_next/1, call/4, call/5]).
+-export([next_timeout/1, call/2, call/3, call/4, call/5]).
 -export([now/0, reset/1, reset/2, add/1, add/2, add/3, curr_rps/1, curr_rps/2]).
 
 -compile({no_auto_import,[now/0]}).
@@ -81,6 +81,20 @@ reset(#throttle{} = T) ->
 reset(#throttle{} = T, Now) when is_integer(Now) ->
   T#throttle{next_ts = Now}.
 
+%% @doc Call the lambda <tt>F</tt>, ensuring that it's not called more
+%% frequently than the throttle would allow.
+%%
+%% Example:
+%% <code>
+%% 1> T = throttle:new(10, 1000).
+%% 2> lists:foldl(fun(_,{T1,A}) ->
+%%      {T2,R} = throttle:call(T1, fun() -> http:get("google.com") end),
+%%      {T2, [R|A]}
+%%    end, {T,[]}, lists:seq(1, 100)).
+%% </code>
+call(T, F) ->
+  call(T, F, now()).
+
 %% @doc Call M,F,A, ensuring that it's not called more frequently than the
 %% throttle would allow.
 %%
@@ -99,17 +113,21 @@ call(T, M,F,A) ->
 %% throttle would allow.
 -spec call(#throttle{}, atom(), atom(), [any()], non_neg_integer()) ->
   {#throttle{}, any()}.
-call(#throttle{} = T, M,F,A, Now) when is_integer(Now) ->
-  case wait_next(T, Now) of
+call(T, M,F,A, Now) ->
+  call(T, fun() -> apply(M,F,A) end, Now).
+
+%% @doc Call the lambda <tt>F</tt>, ensuring that it's not called more
+%% throttle would allow.
+-spec call(#throttle{}, fun(() -> any()),  non_neg_integer()) ->
+  {#throttle{}, any()}.
+call(#throttle{} = T, F, Now) when is_integer(Now) ->
+  case next_timeout(T, Now) of
     0 ->
       {1, T1} = add(T, 1, Now),
-      {T1, apply(M,F,A)};
+      {T1, F()};
     WaitMS ->
-      receive
-        '$$$undef' -> ok
-      after WaitMS -> ok
-      end,
-      call(T, M,F,A, now())
+      receive after WaitMS -> ok end,
+      call(T, F, now())
   end.
 
 %% @doc Add one sample to the throttle
@@ -156,16 +174,14 @@ used(#throttle{rate = R} = T,  Now) -> R-calc_available(T, Now).
 
 %% @doc Return the number of milliseconds to wait until the throttling
 %% threshold is satisfied to fit another sample.
-wait_next(T) -> wait_next(T, now()).
-wait_next(#throttle{next_ts = TS, step = Step, window = Win}, Now) ->
+next_timeout(T) -> next_timeout(T, now()).
+next_timeout(#throttle{next_ts = TS, step = Step, window = Win}, Now) ->
   NextTS    = TS     + Step,
   NowNextTS = Now    + Win,
   Diff      = NextTS - NowNextTS,
   if
-    Diff =< 0 ->
-      0;
-    true ->
-      ceil(Diff / 1000)
+    Diff =< 0 -> 0;
+    true      -> ceil(Diff / 1000)
   end.
   
 %% @see curr_rps/2
@@ -236,6 +252,16 @@ all_test() ->
 
   ?assertEqual(15, length(RR)),
   ?assert(Now5 - Now4 >= 2000000),
+
+  TT2 = throttle:new(5, 1000),
+  {_,RR1} = lists:foldl(fun(_,{TT3,A}) ->
+    {TT4, R} = throttle:call(TT3, fun() -> erlang:system_time(millisecond) end),
+    {TT4, [R|A]}
+  end, {TT2, []}, lists:seq(1, 15)),
+  Now6 = now(),
+
+  ?assertEqual(15, length(RR1)),
+  ?assert(Now6 - Now5 >= 2000000),
 
   ok.
 
