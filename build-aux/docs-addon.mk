@@ -41,7 +41,7 @@ endif
 					-e 's!<pre>!<pre ><code class="language-erlang">!g' \
 					-e 's!</pre>!</code></pre >!g' \
 					-e 's/\t/    /g' \
-      $$(ls -1 doc/*.html | egrep -v '(modules-frame|index)\.html')
+      $$(ls -1 doc/*.html | grep -E -v '(modules-frame|index)\.html')
 	@sed -i -e '/^<body>/s/<body>/<body class="src">/' \
 					-e '/<a href="'#'description">Description<\/a>/d' \
 	        -e '/navbar/!s/ cellspacing="[^"]\+"/ class="tab"/g' \
@@ -52,7 +52,7 @@ endif
           -e "/^<h3 class=\"function\"><a [^h]/s/^\(<h3 class=\"function\">\)\(<a \)/\1<a href=\""'#'"index\"><i class=\"arrow up\"><\/i><\/a>\2 class=\"function\" /" \
           -e "s/<a name=\"\(description\|types\|index\|functions\)\"/<a href=\""'#top'"\" name=\"\1\"/" \
           -e "s/<a name=\"\(description\|types\|index\|functions\)\"/<a href=\""'#top'"\" name=\"\1\"/" \
-      $$(ls -1 doc/*.html | egrep -v '(modules-frame|overview-summary|index)\.html')
+      $$(ls -1 doc/*.html | grep -E -v '(modules-frame|overview-summary|index)\.html')
 	@cp build-aux/module-template.html doc/.template
 	@mv doc/overview-summary.html doc/index.html
 	@rm doc/modules-frame.html
