@@ -33,7 +33,7 @@
 -module(user_default).
 -author('saleyn@gmail.com').
 
--export([help/0, saveh/1, dbg/0, dbgtc/1, dbgon/1, dbgon/2,
+-export([help/0, saveh/1, debug/0, dbgtc/1, dbgon/1, dbgon/2,
          dbgadd/1, dbgadd/2, dbgdel/1, dbgdel/2, dbgoff/0,
          p/1, nl/0, tc/2, tc/4]).
 
@@ -43,7 +43,8 @@ help() ->
   shell_default:help(),
   format("** user extended commands **~n"),
   format("saveh(File)   -- save command history to a file\n"),
-  format("dbg()         -- start debugger application\n"),
+  format("debug()       -- start the debugger application\n"),
+  format("debug(Mods)   -- start the debugger application and add the list of modules\n"),
   format("dbgtc(File)   -- use dbg:trace_client() to read data from File\n"),
   format("dbgon(M)      -- enable dbg tracer on all funs in module(s) M :: atom()|[atom()]\n"),
   format("dbgon(M,Fun)  -- enable dbg tracer for module M and function F\n"),
@@ -61,9 +62,13 @@ help() ->
 
 %% These are in alphabetic order it would be nice if they were to *stay* so!
 
-dbg() ->
+debug() ->
+  debug([]).
+
+debug(Modules) when is_list(Modules) ->
   R = debugger:start(),
   i:iaa([break]),
+  [i:ii(M) || M <- Modules],
   R.
 
 dbgtc(File) ->

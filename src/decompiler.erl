@@ -30,14 +30,15 @@
 -export([run/1, run/2, fun_src/1, fun_src/2]).
 
 %% @doc Decompile a beam file
--spec run(BeamFilename::string()) -> ok | {error, any()}.
-run(BeamFName) when is_list(BeamFName) ->
+-spec run(string()|binary()) -> ok | {error, any()}.
+run(BeamFName) ->
     run(BeamFName, []).
 
 %% @doc Decompile a beam file and optionally save it to disk
--spec run(string(), [verbose | erl | ast]) -> ok | {error, any()}.
-run(BeamFName, Options) when is_list(BeamFName) ->
-    case get_abstract_code(BeamFName) of
+-spec run(string()|binary(), [verbose | erl | ast]) -> ok | {error, any()}.
+run(BeamFName, Options) when is_list(BeamFName); is_binary(BeamFName) ->
+    FName = if is_binary(BeamFName) -> binary_to_list(BeamFName); true -> BeamFName end,
+    case get_abstract_code(FName) of
     {ok, Module, Basename, Forms} ->
         Ast = erl_syntax:form_list(tl(Forms)),
         save_file(lists:member(ast, Options), ast, Options, Basename,
