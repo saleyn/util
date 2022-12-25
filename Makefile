@@ -50,7 +50,7 @@ doc ebin:
 	mkdir -p $@
 
 publish cut:
-	$(REBAR) hex $@ $(if $(replace),--replace)
+	$(REBAR) hex $@ -r hexpm $(if $(replace),--replace) $(if $(noconfirm),--yes)
 
 tar:
 	@rm -f $(TARBALL).tgz; \
