@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - '*'
+      - '*.*.*'
 
 jobs:
   publish:
@@ -12,13 +12,12 @@ jobs:
     steps:
       - name: Get tag name
         id: get_tag_name
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "Ref name: ${{ github.ref_name }}"
       - uses: actions/checkout@v2
         with:
-          ref: ${{ steps.get_tag_name.outputs.VERSION }}
+          ref: ${{ github.ref_name }}
       - name: Print tag name and descr
         run: |
-          echo "Tag: ${{ steps.get_tag_name.outputs.VERSION }}"
           git describe
       - name: Publish to Hex.pm
         env:
