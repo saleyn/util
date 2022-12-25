@@ -6,11 +6,11 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    steps:
-      - name: Check out
-        uses: actions/checkout@v2
+    container:
+      image: erlang:25.2
 
+    steps:
       - name: Publish to Hex.pm
-        uses: erlangpack/github-action@v3
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: make cut
