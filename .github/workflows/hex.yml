@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
       - name: Print tag name and descr
         run: |
-          git describe
+          git describe --tags --abbrev=0
       - name: Publish to Hex.pm
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
