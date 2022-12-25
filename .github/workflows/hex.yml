@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          name: ${{ github.ref_name }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
       - name: Print tag name and descr
         run: |
