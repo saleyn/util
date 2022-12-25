@@ -15,8 +15,5 @@ jobs:
           # Checkout all history for all branches and tags
           fetch-depth: 0
       - name: Publish to Hex.pm
-        env:
-          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-        run: |
-          cat Makefile
-          make publish noconfirm=true
+        env:  HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run:  make publish noconfirm=true
