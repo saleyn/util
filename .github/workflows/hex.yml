@@ -11,11 +11,10 @@ jobs:
 
     steps:
       - name: Get tag name
-        id: get_tag_name
         run: echo "Ref name: ${{ github.ref_name }}"
       - uses: actions/checkout@v2
         with:
-          ref: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
       - name: Print tag name and descr
         run: |
           git describe
