@@ -14,8 +14,6 @@ jobs:
         with:
           # Checkout all history for all branches and tags
           fetch-depth: 0
-      - name: Make documentation
-        run:  make docs
       - name: Publish to Hex.pm
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
