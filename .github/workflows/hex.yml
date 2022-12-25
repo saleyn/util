@@ -13,4 +13,4 @@ jobs:
       - name: Publish to Hex.pm
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-        run: make cut noconfirm=true
+        run: make publish noconfirm=true
