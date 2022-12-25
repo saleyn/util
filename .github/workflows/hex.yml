@@ -10,10 +10,16 @@ jobs:
       image: erlang:25.2
 
     steps:
+      - name: Get tag name
+        id: get_tag_name
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       - uses: actions/checkout@v2
         with:
-          # Checkout all history for all branches and tags
-          fetch-depth: 0
+          ref: ${{ steps.get_tag_name.outputs.VERSION }}
+      - name: Print tag name and descr
+        run: |
+          echo "Tag: ${{ steps.get_tag_name.outputs.VERSION }}"
+          git describe
       - name: Publish to Hex.pm
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
