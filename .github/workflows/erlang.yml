@@ -26,13 +26,7 @@ jobs:
 #        elixir-version: '1.13.2'
     - name: Current Directory
       run:  pwd
-    - name: Git
-      run:  ls -l .git/refs/heads/*
-    - name: Install gawk
-      run:  apt update && apt install sudo && sudo apt-get install gawk
     - name: Compile
       run:  make
     - name: Run tests
       run:  make eunit
-    - name: Make documentation
-      run:  make gh-pages
