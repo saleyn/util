@@ -50,7 +50,7 @@ github-docs gh-pages:
 	rm -f rebar.lock
 	git checkout $(MASTER) -- src $(shell [ -d include ] && echo include)
 	git checkout $(MASTER) -- Makefile rebar.* README.md $(GH_PAGES_FILES)
-	git show $(MASTER):LICENSE >2/dev/null > LICENSE
+	git show $(MASTER):LICENSE >LICENSE 2>/dev/null
 	@# Create google verification file if one exists in the master
 	[ -n "$(GVER)" ] && git show $(MASTER):$(GVER) 2>/dev/null > "$(LOCAL_GVER)" || true
 	make docs
