@@ -9,6 +9,13 @@ info::
 	@echo "make clean-docs                            - Delete generated documentation"
 
 docs::
+	@mkdir -p build-aux
+	@if [ -f build-aux/docs-addon.mk ]; then \
+	  true; \
+	else \
+		echo "Fetching docs-addon.mk from github.com/saleyn/util" && \
+    curl -s -o build-aux/docs-addon.mk https://raw.githubusercontent.com/saleyn/util/master/build-aux/docs-addon.mk; \
+	fi
 	$(REBAR) ex_doc
 
 clean-docs::
