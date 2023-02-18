@@ -121,11 +121,13 @@ pretty_table([Map|_] = LofMaps0) when is_map(Map) ->
 %% @see pretty_table/3.
 %% @end
 %%-------------------------------------------------------------------------
--spec pretty_table([string()], [Row :: tuple()|list()|map()]) -> list().
+-spec pretty_table([binary()|string()|atom()],
+                   [Row :: tuple()|list()|map()]) -> list().
 pretty_table(HeaderRowKeys, Rows) ->
   pretty_table(HeaderRowKeys, Rows, #opts{}).
 
--spec pretty_table([string()|atom()]|tuple(), [Row :: tuple()|list()|map()],
+-spec pretty_table([string()|binary()|atom()]|tuple(),
+                   [Row :: tuple()|list()|map()],
                    Opts::map()|#opts{}) -> list().
 pretty_table(HeaderRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
   pretty_table0(HeaderRowKeys, Rows, MapOpts);
@@ -200,11 +202,11 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
   io:put_chars(pretty_table1(lists:sort(maps:keys(Map)), LofMaps0, #opts{})).
 
--spec pretty_print_table([string()|atom()]|tuple(), [map()|list()]) -> ok.
+-spec pretty_print_table([string()|binary()|atom()]|tuple(), [map()|list()]) -> ok.
 pretty_print_table(HeaderRowKeys, Rows) ->
   io:put_chars(pretty_table1(HeaderRowKeys, Rows, #opts{})).
 
--spec pretty_print_table([string()|atom()]|tuple(), [map()|list()], #opts{}|map()) -> ok.
+-spec pretty_print_table([string()|binary()|atom()]|tuple(), [map()|list()], #opts{}|map()) -> ok.
 pretty_print_table(HeaderRowKeys, Rows, Opts) ->
   io:put_chars(pretty_table0(HeaderRowKeys, Rows, Opts)).
 
