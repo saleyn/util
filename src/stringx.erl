@@ -691,6 +691,7 @@ to_string1(F, Thousands) when is_float(F)
 to_string1(Str,_Opts)   when is_list(Str)    -> {string, Str};
 to_string1(Bin,_Opts)   when is_binary(Bin)  -> {string, binary_to_list(Bin)};
 to_string1(undefined,_Opts)                  -> {string, ""};
+to_string1(nil,_Opts)                        -> {string, ""};
 to_string1(T,_Opts)                          -> {string, io_lib:format("~tp", [T])}.
 
 format_ccy(I, Decimals, #opts{ccy_sym=Sym, ccy_sep=Sep, ccy_pos=Pos, thousands=Th}) ->
@@ -1129,11 +1130,11 @@ pretty_table_map_opts_test() ->
     "-----+-----------+-------\n"
     " a   |        10 |     cc\n"
     "bxxx | 200.00123 | 'Done'\n"
-    "abc  | 100.00000 |     xx\n"
+    "     | 100.00000 |     xx\n"
     "-----+-----------+-------\n",
     lists:flatten(stringx:pretty_table(
       {a,b,c,d},
-      [{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2}, {abc, 100.0, xx,x3}],
+      [{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2}, {nil, 100.0, xx,x3}],
       #{td_dir     => both,
         td_pad     => #{3 => leading},
         td_exclude => [4],
