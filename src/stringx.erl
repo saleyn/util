@@ -47,6 +47,7 @@
   header     => boolean(), % Output header row
   th_dir     => both|leading|trailing, % table header padding dir
   td_dir     => both|leading|trailing, % table row    padding dir
+  td_pad     => #{integer() => both|leading|trailing}, % column padding dir
   td_start   => integer(), % Start printing from this field number
   td_exclude => list(),    % Exclude columns (start with 1) or names
   td_sep     => string(),  % Column separator
@@ -146,6 +147,9 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
 %%      <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
 %% <dt>td_exclulde</dt>
 %%      <dd>List of column ID's (starting with 1) or names to exclude</dd>
+%% <dt>td_pad</dt>
+%%      <dd>A map containing column padding directions
+%%      `#{Col::integer() => both|leading|trailing'.</dd>
 %% <dt>td_sep</dt>
 %%      <dd>Column separator (default `" | "')</dd>
 %% <dt>tr_sep</dt>
@@ -310,7 +314,7 @@ pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
   DefTup  = #opts{},
   DefOpts = maps:from_list(lists:zip(record_info(fields, opts), tl(tuple_to_list(DefTup)))),
   MOpts   = maps:merge(DefOpts, MapOpts),
-  #{number_pad:=NP, header:=OH,      th_dir:=THD, td_dir:=TDD,
+  #{number_pad:=NP, header:=OH,      th_dir:=THD, td_dir:=TDD, td_pad:=TDA,
     td_start:=TDST, td_exclude:=TDE, td_sep:=TDS, tr_sep:=TRS, tr_sep_td:=TRSTD,
     prefix:=Prf,    translate :=TR,  footer_rows:=FR,          td_formats:=TDF,
     thousands:=THS, ccy_sym:=CCY,    ccy_sep    :=CS,          ccy_pos:=CP,
@@ -320,6 +324,7 @@ pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
     header     = OH,
     th_dir     = THD,
     td_dir     = TDD,
+    td_pad     = TDA,
     td_start   = TDST,
     td_exclude = TDE,
     td_sep     = ?IIF(UNI andalso TDS   == DefTup#opts.td_sep,   " │ ", TDS),
@@ -345,14 +350,16 @@ pretty_table1(Keys0, Rows0, #opts{unicode = Uni} = Opts) when is_list(Keys0), is
   KeyStrs = take_nth(Opts#opts.td_start, [element(2, to_string(Key)) || Key <- Keys0]),
   Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts)) || V <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
+  NCols   = length(Keys0),
+  Pad     = fun (I, DefPad) -> maps:get(I, Opts#opts.td_pad, DefPad) end,
   Col     = fun
-              ({number,Str}, {_, Width}) ->
-                string:pad(Str, Width, leading, Opts#opts.number_pad);
-              ({_,undefined}, {_,Width}) when is_atom(Opts#opts.td_dir) ->
-                string:pad("", Width,  Opts#opts.td_dir, $\s);
-              ({_,Str}, {_, Width}) when is_atom(Opts#opts.td_dir) ->
-                string:pad(Str, Width, Opts#opts.td_dir, $\s);
-              ({_,_Str}, {_, _Width}) ->
+              ({number,Str}, {_, Width}, I) ->
+                string:pad(Str, Width, Pad(I, leading), Opts#opts.number_pad);
+              ({_,undefined}, {_,Width}, I) when is_atom(Opts#opts.td_dir) ->
+                string:pad("", Width,  Pad(I, Opts#opts.td_dir), $\s);
+              ({_,Str}, {_, Width}, I) when is_atom(Opts#opts.td_dir) ->
+                string:pad(Str, Width, Pad(I, Opts#opts.td_dir), $\s);
+              ({_,_Str}, {_, _Width}, _I) ->
                 throw({invalid_option, td_dir, Opts#opts.td_dir})
             end,
   #{top:=BoxT, bottom:=BoxB, left:=BoxL,right:=BoxR} = to_outline(Opts#opts.outline),
@@ -373,8 +380,9 @@ pretty_table1(Keys0, Rows0, #opts{unicode = Uni} = Opts) when is_list(Keys0), is
   AddSpLn = length([C || C <- Opts#opts.td_sep, C == $\s]),
   AddSpH  = string:copies(Opts#opts.tr_sep, AddSpLn div 2),
   AddSpT  = string:copies(Opts#opts.tr_sep, AddSpLn - (AddSpLn div 2)),
+  Nums    = lists:seq(1, NCols),
   Row     = fun(Row) ->
-              R0 = filter_out([Col(Str, W) || {Str,W} <- lists:zip(Row, Ws)], Exclude),
+              R0 = filter_out([Col(Str, W, I) || {Str,W,I} <- lists:zip3(Row, Ws, Nums)], Exclude),
               [Opts#opts.prefix, BoxBOL, lists:join(Opts#opts.td_sep, R0), BoxEOL, $\n]
             end,
   Header0 = [{string:pad(Str, W, Opts#opts.th_dir), string:copies(Opts#opts.tr_sep, W)}
@@ -1117,15 +1125,19 @@ pretty_table_calc_format_test() ->
 
 pretty_table_map_opts_test() ->
   ?assertEqual(
-    " a   |     b    \n"
-    "-----+----------\n"
-    " a   |        10\n"
-    "bxxx | 200.00123\n"
-    "-----+----------\n",
+    " a   |     b     |   c   \n"
+    "-----+-----------+-------\n"
+    " a   |        10 |     cc\n"
+    "bxxx | 200.00123 | 'Done'\n"
+    "abc  | 100.00000 |     xx\n"
+    "-----+-----------+-------\n",
     lists:flatten(stringx:pretty_table(
       {a,b,c,d},
       [{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2}, {abc, 100.0, xx,x3}],
-      #{td_dir => both, td_exclude => [3,4], td_formats => {
+      #{td_dir     => both,
+        td_pad     => #{3 => leading},
+        td_exclude => [4],
+        td_formats => {
           undefined,
           fun(V) when is_integer(V) -> {number, integer_to_list(V)};
              (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])} end,
