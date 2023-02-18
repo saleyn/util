@@ -313,7 +313,7 @@ filter_out([_|T1], [true |T2]) -> filter_out(T1, T2);
 filter_out([H|T1], [false|T2]) -> [H|filter_out(T1, T2)];
 filter_out([H|T1], []) ->         [H|filter_out(T1, [])].
 
--spec pretty_table0(tuple()|[string()|atom()], list(), #opts{}|map()) -> iolist().
+-spec pretty_table0(tuple()|[string()|binary()|atom()], list(), #opts{}|map()) -> iolist().
 pretty_table0(HdrRowKeys, Rows, #opts{} = Opts) ->
   pretty_table1(HdrRowKeys, Rows, Opts);
 pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
