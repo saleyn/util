@@ -15,13 +15,13 @@
   prefix     = ""       :: string(),   % Use this prefix in front of each row
   translate,                           % Value translation function `(Val) -> any()`
   footer_rows= 0        :: integer(),  % Number of footer rows
-  td_formats            :: tuple(),    % Optional tuple containing value format for columns
+  td_formats    :: undefined|tuple(),  % Optional tuple containing value format for columns
                                        % (each item is either a Fmt string or fun(Value)).
-  thousands       :: string()|binary(),% Number thousands separator
-  ccy_sym         :: string()|binary(),% Currency prefix/suffix
+  thousands :: undefined|string()|binary(),% Number thousands separator
+  ccy_sym   :: undefined|string()|binary(),% Currency prefix/suffix
   ccy_sep = <<"">>:: string()|binary(),% Currency separator
   ccy_pos = left  :: left|right,       % Currency symbol position
-  outline = [bottom]::none|full|[atom],% Draw outline box on all sides of a table [top,bottom,left,right]
+  outline = [bottom]::none|full|[top|bottom|left|right],% Draw outline box on all sides of a table [top,bottom,left,right]
   unicode = false :: boolean()         % Use unicode symbols for box borders
 }).
 

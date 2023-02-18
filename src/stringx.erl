@@ -196,12 +196,15 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
 %% '''
 %% @end
 %%-------------------------------------------------------------------------
+-spec pretty_print_table([map()]) -> ok.
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
   io:put_chars(pretty_table1(lists:sort(maps:keys(Map)), LofMaps0, #opts{})).
 
+-spec pretty_print_table([string()|atom()]|tuple(), [map()|list()]) -> ok.
 pretty_print_table(HeaderRowKeys, Rows) ->
   io:put_chars(pretty_table1(HeaderRowKeys, Rows, #opts{})).
 
+-spec pretty_print_table([string()|atom()]|tuple(), [map()|list()], #opts{}|map()) -> ok.
 pretty_print_table(HeaderRowKeys, Rows, Opts) ->
   io:put_chars(pretty_table0(HeaderRowKeys, Rows, Opts)).
 
@@ -308,6 +311,7 @@ filter_out([_|T1], [true |T2]) -> filter_out(T1, T2);
 filter_out([H|T1], [false|T2]) -> [H|filter_out(T1, T2)];
 filter_out([H|T1], []) ->         [H|filter_out(T1, [])].
 
+-spec pretty_table0(tuple()|[string()|atom()], list(), #opts{}|map()) -> iolist().
 pretty_table0(HdrRowKeys, Rows, #opts{} = Opts) ->
   pretty_table1(HdrRowKeys, Rows, Opts);
 pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
