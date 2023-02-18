@@ -283,7 +283,7 @@ wrap([Word | Rest], [CurrLine | PrevLines], Margin, Delim) ->
     not Fits ->
       wrap(Rest, [[Word, Delim], CurrLine | PrevLines], Margin, Delim);
     true ->
-      erlang:raise(logic_error)
+      erlang:error(logic_error)
   end.
  
 dropws(Word, Acc) -> dropws2(dropws1(Word), Acc).
@@ -298,7 +298,7 @@ translate_excludes(_,  I, _) when I==undefined; I==[] -> [];
 translate_excludes([], _, _)                          -> [];
 translate_excludes(ColNames, ExcludeNamesAndPos, StartPos) ->
   {IDs, Names} = lists:partition(fun(I) -> is_integer(I) end, ExcludeNamesAndPos),
-  Cols         = if is_tuple(ColNames) -> ColNames; true -> list_to_tuple(ColNames) end,
+  Cols         = list_to_tuple(ColNames),
   TransNames   = fun G([_|L], I, T) when I > tuple_size(Cols) -> G(L,1,T);
                      G([A|L], I, T) when element(I,Cols) == A -> G(L,I+1,setelement(I, T, true));
                      G([],   _I, T) -> T;
@@ -624,8 +624,6 @@ type(T, undefined) -> T;
 type(T, T)         -> T;
 type(_, _)         -> string.
 
-to_strings(Keys, Values, undefined) ->
-  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), #opts{});
 to_strings(Keys, Values, #opts{td_formats=undefined}) ->
   to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), #opts{});
 to_strings(Keys, Values, #opts{td_formats=Formats}=O) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
@@ -907,8 +905,6 @@ format_number_return(Bin, binary) when is_binary(Bin) ->
   Bin;
 format_number_return(Bin, list) when is_binary(Bin) ->
   binary_to_list(Bin);
-format_number_return(Bin, list) when is_list(Bin) ->
-  Bin;
 format_number_return(_Bin, Type) ->
   erlang:error({badarg, {return, Type}}).
 
@@ -1139,7 +1135,7 @@ pretty_table_map_opts_test() ->
     "-----+-----------+-------\n",
     lists:flatten(stringx:pretty_table(
       {a,b,c,d},
-      [{a, 10, cc,x1}, {bxxx, 200.00123, 'Done',x2}, {nil, 100.0, xx,x3}],
+      [{a, 10, cc,x1}, {<<"bxxx">>, 200.00123, 'Done',x2}, {nil, 100.0, xx,x3}],
       #{td_dir     => both,
         td_pad     => #{3 => leading},
         td_exclude => [4],

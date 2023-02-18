@@ -21,7 +21,7 @@
   ccy_sym   :: undefined|string()|binary(),% Currency prefix/suffix
   ccy_sep = <<"">>:: string()|binary(),% Currency separator
   ccy_pos = left  :: left|right,       % Currency symbol position
-  outline = [bottom]::none|full|[top|bottom|left|right],% Draw outline box on all sides of a table [top,bottom,left,right]
+  outline = [bottom]::none|full|[top|bottom|left|right]|map(),% Draw outline box on all sides of a table [top,bottom,left,right]
   unicode = false :: boolean()         % Use unicode symbols for box borders
 }).
 
