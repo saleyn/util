@@ -28,7 +28,7 @@ local_allowed(_Cmd, _Args, State) -> {true, State}.
 %% @private
 -type funspec() :: {Mod::atom(), Fun::atom()}.
 -spec non_local_allowed(FunSpec::funspec(), Args::list(), State::term()) ->
-        {true,NewState} | {false,NewState} |
+        {true,NewState::term()} | {false,NewState::term()} |
         {{redirect, NewFuncSpec::funspec(), NewArgs::list()}, NewState::term()}.
 non_local_allowed({erlang, halt}, _Args, State) -> {false, State};
 non_local_allowed({init,   stop}, _Args, State) -> {false, State};

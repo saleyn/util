@@ -51,6 +51,10 @@
 -type throttle() :: #throttle{}.
 -type time()     :: non_neg_integer().
 
+-type throttle_opts() :: #{retries => integer(), retry_delay => integer()}.
+%% `retries' - number of retries.
+%% `retry_delay' - delay in milliseconds between successive retries.
+
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
@@ -93,7 +97,21 @@ reset(#throttle{} = T, Now) when is_integer(Now) ->
 %%    end, {T,[]}, lists:seq(1, 100)).
 %% </code>
 call(T, F) ->
-  call(T, F, now()).
+  call2(T, F, #{}, now()).
+
+%% @doc Call the lambda `F', ensuring that it's not called more
+%% often then the throttle would allow. `Opts' are a map of options.
+%% When `{retries, R}' option is given and `R' is greater than 0, the
+%% throttler will call the function `F()' up to `R' times if the `F()'
+%% raises an exception.  There will be a delay of `D'
+%% milliseconds (default: `1') between successive executions of `F()'.
+%% If `F()' still raises an exception after the R's retry, that exception
+%% would be reraised and it would be the responsibility of the caller
+%% to handle it.
+-spec call(#throttle{}, fun(() -> any()), throttle_opts()) ->
+  {#throttle{}, any()}.
+call(#throttle{} = T, F, Opts) when is_function(F, 0), is_map(Opts) ->
+  call2(T, F, Opts, now()).
 
 %% @doc Call M,F,A, ensuring that it's not called more frequently than the
 %% throttle would allow.
@@ -106,28 +124,49 @@ call(T, F) ->
 %%      {T2, [R|A]}
 %%    end, {T,[]}, lists:seq(1, 100)).
 %% </code>
-call(T, M,F,A) ->
-  call(T, M,F,A, now()).
+call(T, M,F,A) when is_atom(M), is_atom(F), is_list(A) ->
+  call(T, M,F,A, #{}, now());
+call(T, F, Opts, Now) when is_function(F, 0), is_map(Opts), is_integer(Now) ->
+  call2(T, F, Opts, Now).
 
 %% @doc Call M,F,A, ensuring that it's not called more frequently than the
 %% throttle would allow.
--spec call(#throttle{}, atom(), atom(), [any()], non_neg_integer()) ->
-  {#throttle{}, any()}.
-call(T, M,F,A, Now) ->
-  call(T, fun() -> apply(M,F,A) end, Now).
+call(T, M,F,A, Now) when is_integer(Now) ->
+  call(T, M,F,A, #{}, Now);
+call(T, M,F,A, Opts) when is_map(Opts) ->
+  call(T, M,F,A, Opts, now()).
 
-%% @doc Call the lambda <tt>F</tt>, ensuring that it's not called more
+%% @doc Call M,F,A, ensuring that it's not called more frequently than the
 %% throttle would allow.
--spec call(#throttle{}, fun(() -> any()),  non_neg_integer()) ->
+-spec call(#throttle{}, atom(), atom(), [any()], non_neg_integer(), throttle_opts()) ->
   {#throttle{}, any()}.
-call(#throttle{} = T, F, Now) when is_integer(Now) ->
+call(#throttle{} = T, M,F,A, Opts, Now) when is_atom(M), is_atom(F), is_list(A) ->
+  call2(T, fun() -> apply(M,F,A) end, Opts, Now).
+
+-spec call2(#throttle{}, fun(() -> any()), throttle_opts(), non_neg_integer()) ->
+  {#throttle{}, any()}.
+call2(#throttle{} = T, F, Opts, Now) when is_integer(Now), is_function(F, 0), is_map(Opts) ->
+  Retries = maps:get(retries,     Opts, 0),
+  DelayMS = maps:get(retry_delay, Opts, 1),
+  call3(T, F, Now, Retries, DelayMS).
+
+call3(T, F, Now, Retries, DelayMS) ->
   case next_timeout(T, Now) of
     0 ->
       {1, T1} = add(T, 1, Now),
-      {T1, F()};
+      Result  = try {ok, F()} catch E:R:Trace -> {retry, {E, R, Trace}} end,
+      case Result of
+        {ok, V} ->
+          {T1, V};
+        {retry, _} when Retries > 0 ->
+          receive after DelayMS -> ok end,
+          call3(T, F, now(), Retries-1, DelayMS);
+        {retry, {EE,RR,TR}} ->
+          erlang:raise(EE, RR, TR)
+      end;
     WaitMS ->
       receive after WaitMS -> ok end,
-      call(T, F, now())
+      call3(T, F, now(), Retries, DelayMS)
   end.
 
 %% @doc Add one sample to the throttle
@@ -211,11 +250,11 @@ calc_available(#throttle{rate=R, window=W, step=S} = T, Now) ->
 %%------------------------------------------------------------------------------
 
 -ifdef(EUNIT).
+time(TS, US) -> erlang:universaltime_to_posixtime(TS) * 1000000 + US.
 
 all_test() ->
-  Time = fun(TS, US) -> erlang:universaltime_to_posixtime(TS) * 1000000 + US end,
 
-  Now = Time({{2015, 6, 1}, {11,59,58}}, 900000),
+  Now = time({{2015, 6, 1}, {11,59,58}}, 900000),
   Thr = throttle:new(10, 1000, Now),  %% Throttle 10 samples / sec
   ?assertEqual(100000, Thr#throttle.step),
   ?assertEqual(10,     throttle:available(Thr, Now)),
@@ -224,15 +263,15 @@ all_test() ->
   ?assertEqual(9, throttle:available(T1, Now)),
   ?assertEqual(1, throttle:used(T1, Now)),
 
-  Now1 = Time({{2015, 6, 1}, {11,59,58}}, 999999),
+  Now1 = time({{2015, 6, 1}, {11,59,58}}, 999999),
   ?assertEqual(9, throttle:available(T1, Now1)),
   ?assertEqual(1, throttle:used(T1, Now1)),
 
-  Now2 = Time({{2015, 6, 1}, {11,59,59}}, 0),
+  Now2 = time({{2015, 6, 1}, {11,59,59}}, 0),
   ?assertEqual(10,throttle:available(T1, Now2)),
   ?assertEqual(0, throttle:used(T1, Now2)),
 
-  Now3 = Time({{2015, 6, 1}, {12,0,0}}, 0),
+  Now3 = time({{2015, 6, 1}, {12,0,0}}, 0),
   % 1 second elapsed, the throttler's interval is reset, and 10 samples are available
   ?assertEqual(10,throttle:available(T1, Now3)),
   ?assertEqual(0, throttle:used(T1, Now2)),
@@ -264,6 +303,35 @@ all_test() ->
   ?assert(Now6 - Now5 >= 2000000),
 
   ok.
+
+retry_ok_test() ->
+  Now  = now(),
+  Opts = #{retries => 3, retry_delay => 100},
+  TT   = throttle:new(10, 1000),
+  Inc  = fun(undefined) -> 1; (N) -> N+1 end,
+  F    = fun() ->
+    case get(count) of
+      2 -> ok;
+      N -> put(count, Inc(N)), erlang:error(exception)
+    end
+  end,
+  {_, R} = throttle:call(TT, F, Opts, Now),
+  erase(count),
+  ?assertEqual(ok, R).
+
+retry_fail_test() ->
+  Now  = now(),
+  Opts = #{retries => 3, retry_delay => 100},
+  TT   = throttle:new(10, 1000),
+  try
+    throttle:call(TT, fun() -> erlang:error(exception) end, Opts, Now),
+    ?assert(false)
+  catch error:exception ->
+    Diff = now() - Now,
+    %% Expected delay should be around 300ms
+    ?assert(Diff >= 300000),
+    ?assert(Diff <  400000)
+  end.
 
 -endif.
 
