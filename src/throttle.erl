@@ -51,9 +51,17 @@
 -type throttle() :: #throttle{}.
 -type time()     :: non_neg_integer().
 
--type throttle_opts() :: #{retries => integer(), retry_delay => integer()}.
-%% `retries' - number of retries.
+-type throttle_opts() :: #{
+  retries     => integer(),
+  retry_delay => integer(),
+  blocking    => boolean()
+}.
+%% `retries'     - number of retries.
 %% `retry_delay' - delay in milliseconds between successive retries.
+%% `blocking'    - instructs to block the call if throttled.
+
+-type throttle_result() ::
+  {ok, any()} | {error, throttled | {Reason::any(), StackTrace::list()}}.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -103,13 +111,14 @@ call(T, F) ->
 %% often then the throttle would allow. `Opts' are a map of options.
 %% When `{retries, R}' option is given and `R' is greater than 0, the
 %% throttler will call the function `F()' up to `R' times if the `F()'
-%% raises an exception.  There will be a delay of `D'
-%% milliseconds (default: `1') between successive executions of `F()'.
+%% raises an exception.  The delay between retries is controlled by
+%% the `{retry_delay, D}' options, expressed in milliseconds (default: `1')
+%% between successive executions of `F()'.
 %% If `F()' still raises an exception after the R's retry, that exception
 %% would be reraised and it would be the responsibility of the caller
 %% to handle it.
 -spec call(#throttle{}, fun(() -> any()), throttle_opts()) ->
-  {#throttle{}, any()}.
+  {#throttle{}, throttle_result()}.
 call(#throttle{} = T, F, Opts) when is_function(F, 0), is_map(Opts) ->
   call2(T, F, Opts, now()).
 
@@ -139,34 +148,37 @@ call(T, M,F,A, Opts) when is_map(Opts) ->
 %% @doc Call M,F,A, ensuring that it's not called more frequently than the
 %% throttle would allow.
 -spec call(#throttle{}, atom(), atom(), [any()], non_neg_integer(), throttle_opts()) ->
-  {#throttle{}, any()}.
+  {#throttle{}, throttle_result()}.
 call(#throttle{} = T, M,F,A, Opts, Now) when is_atom(M), is_atom(F), is_list(A) ->
   call2(T, fun() -> apply(M,F,A) end, Opts, Now).
 
 -spec call2(#throttle{}, fun(() -> any()), throttle_opts(), non_neg_integer()) ->
-  {#throttle{}, any()}.
+  {#throttle{}, throttle_result()}.
 call2(#throttle{} = T, F, Opts, Now) when is_integer(Now), is_function(F, 0), is_map(Opts) ->
   Retries = maps:get(retries,     Opts, 0),
   DelayMS = maps:get(retry_delay, Opts, 1),
-  call3(T, F, Now, Retries, DelayMS).
+  Block   = maps:get(blocking,    Opts, true),
+  call3(T, F, Now, Block, Retries, DelayMS).
 
-call3(T, F, Now, Retries, DelayMS) ->
+call3(T, F, Now, Block, Retries, DelayMS) ->
   case next_timeout(T, Now) of
     0 ->
       {1, T1} = add(T, 1, Now),
-      Result  = try {ok, F()} catch E:R:Trace -> {retry, {E, R, Trace}} end,
+      Result  = try {ok, F()} catch _:R:Trace -> {retry, {R, Trace}} end,
       case Result of
-        {ok, V} ->
-          {T1, V};
+        {ok, _} ->
+          {T1, Result};
         {retry, _} when Retries > 0 ->
           receive after DelayMS -> ok end,
-          call3(T, F, now(), Retries-1, DelayMS);
-        {retry, {EE,RR,TR}} ->
-          erlang:raise(EE, RR, TR)
+          call3(T, F, now(), Block, Retries-1, DelayMS);
+        {retry, Error} ->
+          {error, Error}
       end;
+    _ when not Block ->
+      {error, throttled};
     WaitMS ->
       receive after WaitMS -> ok end,
-      call3(T, F, now(), Retries, DelayMS)
+      call3(T, F, now(), Block, Retries, DelayMS)
   end.
 
 %% @doc Add one sample to the throttle
@@ -311,27 +323,33 @@ retry_ok_test() ->
   Inc  = fun(undefined) -> 1; (N) -> N+1 end,
   F    = fun() ->
     case get(count) of
-      2 -> ok;
+      2 -> success;
       N -> put(count, Inc(N)), erlang:error(exception)
     end
   end,
   {_, R} = throttle:call(TT, F, Opts, Now),
   erase(count),
-  ?assertEqual(ok, R).
+  ?assertEqual({ok, success}, R).
 
 retry_fail_test() ->
   Now  = now(),
   Opts = #{retries => 3, retry_delay => 100},
   TT   = throttle:new(10, 1000),
-  try
-    throttle:call(TT, fun() -> erlang:error(exception) end, Opts, Now),
-    ?assert(false)
-  catch error:exception ->
-    Diff = now() - Now,
-    %% Expected delay should be around 300ms
-    ?assert(Diff >= 300000),
-    ?assert(Diff <  400000)
-  end.
+  {error, {exception, _}} = throttle:call(TT, fun() -> erlang:error(exception) end, Opts, Now),
+  Diff = now() - Now,
+  %% Expected delay should be around 300ms
+  ?assert(Diff >= 300000),
+  ?assert(Diff <  400000).
+
+retry_fail_no_block_test() ->
+  Now  = now(),
+  Opts = #{retries => 3, retry_delay => 0},
+  TT   = throttle:new(10, 1000),
+  {error, {exception, _}} = throttle:call(TT, fun() -> erlang:error(exception) end, Opts, Now),
+  Diff = now() - Now,
+  %% Expected delay should be around 0ms
+  ?assert(Diff >   0),
+  ?assert(Diff < 100).
 
 -endif.
 

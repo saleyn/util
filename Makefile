@@ -11,7 +11,7 @@ endif
 PROJECT := $(notdir $(PWD))
 TARBALL := $(PROJECT)
 
-REBAR   := $(shell which rebar3 2> /dev/null)
+REBAR   := $(shell whereis rebar3 2>/dev/null | awk '{print $$2}')
 REBAR   := $(if $(REBAR),$(REBAR),rebar)$(EXT)
 
 empty   :=
