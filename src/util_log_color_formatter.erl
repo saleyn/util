@@ -40,8 +40,7 @@
 -define(CLREOL, "\e[K").
 -define(CSI(Code), ["\e[", integer_to_binary(Code), $m]).
 
--export([check_config/1,
-         format/2]).
+-export([check_config/1, format/2]).
 
 %% @hidden
 check_config(Config0) ->
@@ -92,12 +91,12 @@ color(Level, Config) ->
     color_to_escape(Color).
 
 default(emergency) -> {bg, red};
-default(alert) -> {bg, red};
-default(critical) -> {bg, red};
-default(error) -> red;
-default(warning) -> yellow;
-default(debug) -> blue;
-default(_) -> normal.
+default(alert)     -> {bg, red};
+default(critical)  -> {bg, red};
+default(error)     -> red;
+default(warning)   -> yellow;
+default(debug)     -> blue;
+default(_)         -> normal.
 
 color_to_escape(normal) -> [];
 color_to_escape({Mod, Color}) -> ?CSI(mod(Mod) + code(Color));
@@ -119,11 +118,12 @@ code(cyan)    -> 36;
 code(white)   -> 37.
 
 try_callback_call(Module, Function, Args, DefRet) ->
-    try apply(Module, Function, Args)
+    try
+        apply(Module, Function, Args)
     catch
         error:undef:S ->
             case S of
-                [{Module, Function, Args, _}|_] ->
+                [{Module, Function, Args} | _] ->
                     DefRet;
                 _ ->
                     erlang:raise(error, undef, S)

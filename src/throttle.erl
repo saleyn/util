@@ -93,7 +93,7 @@ reset(#throttle{} = T) ->
 reset(#throttle{} = T, Now) when is_integer(Now) ->
   T#throttle{next_ts = Now}.
 
-%% @doc Call the lambda <tt>F</tt>, ensuring that it's not called more
+%% @doc Call the lambda `F', ensuring that it's not called more
 %% frequently than the throttle would allow.
 %%
 %% Example:

@@ -11,8 +11,8 @@
 %%   This is the same as `ssh -nNT -L 8080:/var/lib/mysql/mysql.sock user@sshserver.example.com'
 %% When using `direct_tcpip/3' or `direct_stream_local/2' directly there
 %% will not be any local port or socket bound, this can either be done
-%% using `ssh_tunnel' or by manually sending data with `ssh_connection.send/3'.
-%% Although `connect/1' can be used to connect to the remote host, other
+%% using `ssh_tunnel' or by manually sending data with `ssh_connection:send/3'.
+%% Although `connect/3' can be used to connect to the remote host, other
 %% methods are supported.
 %% One can use [SSHex](https://github.com/rubencaro/sshex), `ssh:connect/3'
 %% for instance.
@@ -45,7 +45,7 @@
 connect() -> connect({127,0,0,1}, 22, []).
 
 %% @doc Create a connetion to a remote host with the provided options.
-%% This function is mostly used as convenience wrapper around `ssh_connect/3'
+%% This function is mostly used as convenience wrapper around `ssh:connect/3'
 %% and does not support all options.
 %% returns: `{ok, Connection}' or `{error, Reason}'.
 %% [https://manpages.debian.org/stretch/erlang-manpages/ssh.3erl.en.html]
@@ -83,7 +83,7 @@ start_tunnel(Pid, Transport, To) when (is_tuple(To) orelse is_integer(To))
 
 %% @doc Creates a ssh directtcp-ip forwarded channel to a remote port.
 %% The returned channel together with a ssh connection reference (returned
-%% from `:ssh.connect/4') can be used to send messages with `ssh_connection:send/3'
+%% from `ssh:connect/4') can be used to send messages with `ssh_connection:send/3'
 %% returns: `{ok, channel}' or `{error, reason}'.
 %% ## Examples:
 %%     msg = "GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.47.0\r\nAccept: */*\r\n\r\n"
@@ -112,7 +112,7 @@ direct_tcpip(Pid, {OrigHost, OrigPort} = _From, {RemHost, RemPort} = _To) when i
 %% msg = "GET /images/json HTTP/1.1\r\nHost: /var/run/docker.sock\r\nAccept: */*\r\n\r\n"
 %% {ok, Pid} = ssh_tunnel:connect("192.168.90.15", 22),
 %% {ok, Ch}  = ssh_tunnel:direct_stream_local(Pid, "/var/run/docker.sock"),
-%% ok = ssh_connection.send(Pid, Ch, Msg)
+%% ok = ssh_connection:send(Pid, Ch, Msg)
 %% '''
 -spec direct_stream_local(pid(), string()) -> {ok, integer()} | {error, term()}.
 direct_stream_local(Pid, SocketPath) when is_pid(Pid), is_list(SocketPath) ->

@@ -24,7 +24,7 @@
 %%   trunc_io:print(Term, 500).
 %%
 %% Source license: Erlang Public License.
-%% Original author: Matthias Lang, <tt>matthias@corelatus.se</tt>
+%% Original author: Matthias Lang, `matthias@corelatus.se'
 
 -module(trunc_io).
 -author('matthias@corelatus.se').
