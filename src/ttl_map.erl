@@ -67,8 +67,8 @@ new(TTL, Opts) when is_integer(TTL), is_map(Opts) ->
 
 %% @doc Try to add a `Key/Value' pair to the map.
 %% If more than TTL time elapsed since the last insert of the `Key' or the
-%% `Key' is not found in the map, the value is inserted, otherwise no modifications
-%% are made.
+%% `Key' is not found in the map, the value is inserted, otherwise no insertion 
+%% is made.
 -spec try_add(ttl_map(), any(), any(), non_neg_integer()) -> {ttl_map(), Inserted::boolean()}.
 try_add(TTLMap = #ttl_map{ets = ETS, q = Q}, Key, Value, Now) when is_integer(Now) ->
   TTLMap1 = evict(TTLMap, Now),  %% Evict stale entries from the ETS
