@@ -99,14 +99,14 @@
 -type export() :: {Function :: atom(), Arity :: arity()}.
 
 -type exports() :: [export()].
-%% A list of {@type export()}s.
+%% A list of `export()'s.
 
 -type func_form() :: erl_parse:abstract_form().
 %% The abstract form for the function, as described
 %% in the ERTS Users' manual.
 
 -type func_forms() :: [func_form()].
-%% A list of {@type func_form()}s.
+%% A list of `func_form()'s.
 
 %% The record type holding the abstract representation for a module.
 -record(meta_mod, {module             :: module(),
@@ -117,8 +117,7 @@
                   }).
 
 -type meta_mod() :: #meta_mod{}.
-%% A data structure holding the abstract representation
-%% for a module.
+%% A data structure holding the abstract representation for a module.
 
 -type result(Value) :: result(Value, term()).
 
@@ -281,7 +280,7 @@ get_attribute(MetaMod, Key) ->
 add_func(MetaMod, Form) ->
   add_func(MetaMod, Form, true).
 
-%% @doc Add `Function' to `MetaMod' and return the new {@type meta_mod()}. If
+%% @doc Add `Function' to `MetaMod' and return the new `meta_mod()'. If
 %% `Export' is `true', add `Function' to `MetaMod''s `exports'.
 -spec add_func(MetaMod, Func, Export) -> result(meta_mod(), parse_error) when
     MetaMod :: meta_mod(),
@@ -306,7 +305,7 @@ add_func(_, _, _) ->
   {error, parse_error}.
 
 %% @doc Try to remove `Function' from `MetaMod'.
-%% If the function exists, return the new {@type meta_mod()}.
+%% If the function exists, return the new `meta_mod()'.
 %% Otherwise, return `MetaMod'.
 -spec remove_func(MetaMod, Function, Arity) -> NewMod when
     MetaMod  :: meta_mod(),
@@ -333,7 +332,7 @@ has_func(MetaMod, FuncName, Arity) ->
                 false
             end, MetaMod#meta_mod.forms).
 
-%% @doc Attempt to get the {@type func_form()} for `MetaMod':`Function'/`Arity'.
+%% @doc Attempt to get the `func_form()' for `MetaMod':`Function'/`Arity'.
 -spec get_func(MetaMod, Function, Arity) -> result(func_form()) when
     MetaMod  :: meta_mod() | module(),
     Function :: atom(),
