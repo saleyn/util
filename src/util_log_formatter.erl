@@ -63,8 +63,6 @@
 -export([format/2]).
 -export([check_config/1]).
 
--compile({no_auto_import, [atom_to_list/1]}).
-
 -include_lib("kernel/src/logger_internal.hrl").
 
 %%%-----------------------------------------------------------------
@@ -228,7 +226,7 @@ do_format(_Level,_Data,[],_Config) ->
     [].
 
 value(modline,#{mfa:={M,_,_},line:=L}) ->
-    {ok, [atom_to_list(M),$:,integer_to_list(L)]};
+    {ok, [a2l(M),$:,integer_to_list(L)]};
 value(Key,Meta) when is_map_key(Key,Meta) ->
     {ok,maps:get(Key,Meta)};
 value([Key|Keys],Meta) when is_map_key(Key,Meta) ->
@@ -246,7 +244,7 @@ to_string(_,Value,Config) ->
     to_string(Value,Config).
 
 to_string(X,_) when is_atom(X) ->
-    atom_to_list(X);
+    a2l(X);
 to_string(X,_) when is_integer(X) ->
     integer_to_list(X);
 to_string(X,_) when is_pid(X) ->
@@ -267,13 +265,13 @@ format_regname(Key,Pid,Data) ->
             #{mfa := {M,_,_}} = Data,
             if
                 M == Name -> "*";
-                true      -> atom_to_list(Name)
+                true      -> a2l(Name)
             end;
-        {_, Name} -> atom_to_list(Name);
+        {_, Name} -> a2l(Name);
         _         -> pid_to_list(Pid,true)
     end.
 
-atom_to_list(Atom) ->
+a2l(Atom) ->
   case atom_to_list(Atom) of
     "Elixir." ++ L -> L;
     Other          -> Other
@@ -404,7 +402,7 @@ string_p(L) when is_list(L)  -> io_lib:printable_unicode_list(lists:flatten(L));
 string_p(_)                  -> false.
 
 to_string(S) when is_list(S) -> S;
-to_string(S) when is_atom(S) -> atom_to_list(S);
+to_string(S) when is_atom(S) -> a2l(S);
 to_string(S)                 -> lists:flatten(io_lib:format("~tp", [S])).
 
 reformat(Format,unlimited,false) ->
@@ -527,7 +525,7 @@ timestamp_to_datetimemicro(SysTime,Config) when is_integer(SysTime) ->
     {Date,Time,Micro,UtcStr}.
 
 format_mfa({M,F,A},_) when is_atom(M), is_atom(F), is_integer(A) ->
-    atom_to_list(M)++":"++atom_to_list(F)++"/"++integer_to_list(A);
+    a2l(M)++":"++atom_to_list(F)++"/"++integer_to_list(A);
 format_mfa({M,F,A},Config) when is_atom(M), is_atom(F), is_list(A) ->
     format_mfa({M,F,length(A)},Config);
 format_mfa(MFA,Config) ->
