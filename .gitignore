@@ -4,7 +4,7 @@ _build
 rebar.lock
 deps
 doc/
-ebin/
+ebin
 src/erlang_scan.erl
 build-aux/overview.edoc
 *.o

@@ -25,29 +25,21 @@ compile:
 	@if ! which elixirc &>/dev/null; then \
 		true; \
 	else \
-	 	for f in src/*.ex; do elixirc -o ebin --ignore-module-conflict $$f; done; \
+	 	for f in src/*.ex; do elixirc -o _build/default/lib/util/ebin --ignore-module-conflict $$f; done; \
 	fi
+	ln -vfs _build/default/lib/util/ebin
 
 test eunit:
 	@$(REBAR) eunit
 
 -include build-aux/docs-addon.mk
 
-# This is just an example of using make instead of rebar to do fast compilation
-all-fast: $(patsubst src/%.app.src,ebin/%.app,$(wildcard src/*.app.src))
-
-ebin/%.app: src/%.app.src $(wildcard src/*.erl)
-	@sed 's!{modules, *\[.*\]!{modules, [\
-        $(subst $(space),$(delim),$(sort $(basename $(notdir $(filter-out $<,$^)))))]!' \
-		$< > $@
-	erlc +debug_info -I include -o ebin $(filter-out $<,$?)
-
 clean:
 	@$(REBAR) clean
 	@rm -fr ebin doc
 
-doc ebin:
-	mkdir -p $@
+doc:
+	$(REBAR) ex_doc
 
 publish cut:
 	$(REBAR) hex $@ -r hexpm $(if $(replace),--replace) $(if $(noconfirm),--yes)
