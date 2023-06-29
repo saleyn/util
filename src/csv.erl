@@ -26,6 +26,8 @@
    {guess_limit_rows, integer()}|
    {max_nulls_pcnt,   float()}|
    {primary_key,      PKColumns::binary()|[binary()|list()]}|
+   {indexes,          [{IdxName::string()|binary(), [Col::string()|binary()]}|
+                       {IdxName::string()|binary(), [Col::string()|binary()], unique|undefined}]}|
    {drop_temp_table,  boolean()}|
    {encoding,    string()|atom()}|
    {verbose,     boolean()|integer()}].
@@ -66,6 +68,8 @@
 %%       the column data type is forced to be treated as `string'</dd>
 %% <dt>{primary_key, Fields}</dt>
 %%   <dd>Names of primary key fields in the created table</dd>
+%% <dt>{indexes, Indexes}</dt>
+%%   <dd>Indexes to create</dd>
 %% <dt>{drop_temp_table, boolean()}</dt>
 %%   <dd>When true (default), temp table is dropped.</dd>
 %% <dt>{encoding, Encoding}</dt>
@@ -468,7 +472,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
     Types  = proplists:get_value(col_types,   Opts, #{}), % Column types
     Trans0 = proplists:get_value(transforms,  Opts, #{}), % Column transforms
     Enc    = encoding(proplists:get_value(encoding, Opts, undefined)),
-    Verbose= case proplists:get_value(verbose,     Opts, 0) of
+    Verbose= case proplists:get_value(verbose,      Opts, 0) of
                true  -> 1;
                false -> 0;
                _I when is_integer(_I) -> _I
@@ -476,8 +480,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
     SaveSQL= proplists:get_value(save_create_sql_to_file, Opts, false),
     LoadTp = proplists:get_value(load_type,   Opts, recreate),
              lists:member(LoadTp,[recreate, replace, ignore_dups, update_dups, upsert])
-               orelse throw({badarg, {load_type, LoadTp}}),
-    Drop   = proplists:get_value(drop_temp_table, Opts, true),
+               orelse error({badarg, {load_type, LoadTp}}),
+    Drop   = proplists:get_value(drop_temp_table,   Opts, true),
     PKey   = case proplists:get_value(primary_key,  Opts, undefined) of
                K when is_binary(K) ->
                  [K];
@@ -488,7 +492,33 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                [] ->
                  [];
                Other ->
-                 throw({badarg, {primary_key, Other}})
+                 error({badarg, {primary_key, Other}})
+             end,
+    Idxs   = case proplists:get_value(indexes, Opts, []) of
+               L when is_list(L) ->
+                 FF = fun(I) when is_binary(I) -> binary_to_list(I);
+                         (I) when is_list(I) ->
+                          case io_lib:printable_list(I) of
+                            true -> string:to_lower(lists:flatten(I));
+                            false -> error({badarg, {indexes, L}})
+                          end;
+                         (_) ->
+                          error({badarg, {indexes, L}})
+                      end,
+                 lists:map(fun
+                   ({undefined, Cols}) when is_list(Cols) ->
+                     {undefined, [FF(C) || C <- Cols], undefined};
+                   ({Name, Cols}) when is_list(Name) orelse is_binary(Name), is_list(Cols) ->
+                     {FF(Name), [FF(C) || C <- Cols], undefined};
+                   ({Name, Cols, Uniq}) when is_list(Name) orelse is_binary(Name)
+                                           , is_list(Cols)
+                                           , Uniq == unique orelse Uniq == undefined ->
+                     {FF(Name), [FF(C) || C <- Cols], Uniq};
+                   (Other3) ->
+                     error({badarg, {indexes, Other3}})
+                 end, L);
+               Other2 ->
+                 error({badarg, {indexes, Other2}})
              end,
     CSV0   = parse(File, [fix_lengths, binary]),
     ColCnt = length(hd(CSV0)),
@@ -499,7 +529,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
       throw({ignore, {Heads, 0, 0}}),
     PKey  /= [] andalso
       lists:foreach(fun(K) ->
-                      lists:member(K, Heads) orelse throw({primary_key_not_found, K, Heads})
+                      lists:member(K, Heads) orelse error({primary_key_not_found, K, Heads})
                     end, PKey),
     Merge  = fun M([],     [])                        -> [];
                  M([H|T1], [{T,I,J}|T2])              -> [{H,T,I,J}|M(T1,T2)];
@@ -528,7 +558,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                {ok,_,[[N]]} ->
                  N > 0;
                {error, {Code01, _, Msg01}} ->
-                 throw({error_checking_if_table_exists, Code01, binary_to_list(Msg01), Tab})
+                 error({error_checking_if_table_exists, Code01, binary_to_list(Msg01), Tab})
              end,
     TmpTab = case LoadTp of
                upsert -> Tab;
@@ -546,10 +576,10 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                    ["CREATE TABLE `", TmpTab, "` AS SELECT * FROM `", Tab, "` where false;\n"];
                  true when LoadTp /= upsert
                          , LoadTp /= recreate ->
-                   throw({invalid_load_type, LoadTp});
+                   error({invalid_load_type, LoadTp});
                  false when not Create
                           , LoadTp /= recreate ->
-                   throw("Table "++Tab++" doesn't exist and creation not allowed!");
+                   error("Table "++Tab++" doesn't exist and creation not allowed!");
                  _ ->
                    ["CREATE TABLE `", TmpTab, "` (",
                      string:join(
@@ -580,7 +610,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                  [] -> "";
                  _  -> SS = string:join(["`"++binary_to_list(S)++"`" || S <- PKey], ","),
                        io_lib:format("ALTER TABLE `~s` ADD PRIMARY KEY (~s);\n", [TmpTab, SS])
-               end]),
+               end
+             ]),
 
     case SaveSQL of
       false ->
@@ -600,7 +631,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
       case mysql:query(MySqlPid, CrTab) of
         ok -> ok;
         {error, {Code, _, Msg}} ->
-          throw({error_creating_table, Code, binary_to_list(Msg), CrTab})
+          error({error_creating_table, Code, binary_to_list(Msg), CrTab})
       end
     end,
 
@@ -691,12 +722,12 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                 ok ->
                   J+1;
                 {error, {Code1, _, Msg1}} ->
-                  throw({error_inserting_records, Code1, binary_to_list(Msg1), {row, J, R}})
+                  error({error_inserting_records, Code1, binary_to_list(Msg1), {row, J, R}})
               end
             end, I, Batch)
           catch _:E ->
             mysql:unprepare(MySqlPid, Ref),
-            throw(E)
+            error(E)
           end
       end
     end, 1, BatchRows),
@@ -710,6 +741,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
           [];
         recreate ->
           OldTab = Tab ++ "_OLD",
+          create_indexes(MySqlPid, Tab, TmpTab, Idxs),
           %% Rename the actual table X to X_OLD, and the tmp table T to X, and drop X_OLD
           %% in one transaction:
           ["DROP TABLE IF EXISTS `", OldTab, "`;\n"
@@ -759,7 +791,7 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
             Selected = if SelectedRows < 0 -> 0; true -> SelectedRows end,
             {HD, Changed, Selected};
           {error, {Code3, _, Msg3}} ->
-            throw({error_inserting_records, Code3, binary_to_list(Msg3), SQL})
+            error({error_inserting_records, Code3, binary_to_list(Msg3), SQL})
         end
     end
   catch
@@ -775,7 +807,48 @@ on_duplicate_key_update(Tab, HD, PKey) ->
         ["`",LL,"`=IFNULL(VALUES(",LL,"),`",Tab,"`.`",LL,"`)"]
       end || S <- HD, not lists:member(S, PKey)],
      ",")].
+
+create_indexes(_MySqlPid, _Tab, _TmpTab, []) ->
+  ok;
+create_indexes(MySqlPid, Tab, TmpTab, Idxs) ->
+  DropIdxSql   = fun(IdxName) ->
+    io_lib:format("ALTER TABLE `~s` DROP INDEX IF EXISTS `~s`; ", [Tab, IdxName])
+  end,
+  CreateIdxSql = fun(IdxName, ColNames, Uniq) ->
+    io_lib:format("ALTER TABLE `~s` ADD ~sINDEX `~s` (~s);",
+                  [TmpTab, if Uniq == unique -> "UNIQUE "; true -> "" end, IdxName, ColNames])
+  end,
+  lists:foreach(fun({IdxName0, Cols, Uniq}) ->
+    ColNames = string:join(Cols, ","),
+    IdxName  =
+      case IdxName0 of
+        undefined -> get_idx_name(MySqlPid, Tab, ColNames);
+        _         -> IdxName0
+      end,
+    SQL = lists:flatten([DropIdxSql(IdxName), CreateIdxSql(IdxName, ColNames, Uniq)]),
+    case mysql:query(MySqlPid, SQL) of
+      ok ->
+         ok;
+      {error, {Code3, _, Msg3}} ->
+         error({error_creating_index, Code3, binary_to_list(Msg3), SQL})
+    end
+  end, Idxs).
  
+get_idx_name(MySqlPid, Tab, ColNames) ->
+  {ok, _, Rows} = mysql:query(MySqlPid, lists:flatten(io_lib:format(
+    "SELECT index_name, LOWER(GROUP_CONCAT(column_name order by seq_in_index)) as column_names\n"
+    "  FROM INFORMATION_SCHEMA.STATISTICS\n"
+    " WHERE TABLE_NAME = '~s'\n"
+    " GROUP BY index_name\n"
+    "HAVING LOWER(GROUP_CONCAT(column_name order by seq_in_index)) = '~s'\n",
+    Tab, ColNames))),
+  case Rows of
+    [] ->
+      lists:flatten(io_lib:format("idx_~s_~s", [Tab, string:replace(ColNames, $,, $_)]));
+    [[Name | _]] ->
+      binary_to_list(Name)
+  end.
+
 encoding(undefined) -> [];
 encoding(A) when is_atom(A) -> encoding2(atom_to_list(A));
 encoding(L) when is_list(L) -> encoding2(L).

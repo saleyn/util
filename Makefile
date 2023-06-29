@@ -27,7 +27,6 @@ compile:
 	else \
 	 	for f in src/*.ex; do elixirc -o _build/default/lib/util/ebin --ignore-module-conflict $$f; done; \
 	fi
-	ln -vfs _build/default/lib/util/ebin
 
 test eunit:
 	@$(REBAR) eunit
