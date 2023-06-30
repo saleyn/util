@@ -502,8 +502,8 @@ load_to_mysql(File, Tab, MySqlPid, Opts)
                             true -> string:to_lower(lists:flatten(I));
                             false -> error({badarg, {indexes, L}})
                           end;
-                         (_) ->
-                          error({badarg, {indexes, L}})
+                         (I) ->
+                          error({badarg, {indexes, [I]}})
                       end,
                  lists:map(fun
                    ({undefined, Cols}) when is_list(Cols) ->
