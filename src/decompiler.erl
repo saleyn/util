@@ -1,5 +1,9 @@
 %%%------------------------------------------------------------------------
 %%% @doc Module and function decompiler
+%%%
+%%% In order to use decompiler, make sure to include `syntax_tools'
+%%% application in dependencies.
+%%%
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @end
 %%%------------------------------------------------------------------------
