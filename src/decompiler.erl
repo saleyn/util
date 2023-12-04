@@ -38,8 +38,15 @@
 run(BeamFName) ->
     run(BeamFName, []).
 
-%% @doc Decompile a beam file and optionally save it to disk
--spec run(string()|binary(), [verbose | erl | ast]) -> ok | {error, any()}.
+%% @doc Decompile a beam file or module and optionally save it to disk
+-spec run(string()|binary()|atom(), [verbose | erl | ast]) -> ok | {error, any()}.
+run(Module, Options) when is_atom(Module) ->
+    case code:which(Module) of
+      BeamFName when is_list(BeamFName) ->
+        run(BeamFName, Options);
+      non_existing ->
+        {error, not_found}
+    end;
 run(BeamFName, Options) when is_list(BeamFName); is_binary(BeamFName) ->
     FName = if is_binary(BeamFName) -> binary_to_list(BeamFName); true -> BeamFName end,
     case get_abstract_code(FName) of
