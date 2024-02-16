@@ -200,11 +200,11 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
 %%-------------------------------------------------------------------------
 -spec pretty_print_table([map()]) -> ok.
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
-  io:put_chars(pretty_table1(lists:sort(maps:keys(Map)), LofMaps0, #opts{})).
+  io:put_chars(pretty_table0(lists:sort(maps:keys(Map)), LofMaps0, #opts{})).
 
 -spec pretty_print_table([string()|binary()|atom()]|tuple(), [map()|list()]) -> ok.
 pretty_print_table(HeaderRowKeys, Rows) ->
-  io:put_chars(pretty_table1(HeaderRowKeys, Rows, #opts{})).
+  io:put_chars(pretty_table0(HeaderRowKeys, Rows, #opts{})).
 
 -spec pretty_print_table([string()|binary()|atom()]|tuple(), [map()|list()], #opts{}|map()) -> ok.
 pretty_print_table(HeaderRowKeys, Rows, Opts) ->
@@ -315,27 +315,27 @@ filter_out([H|T1], []) ->         [H|filter_out(T1, [])].
 
 -spec pretty_table0(tuple()|[string()|binary()|atom()], list(), #opts{}|map()) -> iolist().
 pretty_table0(HdrRowKeys, Rows, #opts{} = Opts) ->
-  pretty_table1(HdrRowKeys, Rows, Opts);
+  pretty_table1(HdrRowKeys, Rows, init_opts(Opts));
 pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
   DefTup  = #opts{},
   DefOpts = maps:from_list(lists:zip(record_info(fields, opts), tl(tuple_to_list(DefTup)))),
   MOpts   = maps:merge(DefOpts, MapOpts),
-  #{number_pad:=NP, header:=OH,      th_dir:=THD, td_dir:=TDD, td_pad:=TDA,
-    td_start:=TDST, td_exclude:=TDE, td_sep:=TDS, tr_sep:=TRS, tr_sep_td:=TRSTD,
-    prefix:=Prf,    translate :=TR,  footer_rows:=FR,          td_formats:=TDF,
-    thousands:=THS, ccy_sym:=CCY,    ccy_sep    :=CS,          ccy_pos:=CP,
-    unicode  :=UNI, outline:=OUTLINE} = MOpts,
-  Opts = #opts{
+  #{number_pad:=NP, header    :=OH,  th_dir:=THD, td_dir:=TDD, td_pad:=TDA,
+    td_start :=TST, td_exclude:=TDE, td_sep:=TDS, tr_sep:=TRS, tr_sep_td:=TRSTD,
+    prefix   :=Prf, translate :=TR,  footer_rows:=FR,          td_formats:=TDF,
+    thousands:=THS, ccy_sym   :=CCY, ccy_sep    :=CS,          ccy_pos:=CP,
+    unicode  :=UNI, outline   :=OUTLINE} = MOpts,
+  Opts = init_opts(#opts{
     number_pad = NP,
     header     = OH,
     th_dir     = THD,
     td_dir     = TDD,
     td_pad     = TDA,
-    td_start   = TDST,
+    td_start   = TST,
     td_exclude = TDE,
-    td_sep     = ?IIF(UNI andalso TDS   == DefTup#opts.td_sep,   " │ ", TDS),
-    tr_sep     = ?IIF(UNI andalso TRS   == DefTup#opts.tr_sep,   "─",   TRS),
-    tr_sep_td  = ?IIF(UNI andalso TRSTD == DefTup#opts.tr_sep_td,"┼",   TRSTD),
+    td_sep     = TDS,
+    tr_sep     = TRS,
+    tr_sep_td  = TRSTD,
     prefix     = Prf,
     translate  = TR,
     footer_rows= FR,
@@ -346,8 +346,16 @@ pretty_table0(HdrRowKeys, Rows, MapOpts) when is_map(MapOpts) ->
     ccy_pos    = CP,
     outline    = OUTLINE,
     unicode    = UNI
-  },
+  }),
   pretty_table1(HdrRowKeys, Rows, Opts).
+
+init_opts(#opts{td_sep=TDS, tr_sep=TRS, tr_sep_td=TRSTD, unicode=UNI} = Opts) ->
+  DefTup = #opts{},
+  Opts#opts{
+    td_sep     = ?IIF(UNI andalso TDS   == DefTup#opts.td_sep,   " │ ", TDS),
+    tr_sep     = ?IIF(UNI andalso TRS   == DefTup#opts.tr_sep,   "─",   TRS),
+    tr_sep_td  = ?IIF(UNI andalso TRSTD == DefTup#opts.tr_sep_td,"┼",   TRSTD)
+  }.
 
 pretty_table1(Keys0, Rows0, Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
