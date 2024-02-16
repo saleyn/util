@@ -360,11 +360,11 @@ init_opts(#opts{td_sep=TDS, tr_sep=TRS, tr_sep_td=TRSTD, unicode=UNI} = Opts) ->
 pretty_table1(Keys0, Rows0, Opts) when is_tuple(Keys0) ->
   pretty_table1(tuple_to_list(Keys0), Rows0, Opts);
 pretty_table1(Keys0, Rows0, #opts{unicode = Uni} = Opts) when is_list(Keys0), is_list(Rows0) ->
+  NCols   = length(Keys0),
   Exclude = translate_excludes(Keys0, Opts#opts.td_exclude, Opts#opts.td_start),
   KeyStrs = take_nth(Opts#opts.td_start, [element(2, to_string(Key)) || Key <- Keys0]),
-  Rows    = [take_nth(Opts#opts.td_start, to_strings(Keys0, V, Opts)) || V <- Rows0],
+  Rows    = [take_nth(Opts#opts.td_start, to_strings(NCols, Keys0, V, Opts)) || V <- Rows0],
   Ws      = ws(Rows, [{undefined, string:length(Key)} || Key <- KeyStrs]),
-  NCols   = length(Keys0),
   Pad     = fun (I, DefPad) -> maps:get(I, Opts#opts.td_pad, DefPad) end,
   Col     = fun
               ({number,Str}, {_, Width}, I) ->
@@ -632,32 +632,51 @@ type(T, undefined) -> T;
 type(T, T)         -> T;
 type(_, _)         -> string.
 
-to_strings(Keys, Values, #opts{td_formats=undefined}) ->
-  to_strings1(Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), #opts{});
-to_strings(Keys, Values, #opts{td_formats=Formats}=O) when is_tuple(Formats), tuple_size(Formats) == length(Keys) ->
-  to_strings1(Keys, Values, tuple_to_list(Formats), O);
-to_strings(Keys, Values, #opts{td_formats=Formats}=O) when (is_list(Formats) andalso length(Formats)==length(Keys))
+to_strings(NCols, Keys, Values, #opts{td_formats=undefined}) ->
+  to_strings1(NCols, Keys, Values, tuple_to_list(erlang:make_tuple(length(Keys), undefined)), #opts{});
+to_strings(NCols, Keys, Values, #opts{td_formats=Formats}=O) when is_tuple(Formats) ->
+  to_strings1(NCols, Keys, Values, tuple_to_list(Formats), O);
+to_strings(NCols, Keys, Values, #opts{td_formats=Formats}=O) when is_list(Formats)
                                                            orelse is_function(Formats, 1)
                                                            orelse is_function(Formats, 3) ->
-  to_strings1(Keys, Values, Formats, O).
+  to_strings1(NCols, Keys, Values, Formats, O).
 
-to_strings1([], _, _, _) ->
+to_strings1(_NCols, [], _, _, _) ->
   [];
-to_strings1([K|Keys], Map, [F|Formats], Opts) when is_map(Map) ->
-  [to_string(K, maps:get(K, Map), Map, F, Opts) | to_strings1(Keys, Map, Formats, Opts)];
-to_strings1([K|Keys], Map, Fmt, Opts) when is_map(Map) andalso (is_function(Fmt,1) orelse is_function(Fmt, 3)) ->
-  [to_string(K, maps:get(K, Map), Map, Fmt, Opts) | to_strings1(Keys, Map, Fmt, Opts)];
-to_strings1(_Keys, List, Fmt, Opts) when is_list(List) andalso (is_function(Fmt,1) orelse is_function(Fmt,3)) ->
-  Row = list_to_tuple(List),
-  [to_string(undefined, Entry, Row, Fmt, Opts) || Entry <- List];
-to_strings1(_Keys, List, Formats, Opts) when is_list(List), is_list(Formats) ->
-  Row = list_to_tuple(List),
-  [to_string(undefined, Entry, Row, F, Opts) || {Entry, F} <- lists:zip(List, Formats)];
-to_strings1(Keys, Row, Fmt, Opts) when is_tuple(Row) andalso (is_function(Fmt,1) orelse is_function(Fmt,3)) ->
-  [to_string(K, Entry, Row, Fmt, Opts) || {K, Entry} <- lists:zip(Keys, tuple_to_list(Row))];
-to_strings1(Keys, Row, Formats, Opts) when is_tuple(Row), is_list(Formats) ->
-  List = tuple_to_list(Row),
-  [to_string(K, Entry, Row, F, Opts) || {K, Entry, F} <- lists:zip3(Keys, List, Formats)].
+to_strings1(NCols, Keys0, Map, Formats0, Opts) when is_map(Map) ->
+  case {Keys0, Formats0} of
+    {[K|Keys], [F|Formats]} ->
+      [to_string(K, maps:get(K, Map), Map, F, Opts) | to_strings1(NCols, Keys, Map, Formats, Opts)];
+    {[], [_|_]} ->
+      erlang:error("Invalid number of formatting elements in td_formats");
+    {[_|_], []} ->
+      erlang:error("Invalid number of formatting elements in td_formats");
+    {[K|Keys], Fmt} when is_function(Fmt,1); is_function(Fmt,3) ->
+      [to_string(K, maps:get(K, Map), Map, Fmt, Opts) | to_strings1(NCols, Keys, Map, Fmt, Opts)];
+    _ ->
+      erlang:error(lists:flatten(io_lib:format("Invalid type of td_formats: ~p", [Formats0])))
+  end;
+to_strings1(_NCols, _Keys, List, Fmt, Opts) when is_list(List) ->
+  if
+    is_function(Fmt,1); is_function(Fmt,3) ->
+      Row = list_to_tuple(List),
+      [to_string(undefined, Entry, Row, Fmt, Opts) || Entry <- List];
+    is_list(Fmt) ->
+      Row = list_to_tuple(List),
+      [to_string(undefined, Entry, Row, F, Opts) || {Entry, F} <- lists:zip(List, Fmt)];
+    true ->
+      erlang:error("Invalid items - 2nd argument must be a map, list, or tuple")
+  end;
+to_strings1(NCols, Keys, Row, Fmt, Opts) when is_tuple(Row) ->
+  if
+    is_function(Fmt,1); is_function(Fmt,3) ->
+      [to_string(K, Entry, Row, Fmt, Opts) || {K, Entry} <- lists:zip(Keys, t2l(NCols, Row))];
+    is_list(Fmt) ->
+      List = t2l(NCols, Row),
+      [to_string(K, Entry, Row, F, Opts) || {K, Entry, F} <- lists:zip3(Keys, List, Fmt)];
+    true ->
+      erlang:error(lists:flatten(io_lib:format("Invalid type of td_formats: ~p", [Fmt])))
+  end.
 
 to_string(V) ->
   to_string(undefined, V, undefined, undefined, undefined).
@@ -704,6 +723,11 @@ to_string1(Bin,_Opts)   when is_binary(Bin)  -> {string, binary_to_list(Bin)};
 to_string1(undefined,_Opts)                  -> {string, ""};
 to_string1(nil,_Opts)                        -> {string, ""};
 to_string1(T,_Opts)                          -> {string, io_lib:format("~tp", [T])}.
+
+t2l(N, T) when tuple_size(T) =:= N ->
+  tuple_to_list(T);
+t2l(N, T) ->
+  erlang:error(lists:flatten(io_lib:format("Expected tuple size ~w. Got ~w: ~p", [N, tuple_size(T), T]))).
 
 format_ccy(I, Decimals, #opts{ccy_sym=Sym, ccy_sep=Sep, ccy_pos=Pos, thousands=Th}) ->
   format_number(I, Decimals, Decimals, #{ccy_sym=>Sym, ccy_sep=>Sep, ccy_pos=>Pos,
