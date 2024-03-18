@@ -4,6 +4,8 @@
 %%% In order to use decompiler, make sure to include `syntax_tools'
 %%% application in dependencies.
 %%%
+%%% See also https://github.com/hrzndhrn/beam_file
+%%%
 %%% @author Serge Aleynikov <saleyn@gmail.com>
 %%% @end
 %%%------------------------------------------------------------------------
