@@ -141,6 +141,8 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
 %% @doc Pretty print table of lists/tuples/maps to list.
 %% The following options control formatting behavior:
 %% <dl>
+%% <dt>header</dt>
+%%      <dd>When true (default), output header row</dd>
 %% <dt>number_pad</dt>
 %%      <dd>Leading padding character used for numbers</dd>
 %% <dt>th_dir</dt>
@@ -447,6 +449,9 @@ align_rows(Rows) ->
 %%     <dd>Column padding direction, where `Direction' is one of `leading',
 %%         `trailing', `{Position::integer(), leading|trailing|none}',
 %%         `{last, leading|trailing|none}'</dd>
+%% <dt>{type, binary|charlist}</dt>
+%%     <dd>Return columns in the result rows as binaries or charlists
+%%     (default)</dd>
 %% <dt>{return, tuple|list}</dt>
 %%     <dd>Return result rows as lists or tuples</dd>
 %% <dt>{prefix, string()}</dt>
@@ -465,12 +470,14 @@ align_rows(Rows) ->
                                      trailing|leading|both|none}]} |
                    {exclude,Cols::[integer()]} |
                    {return, Ret::tuple|list}   |
+                   {type,   binary|charlist}   |
                    {prefix,       string()}    |
                    {ignore_empty, boolean()}]) ->
        [AlignedRow::tuple()|list()].
 align_rows([], _Options) ->
   [];
 align_rows(Rows, Options) when is_list(Rows), is_list(Options) ->
+  TP = proplists:get_value(type, Options, charlist),
   case lists:any(fun(I) -> is_tuple(I) end, Rows) of
     true ->
       FF = fun
@@ -479,23 +486,25 @@ align_rows(Rows, Options) when is_list(Rows), is_list(Options) ->
             (I) when is_list(I)   -> I
            end,
       RR = [FF(R) || R <- Rows],
-      LL = align_rows1(RR, Options),
+      LL = align_rows1(RR, TP, Options),
       case proplists:get_value(return, Options) of
         I when I==undefined; I==tuple ->
-          [case is_binary(R) of
-             true -> binary_to_list(R);
-             _    -> list_to_tuple(R)
+          [case {is_binary(R), TP} of
+             {true, charlist} -> binary_to_list(R);
+             {true, binary}   -> R;
+             {false, _}       -> list_to_tuple(R)
            end || R <- LL];
         list ->
-          [case is_binary(R) of
-             true  -> binary_to_list(R);
-             false -> R
+          [case {is_binary(R), TP} of
+             {true, charlist} -> binary_to_list(R);
+             {true, binary}   -> R;
+             {false, _}       -> R
            end || R <- LL]
       end;
     false ->
-      align_rows1(Rows, Options)
+      align_rows1(Rows, TP, Options)
   end.
-align_rows1(Rows, Options) when is_list(Rows), is_list(Options) ->
+align_rows1(Rows, TP, Options) when is_list(Rows), is_list(Options) ->
   Simple = all_columns_simple(Rows),
   {N, L, Unlist} = if
                      Simple -> {1, [[I] || I <- Rows], true};
@@ -584,25 +593,34 @@ align_rows1(Rows, Options) when is_list(Rows), is_list(Options) ->
                                 end, list_to_tuple(LR), EX)), I =/= false]
                   end, LL)
         end,
-  case  proplists:get_value(prefix,  Options, []) of
+  case  proplists:get_value(prefix, Options, []) of
     [] when Unlist ->
-      [I || [I] <- LL1];
+      [to_type(TP, I) || [I] <- LL1];
     [] ->
       LL1;
-    Pfx ->
+    Pfx0 ->
+      Pfx = if is_binary(Pfx0) -> Pfx0;
+               is_list(Pfx0)   -> list_to_binary(Pfx0);
+               true            -> error({invalid_prefix, Pfx0})
+            end,
       LL2 = [case R of
                _ when is_binary(R) ->
-                 <<(list_to_binary(Pfx))/binary, R/binary>>;
+                 <<Pfx/binary, R/binary>>;
                [HH|TT] when is_binary(HH) ->
-                 [<<(list_to_binary(Pfx))/binary, HH/binary>> | TT];
+                 [to_type(TP, <<Pfx/binary, HH/binary>>) | [to_type(TP, I) || I <- TT]];
                [HH|TT] when is_list(HH) ->
-                 [Pfx ++ HH | TT]
+                 [to_type(TP, <<Pfx/binary, (list_to_binary(HH))/binary>>) | [to_type(TP, I) || I <- TT]]
              end || R <- LL1],
       if
-        Unlist -> [I || [I] <- LL2];
+        Unlist -> [to_type(TP, I) || [I] <- LL2];
         true   -> LL2
       end
   end.
+
+to_type(binary,   V) when is_binary(V) -> V;
+to_type(binary,   V) when is_list(V)   -> list_to_binary(V);
+to_type(charlist, V) when is_binary(V) -> binary_to_list(V);
+to_type(charlist, V) when is_list(V)   -> V.
 
 all_columns_simple(Rows) ->
   lists:all(fun(I) ->
