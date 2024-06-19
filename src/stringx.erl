@@ -45,6 +45,8 @@
 -type pretty_print_opts() :: #{
   number_pad => char(),    % Padding character for numbers
   header     => boolean(), % Output header row
+  unicode    => boolean(), % When true, use unicode outline characters
+  outline    => none | full | [top | left | bottom | right], % outline sides
   th_dir     => both|leading|trailing, % table header padding dir
   td_dir     => both|leading|trailing, % table row    padding dir
   td_pad     => #{integer() => both|leading|trailing}, % column padding dir
