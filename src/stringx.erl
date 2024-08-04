@@ -18,7 +18,7 @@
 -author('saleyn@gmail.com').
 
 %% External API
--export([titlecase/1, wordwrap/2, wordwrap/3]).
+-export([titlecase/1, wordwrap/2, wordwrap/3, wrap_words/3]).
 -export([pretty_table/1, pretty_table/2, pretty_table/3]).
 -export([pretty_print_table/1, pretty_print_table/2, pretty_print_table/3]).
 -export([align_rows/1, align_rows/2, aligned_format/2, aligned_format/3]).
@@ -88,26 +88,51 @@ titlecase(S) when is_list(S) ->
   titlecase(S, []).
 
 %%-------------------------------------------------------------------------
-%% @doc Wrap words words in a string
-%% @end
-%%-------------------------------------------------------------------------
--spec wordwrap(string(), integer()) -> string().
-wordwrap(S, Margin) when is_list(S), is_integer(Margin) ->
-  wordwrap(S, [], [], 0, Margin).
-
-%%-------------------------------------------------------------------------
-%% @doc Wrap words words in a string to multiple lines that fit the margin
-%% Example:
+%% @doc Wrap words list in a string to multiple lines that fit the margin
+%% There are two uses of this function:
+%% First:
+%% <code>
+%% 1> stringx:wordwrap("abc efg exdf"], 8, "\n").
+%% "abc efg\nexdf"
+%% </code>
+%% Second:
 %% <code>
 %% 1> stringx:wordwrap(["abc", "efg", "exdf"], 8, ",").
 %% ["abc,efg,","exdf"]
 %% </code>
+%% The second use is deprecated. Use `wrap_words/3' instead.
 %% @end
 %%-------------------------------------------------------------------------
--spec wordwrap([Word], integer(), Word) -> [string()|binary()]
+-spec wordwrap(string()|binary(), integer()) -> string()|binary().
+wordwrap([W|_] = S, Margin) when is_list(W) ->
+  wrap_words(S, Margin, "\n");
+wordwrap(S, Margin) ->
+  wordwrap(S, Margin, "\n").
+
+-spec wordwrap(Word, integer(), string()|binary()) -> Word
         when Word :: string()|binary().
+wordwrap(S, Margin, Delim) when is_binary(S), is_integer(Margin) ->
+  list_to_binary(wordwrap(binary_to_list(S), [], [], 0, Margin, to_rev_list(Delim)));
+wordwrap([C|_] = S, Margin, Delim) when is_integer(C), is_integer(Margin) ->
+  wordwrap(S, [], [], 0, Margin, to_rev_list(Delim));
+
 wordwrap(Words, Margin, Delim) ->
-  wrap(Words, [[]], Margin, Delim).
+  wrap_words(Words, Margin, Delim).
+
+%%-------------------------------------------------------------------------
+%% @doc Wrap words list in a string to multiple lines that fit the margin
+%% Example:
+%% <code>
+%% 1> stringx:wrap_words(["abc", "efg", "exdf"], 8, ",").
+%% ["abc,efg,","exdf"]
+%% </code>
+%% @end
+%%-------------------------------------------------------------------------
+-spec wrap_words([Word], integer(), Word) -> [Word]
+        when Word :: string()|binary().
+wrap_words([W|_] = Words, Margin, Delim) when is_list(W); is_binary(W) ->
+  WD = to_list(Delim),
+  maybe_to_binary(is_binary(W), wrap(Words, [[]], Margin, 0, WD, length(WD))).
 
 %%-------------------------------------------------------------------------
 %% @doc Pretty print list of maps to list.
@@ -227,68 +252,64 @@ titlecase([C | T], [$  |_] = Acc) when C >= $a, C =< $z ->
 titlecase([C | T], Acc) ->
   titlecase(T, [C | Acc]).
 
-wordwrap([], Acc, WordAcc, _LineLen, _Margin) ->
+wordwrap([], Acc, WordAcc, _LineLen, _Margin, _Delim) ->
   lists:reverse(WordAcc ++ Acc);
 
 % Premature newline
-wordwrap([$\n | Rest], Acc, WordAcc, _LineLen, Margin) ->
-  wordwrap(Rest, [$\n | dropws(WordAcc, Acc)], [], 0, Margin);
+wordwrap([$\n | Rest], Acc, WordAcc, _LineLen, Margin, Delim) ->
+  wordwrap(Rest, Delim ++ dropws(WordAcc, Acc), [], 0, Margin, Delim);
 
-% Reached the wrap length at a space character - add $\n
-wordwrap([$  | Rest], Acc, WordAcc, Margin, Margin) ->
-  wordwrap(Rest, [$\n | dropws(WordAcc, Acc)], [], 0, Margin);
+wordwrap([$\r | Rest], Acc, WordAcc, _LineLen, Margin, Delim) ->
+  wordwrap(Rest, dropws(WordAcc, Acc), [], 0, Margin, Delim);
+
+% Reached the wrap length at a space character - add Delim
+wordwrap([$  | Rest], Acc, WordAcc, Margin, Margin, Delim) ->
+  wordwrap(Rest, Acc, WordAcc, Margin, Margin, Delim);
 
 % Found space character before the wrap length - continue
-wordwrap([$  | Rest], Acc, WordAcc, LineLen, Margin) ->
-  wordwrap(Rest, [$  | WordAcc ++ Acc], [], LineLen + 1 + length(WordAcc), Margin);
+wordwrap([$  | Rest], Acc, WordAcc, LineLen, Margin, Delim) ->
+  wordwrap(Rest, [$  | WordAcc ++ Acc], [], LineLen + 1 + length(WordAcc), Margin, Delim);
 
 % Overflowed the current line while building a word
-wordwrap([C | Rest], Acc, WordAcc, 0, Margin) when erlang:length(WordAcc) > Margin ->
-  wordwrap(Rest, Acc, [C | WordAcc], 0, Margin);
-wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin)
+wordwrap([C | Rest], Acc, WordAcc, 0, Margin, Delim) when erlang:length(WordAcc) > Margin ->
+  wordwrap(Rest, Acc, [C | WordAcc], 0, Margin, Delim);
+wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin, Delim)
   when erlang:length(WordAcc) + LineLen > Margin ->
-  wordwrap(Rest, [$\n | dropws(Acc, [])], [C | WordAcc], 0, Margin);
+  wordwrap(Rest, Delim ++ dropws(Acc, []), [C | WordAcc], 0, Margin, Delim);
 
 % Just building a word...
-wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin) ->
-  wordwrap(Rest, Acc, [C | WordAcc], LineLen, Margin).
+wordwrap([C | Rest], Acc, WordAcc, LineLen, Margin, Delim) ->
+  wordwrap(Rest, Acc, [C | WordAcc], LineLen, Margin, Delim).
 
 
 % * All done, return the result
-wrap([], Result, _Margin, _Delim) ->
-  lists:map(fun
-    ([])  -> [];
-    ([L]) -> [L];
-    (L)   -> lists:flatten(L)
-  end, lists:reverse(Result));
+wrap([], Result, _Margin, _CurLineSz, _Delim, _DelimSize) ->
+  lists:map(fun(L) -> lists:flatten(L) end, lists:reverse(Result));
 
-wrap([Word | Rest], [CurrLine | PrevLines], Margin, Delim) ->
-  Width = iolist_size(Word) + iolist_size(CurrLine) + iolist_size(Delim),
+wrap([Word | Rest], [CurrLine | PrevLines], Margin, CurLineSz, Delim, DelimSize) ->
+  WSize = iolist_size(Word),
+  Width = WSize + CurLineSz + DelimSize,
   Fits  = Width =< Margin,
   if
     % Adding word(s) to an empty line
-    CurrLine == [], Rest == [] ->
-      % This is the last word
-      wrap([],   [Word | PrevLines], Margin, Delim);
     CurrLine == [] ->
-      wrap(Rest, [[Word, Delim] | PrevLines], Margin, Delim);
+      wrap(Rest, [[Word] | PrevLines], Margin, WSize, Delim, DelimSize);
 
     % Adding to a partially filled line, where the word fits the margin?
-    Fits, Rest == [] ->
-      % This is the last word
-      wrap([],   [[CurrLine, Word] | PrevLines], Margin, Delim);
     Fits ->
-      wrap(Rest, [[CurrLine, Word, Delim] | PrevLines], Margin, Delim);
+      % This is the last word
+      wrap(Rest, [[CurrLine, Delim, Word] | PrevLines], Margin, Width, Delim, DelimSize);
 
     % The word does not fit the line, append it to the new one.
-    not Fits, Rest == [] ->
-      % This is the last word
-      wrap([],   [Word, CurrLine | PrevLines], Margin, Delim);
     not Fits ->
-      wrap(Rest, [[Word, Delim], CurrLine | PrevLines], Margin, Delim);
+      % This is the last word
+      wrap(Rest, [[Word], CurrLine | PrevLines], Margin, WSize, Delim, DelimSize);
     true ->
       erlang:error(logic_error)
   end.
+
+to_rev_list(S) when is_binary(S) -> binary_to_list(S);
+to_rev_list(S) when is_list(S)   -> S.
 
 dropws(Word, Acc) -> dropws2(dropws1(Word), Acc).
 
@@ -622,6 +643,9 @@ to_type(binary,   V) when is_list(V)   -> list_to_binary(V);
 to_type(charlist, V) when is_binary(V) -> binary_to_list(V);
 to_type(charlist, V) when is_list(V)   -> V.
 
+to_list(V) when is_binary(V) -> binary_to_list(V);
+to_list(V) when is_list(V)   -> V.
+
 all_columns_simple(Rows) ->
   lists:all(fun(I) ->
              is_atom(I)    orelse
@@ -935,15 +959,17 @@ format_number_return(_Bin, Type) ->
   erlang:error({badarg, {return, Type}}).
 
 %% maybe_to_binary/1
--spec maybe_to_binary(binary() | string()) -> binary().
-maybe_to_binary(B) when is_binary(B) -> B;
-maybe_to_binary(L) when is_list(L) ->
+-spec maybe_to_binary(binary() | string())  -> binary().
+maybe_to_binary(B)                          -> maybe_to_binary(true, B).
+maybe_to_binary(true,  B) when is_binary(B) -> B;
+maybe_to_binary(false, B) when is_binary(B) -> unicode:characters_to_list(B);
+maybe_to_binary(false, L) when is_list(L)   -> L;
+maybe_to_binary(_,     L) when is_list(L)   ->
 	case unicode:characters_to_binary(L, utf8, utf8) of
-		B when is_binary(B) -> B;
-		_ -> erlang:error({badarg, L})
+    B when is_binary(B) -> B;
+		_                   -> erlang:error({badarg, L})
 	end;
-maybe_to_binary(T)->
-	erlang:error({badarg, T}).
+maybe_to_binary(_, T)   -> erlang:error({badarg, T}).
 
 %% split_thousands/1
 -spec split_thousands(binary()) -> [<<_:24>>].
@@ -1008,8 +1034,16 @@ to_outline(#{} = M) ->
 -include_lib("eunit/include/eunit.hrl").
 
 word_wrap_test() ->
-  ?assertEqual(["abc,efg,","exdf"],
+  ?assertEqual("abc efg\nexdf",
+    stringx:wordwrap("abc efg exdf", 8, "\n")).
+
+wrap_words_test() ->
+  ?assertEqual(["abc,efg","exdf"],
     stringx:wordwrap(["abc", "efg", "exdf"], 8, ",")).
+
+wrap_words2_test() ->
+  ?assertEqual(["abc,efg","exdf"],
+    stringx:wrap_words(["abc", "efg", "exdf"], 8, ",")).
 
 align_rows_test() ->
   ?assertEqual(
