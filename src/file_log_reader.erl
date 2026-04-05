@@ -1,22 +1,22 @@
 %%% vim:ts=4:sw=4:et
 %%%----------------------------------------------------------------------------
-%%% @doc Periodically read an append-only log file and parse newly added data.
-%%%
-%%% The user controls the interval in msec how often to check for file
-%%% modifications. When new data is appended to file it triggers invocation of
-%%% the user-defined parsing function that deliminates the file, and the result
-%%% is delivered to the consumer by calling the consumer callback function.
-%%%
-%%% The log reader can be started as a `gen_server' or can be controlled
-%%% synchronously by using `init/3', `run/1', and `close/1' methods.
-%%%
-%%% @author    Serge Aleynikov <saleyn@gmail.com>
-%%% @copyright 2015 Serge Aleynikov
-%%% @end
-%%%----------------------------------------------------------------------------
 %%% Created: 2015-02-12
 %%%----------------------------------------------------------------------------
 -module(file_log_reader).
+-moduledoc """
+Periodically read an append-only log file and parse newly added data.
+
+The user controls the interval in msec how often to check for file
+modifications. When new data is appended to file it triggers invocation of the
+user-defined parsing function that deliminates the file, and the result is
+delivered to the consumer by calling the consumer callback function.
+
+The log reader can be started as a `gen_server` or can be controlled
+synchronously by using `init/3`, `run/1`, and `close/1` methods.
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+Copyright: 2015 Serge Aleynikov
+""".
 -author('saleyn@gmail.com').
 
 -behaviour(gen_server).
@@ -45,6 +45,36 @@
     fun((Msg :: any() | {'$end_of_file', string(), Res ::
                             ok | {error|throw|exit, Reason::any(), Stacktrace::list()}},
          Pos::integer(), State::any()) -> NewState::any()).
+-doc """
+Details:
+
+- `pos` — Start reading from this position (default: 0)
+- `end_pos` — Read until this position and stop. If provided and file position
+  reaches `end_pos`, the consumer() callback given to the reader will be called
+  as: ``Consumer({`$end_of_file', Filename::string(), Result}, Pos::integer(),
+  State)'' where `Result` is `ok` or `{error|exit|exception, Error::any(),
+  StackTrace}` if an error occured.
+- `max_size` — Maximum chunk size to read from file in a single pass (default:
+  32M).
+- `timeout` — Number of milliseconds between successive file scanning (default:
+  1000)
+- `retry_sec` — Number of seconds between successive retries upon failure to
+  open the market data file passed to one of the `start*/{3,4}` functions
+  (default: 15). The value of 0 means that the file must exist or else the
+  process won't start.
+- `parser` — Is the function to be called when the next chunk is read from file.
+  The function must return:
+  - `{ok, Msg, Tail, State}` — invoke `Consumer` callback passing it the parsed
+    message `Msg`, and continue parsing the `Tail` binary
+  - `{incomplete, State}` — the data contains no complete messages - wait until
+    there's more
+  - `{skip, Tail, State}` — disregard input and continue parsing `Tail` without
+    calling `Consumer` callback
+- `pstate` — Initial value of the parser state or a functor `fun((File::string()
+  Consumer::consumer(), Options::options()) -> PState::any())'
+- `pstate_update` — Update function of the parser state. Called when the user
+  invokes `update_pstate/3`
+""".
 -type options()  :: [
     {pos,       StartPos::integer()}           |
     {end_pos,   ReadUntilPos::integer() | eof} |
@@ -59,47 +89,6 @@
     {pstate, fun((File::string(), consumer(), Options::list()) -> any()) | any()} |
     {pstate_update, fun((Option::atom(), Value::any(), PState::any()) ->
                         {ok, NewPState::any()} | {error, any()})}].
-%% Details:
-%% <dl>
-%% <dt>pos</dt>
-%%   <dd>Start reading from this position (default: 0)</dd>
-%% <dt>end_pos</dt>
-%%   <dd>Read until this position and stop. If provided and file position reaches
-%%       `end_pos', the consumer() callback given to the reader will be called as:
-%%       ``Consumer({'$end_of_file', Filename::string(), Result}, Pos::integer(), State)''
-%%       where `Result' is `ok' or `{error|exit|exception, Error::any(), StackTrace}'
-%%       if an error occured.
-%%   </dd>
-%% <dt>max_size</dt>
-%%   <dd>Maximum chunk size to read from file in a single pass (default: 32M).</dd>
-%% <dt>timeout</dt>
-%%   <dd>Number of milliseconds between successive file scanning (default: 1000)</dd>
-%% <dt>retry_sec</dt>
-%%   <dd>Number of seconds between successive retries upon failure to open the
-%%       market data file passed to one of the `start*/{3,4}' functions (default: 15).
-%%       The value of 0 means that the file must exist or else the process won't
-%%       start.</dd>
-%% <dt>parser</dt>
-%%   <dd>Is the function to be called when the next chunk is read from file. The
-%%       function must return:
-%%       <dl>
-%%       <dt>`{ok, Msg, Tail, State}'</dt>
-%%          <dd>invoke `Consumer' callback passing it the parsed message `Msg',
-%%              and continue parsing the `Tail' binary</dd>
-%%       <dt>`{incomplete, State}'</dt>
-%%          <dd>the data contains no complete messages - wait until there's more</dd>
-%%       <dt>`{skip, Tail, State}'</dt>
-%%          <dd>disregard input and continue parsing `Tail' without calling
-%%              `Consumer' callback</dd>
-%%       </dl>
-%%   </dd>
-%% <dt>pstate</dt>
-%%   <dd>Initial value of the parser state or a functor `fun((File::string()
-%%       Consumer::consumer(), Options::options()) -> PState::any())'</dd>
-%% <dt>pstate_update</dt>
-%%   <dd>Update function of the parser state.  Called when the user invokes
-%%       `update_pstate/3'</dd>
-%% </dl>
 
 -export_type([consumer/0, options/0]).
 
@@ -127,13 +116,12 @@
 %%%----------------------------------------------------------------------------
 
 %%-----------------------------------------------------------------------------
-%% @doc To be called by the supervisor in order to start the server.
-%%      If init/1 fails with Reason, the function returns `{error,Reason}'.
-%%      If init/1 returns `{stop,Reason}' or ignore, the process is
-%%      terminated and the function returns `{error,Reason}' or ignore,
-%%      respectively.
-%% @see start_link/3
-%% @end
+-doc """
+To be called by the supervisor in order to start the server. If init/1 fails
+with Reason, the function returns `{error,Reason}`. If init/1 returns
+`{stop,Reason}` or ignore, the process is terminated and the function returns
+`{error,Reason}` or ignore, respectively. See: `start_link/3`.
+""".
 %%-----------------------------------------------------------------------------
 -spec start_link(atom(), string(), consumer(), options()) ->
     {ok, pid()} | ignore | {error, any()}.
@@ -142,23 +130,22 @@ start_link(RegName, File, Consumer, Options)
     gen_server:start_link({local, RegName}, ?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
-%% @doc Process `File' by calling `Consumer' callback on every delimited
-%%      message. Message delimination is handled by the `{parser, Parser}'
-%%      option. `Consumer' function gets called iteratively with the following
-%%      arguments:
-%%      <dl>
-%%          <dt>(Msg, Pos::integer(), State)</dt>
-%%          <dd>`Msg' is what the parser function returned. `Pos' is current
-%%              file position following the `Msg'. `State' is current value
-%%              of parser state that is initialized by `{pstate, PState}'
-%%              option given to the `start_link/{3,4}' function</dd>
-%%          <dt>({'$end_of_file', Filename::string(), Result}, Pos::integer(), PState)</dt>
-%%          <dd>This call happens when end of file condition is reached (see
-%%              definition of `consumer()' type)</dd>
-%%      </dl>
-%%      `Consumer' can end processing normally without reaching the end
-%%      of file by throwing `{eof, PState}' exception.
-%% @end
+-doc """
+Process `File` by calling `Consumer` callback on every delimited message.
+Message delimination is handled by the `{parser, Parser}` option. `Consumer`
+function gets called iteratively with the following arguments:
+
+- `(Msg, Pos::integer(), State)` — `Msg` is what the parser function returned.
+  `Pos` is current file position following the `Msg`. `State` is current value
+  of parser state that is initialized by `{pstate, PState}` option given to the
+  `start_link/{3,4}` function
+- `({'$end_of_file', Filename::string(), Result}, Pos::integer(), PState)` —
+  This call happens when end of file condition is reached (see definition of
+  `consumer()` type)
+
+`Consumer` can end processing normally without reaching the end of file by
+throwing `{eof, PState}` exception.
+""".
 %%-----------------------------------------------------------------------------
 -spec start_link(string(), consumer(), options()) ->
     {ok, pid()} | ignore | {error, any()}.
@@ -167,8 +154,7 @@ start_link(File, Consumer, Options)
     gen_server:start_link(?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
-%% @doc Start the server outside of supervision tree.
-%% @end
+-doc "Start the server outside of supervision tree.".
 %%-----------------------------------------------------------------------------
 -spec start(atom(), string(), consumer(), options()) ->
     {ok, pid()} | {error, any()}.
@@ -183,41 +169,38 @@ start(File, Consumer, Options)
     gen_server:start(?MODULE, [File, Consumer, Options], []).
 
 %%-----------------------------------------------------------------------------
-%% @doc Report last processed file position/size.
-%% @end
+-doc "Report last processed file position/size.".
 %%-----------------------------------------------------------------------------
 -spec position(pid() | atom()) -> {ok, Position::integer()}.
 position(Pid) ->
     gen_server:call(Pid, position).
 
 %%-----------------------------------------------------------------------------
-%% @doc Return current parser state (`{pstate, any()}' initialization option).
-%% @end
+-doc "Return current parser state (`{pstate, any()}` initialization option).".
 %%-----------------------------------------------------------------------------
 -spec pstate(pid() | atom()) -> {ok, any()}.
 pstate(Pid) ->
     gen_server:call(Pid, pstate).
 
 %%-----------------------------------------------------------------------------
-%% @doc Update parser state.
-%% @end
+-doc "Update parser state.".
 %%-----------------------------------------------------------------------------
 -spec update_pstate(pid(), Option::atom(), Value::any()) -> {ok, State::any()}.
 update_pstate(Pid, Option, Value) when is_atom(Option) ->
     gen_server:call(Pid, {update_pstate, Option, Value}).
 
 %%-----------------------------------------------------------------------------
-%% @doc Stop the server.
-%% @end
+-doc "Stop the server.".
 %%-----------------------------------------------------------------------------
 -spec stop(pid() | atom()) -> ok.
 stop(Pid) ->
     gen_server:call(Pid, stop).
 
 %%-----------------------------------------------------------------------------
-%% @doc When using file processor without gen_server, use this function to
-%%      initialize the state, and then call run/1.
-%% @end
+-doc """
+When using file processor without gen_server, use this function to initialize
+the state, and then call run/1.
+""".
 %%-----------------------------------------------------------------------------
 -spec init(string(), consumer(), options()) -> {ok, #state{}}.
 init(File, Consumer, Options) when is_list(File), is_list(Options) ->
@@ -257,8 +240,7 @@ init(File, Consumer, Options) when is_list(File), is_list(Options) ->
     end.
 
 %%-----------------------------------------------------------------------------
-%% @doc Process file from given position `Pos' to `EndPos' (or `eof').
-%% @end
+-doc "Process file from given position `Pos` to `EndPos` (or `eof`).".
 %%-----------------------------------------------------------------------------
 -spec run(#state{}) -> #state{}.
 run(#state{fd=FD, pos=Pos, end_pos=EndPos, max_size=MaxChunkSz, done=false} = S) ->
@@ -307,8 +289,7 @@ schedule_timer(#state{timeout=Timeout, fd=FD} = S) ->
     S#state{tref=TRef}.
 
 %%-----------------------------------------------------------------------------
-%% @doc Close file processor (use this method when not using gen_server)
-%% @end
+-doc "Close file processor (use this method when not using gen_server)".
 %%-----------------------------------------------------------------------------
 close(#state{fd=FD} = State) ->
     file:close(FD),
@@ -320,8 +301,7 @@ close(#state{fd=FD} = State) ->
 
 %%-----------------------------------------------------------------------------
 %% @private
-%% @doc Initiates the server
-%% @end
+-doc "Initiates the server".
 %%-----------------------------------------------------------------------------
 -spec init(list()) ->
     {ok, #state{}} |
@@ -335,8 +315,7 @@ init([File, Consumer, Options]) ->
 
 %%-----------------------------------------------------------------------------
 %% @private
-%% @doc Handling call messages
-%% @end
+-doc "Handling call messages".
 %%-----------------------------------------------------------------------------
 -spec handle_call(any(), From::tuple(), #state{}) ->
     {reply, Reply::any(), #state{}} |
@@ -369,8 +348,7 @@ handle_call(Request, _From, State) ->
 
 %%-----------------------------------------------------------------------------
 %% @private
-%% @doc Handling cast messages
-%% @end
+-doc "Handling cast messages".
 %%-----------------------------------------------------------------------------
 -spec handle_cast(any(), #state{}) ->
     {noreply, #state{}} | {noreply, #state{}, Timeout::integer() | hibernate} |
@@ -380,8 +358,7 @@ handle_cast(Msg, State) ->
 
 %%-----------------------------------------------------------------------------
 %% @private
-%% @doc Handling all non call/cast messages
-%% @end
+-doc "Handling all non call/cast messages".
 %%-----------------------------------------------------------------------------
 -spec handle_info(any(), #state{}) ->
     {noreply, #state{}} | {noreply, #state{}, Timeout::integer() | hibernate} |
@@ -404,11 +381,11 @@ handle_info(_Info, State) ->
 
 %%-----------------------------------------------------------------------------
 %% @private
-%% @doc This function is called by a gen_server when it is about to
-%% terminate. It should be the opposite of Module:init/1 and do any
-%% necessary cleaning up. When it returns, the gen_server terminates
-%% with Reason. The return value is ignored.
-%% @end
+-doc """
+This function is called by a gen_server when it is about to terminate. It should
+be the opposite of Module:init/1 and do any necessary cleaning up. When it
+returns, the gen_server terminates with Reason. The return value is ignored.
+""".
 %%-----------------------------------------------------------------------------
 -spec terminate(any(), #state{}) -> ok.
 terminate(_Reason, #state{}) ->
@@ -416,8 +393,7 @@ terminate(_Reason, #state{}) ->
 
 %%-----------------------------------------------------------------------------
 %% @private
-%% @doc Convert process state when code is changed
-%% @end
+-doc "Convert process state when code is changed".
 %%-----------------------------------------------------------------------------
 -spec code_change(any(), #state{}, any()) -> #state{}.
 code_change(_OldVsn, State, _Extra) ->

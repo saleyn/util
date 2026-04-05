@@ -1,9 +1,5 @@
 %%% vim:ts=4:sw=4:et
 %%%-----------------------------------------------------------------------------
-%%% @doc    OS supporting commands
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%-----------------------------------------------------------------------------
 %%% Date:   2015-12-10
 %%%-----------------------------------------------------------------------------
 %%% Copyright (c) 2015 Serge Aleynikov
@@ -28,6 +24,11 @@
 %%% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%%-----------------------------------------------------------------------------
 -module(osx).
+-moduledoc """
+OS supporting commands
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 -author('saleyn@gmail.com').
 
 -export([command/1, command/2, command/3, status/1]).
@@ -127,12 +128,11 @@ get_data(P, Fun, D, Ref, Timeout) ->
 		exit(timeout)
     end.
 
-%% @doc
-%% Return a canonicalized pathname, having resolved symlinks to their
-%% destination. Modelled on realpath(3).
-%% @end
-%% Derived from https://github.com/mk270/realpath
-%% Copyright 2020 Martin Keegan
+-doc """
+Return a canonicalized pathname, having resolved symlinks to their destination.
+Modelled on realpath(3). Derived from https://github.com/mk270/realpath
+Copyright 2020 Martin Keegan
+""".
 -spec realpath(string()) -> string().
 realpath(Path) when is_list(Path) ->
     check_canonical(Path, 20);
@@ -179,12 +179,11 @@ make_fragments(S) ->
 join_non_null([]) -> "";
 join_non_null(SS) -> filename:join(SS).
 
-%% @doc
-%% Return a path where the use of ".." to indicate parent directory has
-%% been resolved. Currently does not accept relative paths.
-%% @end
-%% Derived from https://github.com/mk270/realpath
-%% Copyright 2020 Martin Keegan
+-doc """
+Return a path where the use of ".." to indicate parent directory has been
+resolved. Currently does not accept relative paths. Derived from
+https://github.com/mk270/realpath Copyright 2020 Martin Keegan
+""".
 -spec normalpath(list()) -> string().
 normalpath(S=[$/|_]) when is_list(S)->
     normalpath2(S);

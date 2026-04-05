@@ -1,13 +1,12 @@
 %%%------------------------------------------------------------------------
-%%% @doc Implements SNTP query logic.  
-%%%      SNTP - Simple Network Time Protocol (RFC-2030).
-%%%
-%%% @author  Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%------------------------------------------------------------------------
 %%% Created 2006-07-15
 %%%------------------------------------------------------------------------
 -module(sntp).
+-moduledoc """
+Implements SNTP query logic. SNTP - Simple Network Time Protocol (RFC-2030).
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 -author('saleyn@gmail.com').
 
 %% External API
@@ -21,18 +20,17 @@
 %%%------------------------------------------------------------------------
 
 %%-------------------------------------------------------------------------
-%% @doc Return a list of default NTP time servers for this host.
-%% @end
+-doc "Return a list of default NTP time servers for this host.".
 %%-------------------------------------------------------------------------
 -spec time_servers() -> [ inet:ip_address() ].
 time_servers() ->
     time_servers(true).
     
 %%-------------------------------------------------------------------------
-%% @doc Return a list of default NTP time servers for this host. If 
-%%      `Resolve' is true, the list will contain IP addresses or else 
-%%      host names.
-%% @end
+-doc """
+Return a list of default NTP time servers for this host. If `Resolve` is true,
+the list will contain IP addresses or else host names.
+""".
 %%-------------------------------------------------------------------------
 -spec time_servers(boolean()) -> [ inet:ip_address() ].
 time_servers(Resolve) when is_boolean(Resolve) ->
@@ -48,19 +46,20 @@ time_servers(Resolve) when is_boolean(Resolve) ->
     end.
 
 %%-------------------------------------------------------------------------
-%% @doc Query NTP time sources from `"/etc/ntp.conf"' and return 
-%%      min/max/avg offset of current host from given time sources.
-%% @see avg_time/1
-%% @end
+-doc """
+Query NTP time sources from `"/etc/ntp.conf"` and return min/max/avg offset of
+current host from given time sources. See: `avg_time/1`.
+""".
 %%-------------------------------------------------------------------------
 -spec avg_time() -> {Min::integer(), Max::integer(), Avg::integer()}.
 avg_time() ->
     avg_time(time_servers()).
 
 %%-------------------------------------------------------------------------
-%% @doc Query `ServerAddress' NTP time sources and return min/max/avg offset
-%%      of current host from given time sources.
-%% @end
+-doc """
+Query `ServerAddress` NTP time sources and return min/max/avg offset of current
+host from given time sources.
+""".
 %%-------------------------------------------------------------------------
 -spec avg_time([ inet:ip_address() ]) -> {Min::integer(), Max::integer(), Avg::integer()}.
 avg_time(ServerAddresses) ->
@@ -78,9 +77,10 @@ avg_time(ServerAddresses) ->
     {Min, Max, round(Sum/N)}.
 
 %%-------------------------------------------------------------------------
-%% @doc Query `ServerAddress' time source to find out server time and 
-%%      current host's offset from time source.
-%% @end
+-doc """
+Query `ServerAddress` time source to find out server time and current host's
+offset from time source.
+""".
 %%-------------------------------------------------------------------------
 -spec time(ServerAddress::inet:ip_address()) -> #sntp{}.
 time(ServerAddress) ->

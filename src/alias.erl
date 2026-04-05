@@ -1,21 +1,23 @@
 %%% vim:ts=2:sw=2:et
 %%%-----------------------------------------------------------------------------
-%%% @doc Creation of module aliases
-%%%
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @copyright 2021 Serge Aleynikov
-%%% @end
-%%%-----------------------------------------------------------------------------
 %%% Created 2021-06-01
 %%%-----------------------------------------------------------------------------
 -module(alias).
+-moduledoc """
+Creation of module aliases
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+Copyright: 2021 Serge Aleynikov
+""".
 -export([create/2, create/3]).
 
-%% @doc Create a module `Alias' for the given `OrigMod' module.
-%% This function is useful for creating in-memory Elixir wrapper modules without
-%% needing to maintain persistent files with such wrappers.
-%% `IncFuns' argument can be `all' or a list of `{Fun, Arity}' values which
-%% only export a subset of functions from the `OrigMod'.
+-doc """
+Create a module `Alias` for the given `OrigMod` module. This function is useful
+for creating in-memory Elixir wrapper modules without needing to maintain
+persistent files with such wrappers. `IncFuns` argument can be `all` or a list
+of `{Fun, Arity}` values which only export a subset of functions from the
+`OrigMod`.
+""".
 
 create(Alias, OrigMod) ->
   create(Alias, OrigMod, all).

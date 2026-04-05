@@ -1,0 +1,493 @@
+#!/usr/bin/env python3
+"""
+Convert EDoc %% @doc comments and %% type docs to OTP-27 -doc attributes.
+HTML (<dl>/<dt>/<dd>/<li>) in type-doc comments is converted to Markdown.
+
+The argument may be one or more Erlang source files or a directory containing
+`*.?rl` files.
+
+Usage:
+  fix-erlang-docs [options] <file.erl|dir> [...]
+
+Options:
+  -i, --inplace     Modify files in-place (default: write to stdout)
+  -w WIDTH          Wrap documentation text to WIDTH columns (default: 80, 0=off)
+  -nw, --nowrap     Preserve existing line breaks as-is (no wrapping)
+"""
+
+import re
+import sys
+import textwrap
+from html.parser import HTMLParser
+from pathlib import Path
+
+
+# ── EDoc HTML → Markdown ─────────────────────────────────────────────────────
+
+def _edoc_quotes(text):
+    """Convert `term' EDoc notation to `term` Markdown backticks."""
+    return re.sub(r"`([^'`\n]+)'", r'`\1`', text)
+
+
+def _wrap_term(term):
+    """Wrap a DT term in backticks, collapsing any inner backtick pairs first."""
+    if '`' in term:
+        term = re.sub(r'`([^`]+)`', r'\1', term)
+    return f'`{term}`'
+
+
+class _EDocHTML(HTMLParser):
+    """Convert EDoc HTML subset (<dl>/<dt>/<dd>/<du>/<ul>/<li>) to Markdown.
+
+    Handles arbitrarily nested <dl> structures by maintaining a stack of
+    dl contexts.  Each context tracks the pending dt term, the dd body text,
+    and any sub-items accumulated from nested lists.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.output  = []   # final markdown lines
+        self._stack  = []   # open HTML tag stack
+        # Stack of dl contexts:
+        #   {'pending_dt': str|None, 'dt_buf': str, 'dd_buf': str, 'dd_sub': list}
+        self._dl     = []
+        self._li_buf = ''
+
+    def handle_starttag(self, tag, attrs):
+        self._stack.append(tag)
+        if tag == 'dl':
+            self._dl.append({'pending_dt': None, 'dt_buf': '', 'dd_buf': '', 'dd_sub': []})
+
+    def _target(self):
+        """Where completed entries go: parent dd_sub (nested) or main output."""
+        return self._dl[-2]['dd_sub'] if len(self._dl) >= 2 else self.output
+
+    def _indent(self):
+        """Bullet prefix indent based on nesting depth."""
+        return '  ' * (len(self._dl) - 1)
+
+    def handle_endtag(self, tag):
+        for j in range(len(self._stack) - 1, -1, -1):
+            if self._stack[j] == tag:
+                self._stack.pop(j)
+                break
+
+        if tag == 'dt' and self._dl:
+            ctx              = self._dl[-1]
+            ctx['pending_dt'] = ' '.join(ctx['dt_buf'].split())
+            ctx['dt_buf']    = ''
+            ctx['dd_sub']    = []
+
+        elif tag == 'dd' and self._dl:
+            ctx    = self._dl[-1]
+            direct = ' '.join(ctx['dd_buf'].split())
+            dt     = ctx['pending_dt']
+            pfx    = self._indent() + '- '
+            target = self._target()
+            if dt is not None:
+                term = _wrap_term(dt)
+                line = f'{pfx}{term} — {direct}' if direct else f'{pfx}{term}'
+                target.append(line)
+            elif direct:
+                target.append(f'{self._indent()}  {direct}')
+            for sub in ctx['dd_sub']:
+                target.append(sub)
+            ctx['pending_dt'] = None
+            ctx['dd_buf']     = ''
+            ctx['dd_sub']     = []
+
+        elif tag == 'dl' and self._dl:
+            self._dl.pop()
+
+        elif tag == 'li':
+            ind = '  ' * len(self._dl)
+            sub = f'{ind}- {self._li_buf.strip()}'
+            if self._dl:
+                self._dl[-1]['dd_sub'].append(sub)
+            else:
+                self.output.append(sub)
+            self._li_buf = ''
+
+    def handle_data(self, data):
+        top = self._stack[-1] if self._stack else None
+        if top == 'li':
+            if data.strip():
+                self._li_buf += data
+        elif top == 'dd' and self._dl:
+            if data.strip():
+                self._dl[-1]['dd_buf'] += data
+        elif top == 'dt' and self._dl:
+            if data.strip():
+                self._dl[-1]['dt_buf'] += data
+        elif self._dl and self._dl[-1]['pending_dt'] is not None:
+            # Text between </dt> and <dd> (e.g. "Untracked can be one of:")
+            if data.strip():
+                self._dl[-1]['dd_buf'] += data
+        else:
+            # Only emit blank lines as paragraph breaks when not inside a
+            # list container (ul/ol/dl) — whitespace between <li> items
+            # should not produce spurious blank lines.
+            in_list = top in ('ul', 'ol', 'dl')
+            for line in data.split('\n'):
+                s = line.strip()
+                if s:
+                    self.output.append(s)
+                elif not in_list and self.output and self.output[-1] != '':
+                    # Preserve blank lines as paragraph breaks
+                    self.output.append('')
+
+
+def html_to_markdown(text_lines):
+    """Convert EDoc HTML comment lines (without %% prefix) to Markdown lines."""
+    raw    = _edoc_quotes('\n'.join(text_lines))
+    parser = _EDocHTML()
+    parser.feed(raw)
+    return parser.output
+
+
+def wrap_lines(lines, width):
+    """Wrap prose lines to `width` columns, leaving code fences and HTML intact."""
+    if not width:
+        return list(lines)
+    out = []
+    in_fence = False
+    para = []  # accumulated plain-text words for current paragraph
+
+    def flush_para():
+        if para:
+            wrapped = textwrap.fill(' '.join(para), width=width)
+            out.extend(wrapped.split('\n'))
+            para.clear()
+
+    for line in lines:
+        s = line.rstrip() if isinstance(line, str) else line
+        # Code fence toggle
+        if s.lstrip().startswith('```'):
+            flush_para()
+            in_fence = not in_fence
+            out.append(s)
+            continue
+        # Inside fence: preserve verbatim
+        if in_fence:
+            out.append(s)
+            continue
+        # Blank line → paragraph break
+        if not s.strip():
+            flush_para()
+            out.append('')
+            continue
+        # HTML tag line: pass through (may appear in raw @doc blocks)
+        if re.match(r'^\s*<\w', s):
+            flush_para()
+            out.append(s)
+            continue
+        # Markdown list item: `- text` or `  - text`
+        m = re.match(r'^( {0,6})([-*] )(.*)', s)
+        if m:
+            flush_para()
+            prefix = m.group(1) + m.group(2)
+            rest   = m.group(3)
+            cont   = ' ' * len(prefix)
+            if len(s) <= width:
+                out.append(s)
+            else:
+                words    = rest.split()
+                cur_line = prefix
+                first    = True
+                for word in words:
+                    sep       = '' if first else ' '
+                    candidate = cur_line + sep + word
+                    if not first and len(candidate) > width:
+                        out.append(cur_line)
+                        cur_line = cont + word
+                    else:
+                        cur_line = candidate
+                        first    = False
+                if cur_line.strip():
+                    out.append(cur_line)
+            continue
+        # Plain text: accumulate into paragraph
+        para.append(s.strip())
+
+    flush_para()
+    return out
+
+
+# ── @doc block handling ───────────────────────────────────────────────────────
+
+# Tags that carry no doc text and should be silently skipped
+_SKIP_TAGS = re.compile(r'^@(end|version|since|deprecated|module|private|hidden)\b')
+# Tags whose value is collected into metadata
+_META_TAGS = re.compile(r'^@(author|copyright)\b')
+
+
+def collect_doc_block(lines, start, prefix='%% '):
+    """Collect an @doc block starting at `start`.
+
+    `prefix` is the comment prefix, either '%% ' (function) or '%%% ' (module).
+    Returns (text_lines, see_refs, meta, next_index).
+    meta is a dict that may contain 'author' and/or 'copyright' keys.
+    """
+    text_lines = []
+    see_refs = []
+    meta = {}
+    i = start
+    plen = len(prefix)       # e.g. 3 for '%% '
+    bare = prefix.rstrip()   # e.g. '%%' or '%%%'
+
+    # First line: <prefix>@doc <text>
+    first = lines[i].rstrip()
+    tag_rest = first[plen + 4:]  # skip prefix + '@doc'
+    if tag_rest.startswith(' '):
+        text_lines.append(tag_rest[1:])
+    i += 1
+
+    while i < len(lines):
+        raw = lines[i].rstrip()
+        see_pfx  = prefix + '@see '
+        see_pfx2 = prefix + '@see'
+        if raw.startswith(see_pfx):
+            see_refs.append(raw[len(see_pfx):].strip())
+            i += 1
+        elif raw.startswith(see_pfx2) and len(raw) > len(see_pfx2):
+            see_refs.append(raw[len(see_pfx2):].strip())
+            i += 1
+        elif re.match(rf'^{re.escape(prefix)}@\w', raw):
+            tag_body = raw[plen:]
+            m = _META_TAGS.match(tag_body)
+            if m:
+                key = m.group(1)         # 'author' or 'copyright'
+                val = tag_body[len(key)+1:].strip()
+                meta[key] = val
+                i += 1
+            elif _SKIP_TAGS.match(tag_body):
+                i += 1  # silently consume metadata tags
+            else:
+                break   # unknown @tag — stop
+        elif raw.startswith(prefix):
+            text_lines.append(raw[plen:])
+            i += 1
+        elif raw == bare:
+            text_lines.append('')
+            i += 1
+        else:
+            break
+
+    return text_lines, see_refs, meta, i
+
+
+_HTML_RE = re.compile(r'<(dl|dt|dd|ul|ol|li)\b', re.IGNORECASE)
+
+
+def build_doc_attr(text_lines, see_refs, width=80, kind='-doc', meta=None):
+    """Format collected lines into a -doc (or -moduledoc) attribute string."""
+    # Convert closing ''' markers to ``` before any further processing
+    text_lines = ["```" if ln.rstrip() == "'''" else ln for ln in text_lines]
+
+    # If the block contains HTML, convert it; otherwise apply edoc_quotes only
+    if any(_HTML_RE.search(ln) for ln in text_lines):
+        lines = html_to_markdown(text_lines)
+    else:
+        lines = [_edoc_quotes(ln) for ln in text_lines]
+
+    # Append see-also references
+    for ref in see_refs:
+        lines.append(f"See: `{ref}`.")
+
+    # Drop trailing blank lines
+    while lines and not lines[-1].strip():
+        lines.pop()
+
+    if not lines:
+        return f'{kind} false.'
+
+    lines = wrap_lines(lines, width)
+
+    # Drop trailing blank lines again after wrapping
+    while lines and not lines[-1].strip():
+        lines.pop()
+
+    # Append author/copyright metadata after wrapping (blank line + one per line)
+    if meta:
+        lines.append('')
+        if 'author' in meta:
+            lines.append(f"Author: {meta['author']}")
+        if 'copyright' in meta:
+            lines.append(f"Copyright: {meta['copyright']}")
+
+    # Single non-empty line with no double-quotes → compact form
+    if len(lines) == 1 and '"' not in lines[0]:
+        return f'{kind} "{lines[0]}".'
+
+    # Everything else → triple-quoted heredoc (handles any length/content)
+    body = "\n".join(lines)
+    return f'{kind} """\n{body}\n""".'
+
+
+# ── -type trailing doc handling ──────────────────────────────────────────────
+
+def collect_type_doc(lines, start):
+    """Collect untagged %% comment lines immediately following a -type declaration.
+
+    Returns (text_lines, next_index) with the '%% ' prefix stripped.
+    """
+    text_lines = []
+    i = start
+    while i < len(lines):
+        raw = lines[i].rstrip()
+        if raw == '%%':
+            text_lines.append('')
+        elif raw.startswith('%% '):
+            text_lines.append(raw[3:])
+        else:
+            break
+        i += 1
+    return text_lines, i
+
+
+def build_type_doc(text_lines, width=80):
+    """Convert EDoc HTML type-doc lines to a -doc attribute (Markdown)."""
+    md_lines = html_to_markdown(text_lines)
+    md_lines = wrap_lines(md_lines, width)
+    while md_lines and not md_lines[-1].strip():
+        md_lines.pop()
+    if not md_lines:
+        return '-doc false.'
+    if len(md_lines) == 1 and '"' not in md_lines[0]:
+        return f'-doc "{md_lines[0]}".'
+    body = '\n'.join(md_lines)
+    return f'-doc """\n{body}\n""".'
+
+
+# ── main converter ────────────────────────────────────────────────────────────
+
+_TYPE_RE    = re.compile(r'^-(type|opaque)\b')
+_MODULE_RE  = re.compile(r'^-module\(')
+# Separator lines like %%%---- or %%%==== or %%----- or %%====
+_SEP_RE     = re.compile(r'^%%%-?[-=]+\s*$')
+_SEP2_RE    = re.compile(r'^%%-?[-=]+\s*$')
+
+
+def convert(content, width=80):
+    lines = content.splitlines(keepends=True)
+    out = []
+    i = 0
+    module_seen       = False
+    pending_moduledoc = None  # buffered -moduledoc to emit after -module()
+
+    while i < len(lines):
+        if re.match(r'^%%% @doc\b', lines[i]):
+            # Module-level EDoc block (%%% prefix) → buffer as -moduledoc
+            text, refs, meta, i = collect_doc_block(lines, i, prefix='%%% ')
+            pending_moduledoc = build_doc_attr(text, refs, width, kind='-moduledoc', meta=meta)
+            # Skip adjacent %%% separator / blank comment lines
+            while i < len(lines) and (_SEP_RE.match(lines[i]) or
+                                       lines[i].rstrip() == '%%%'):
+                i += 1
+        elif re.match(r'^%%% @\w', lines[i]):
+            # Stray metadata tag outside a @doc block — drop it
+            i += 1
+        elif _MODULE_RE.match(lines[i]):
+            module_seen = True
+            out.append(lines[i])
+            i += 1
+            if pending_moduledoc:
+                out.append(pending_moduledoc + '\n')
+                pending_moduledoc = None
+        elif re.match(r'^%% @doc\b', lines[i]):
+            text, refs, meta, i = collect_doc_block(lines, i)
+            if not module_seen:
+                # First @doc in file, before -module() → becomes -moduledoc
+                pending_moduledoc = build_doc_attr(text, refs, width, kind='-moduledoc', meta=meta)
+                # Skip adjacent %% separator / blank comment lines
+                while i < len(lines) and (_SEP2_RE.match(lines[i].rstrip()) or
+                                           lines[i].rstrip() == '%%'):
+                    i += 1
+            else:
+                out.append(build_doc_attr(text, refs, width, meta=meta) + '\n')
+        elif _TYPE_RE.match(lines[i]):
+            # Collect full (possibly multi-line) type declaration
+            type_lines = []
+            while i < len(lines):
+                type_lines.append(lines[i])
+                if lines[i].rstrip().endswith('.'):
+                    i += 1
+                    break
+                i += 1
+            # Collect trailing %% doc block, if any
+            if i < len(lines) and (lines[i].startswith('%% ') or
+                                    lines[i].rstrip() == '%%'):
+                doc_lines, i = collect_type_doc(lines, i)
+                if doc_lines:
+                    out.append(build_type_doc(doc_lines, width) + '\n')
+            out.extend(type_lines)
+        else:
+            out.append(lines[i])
+            i += 1
+    return ''.join(out)
+
+
+_ERLANG_EXTS = {'.erl', '.hrl'}
+
+
+def expand_paths(args):
+    """Expand a mixed list of .erl/.hrl files and directories into Path objects."""
+    paths = []
+    for arg in args:
+        p = Path(arg)
+        if p.is_dir():
+            for ext in ('.erl', '.hrl'):
+                paths.extend(sorted(p.glob(f'**/*{ext}')))
+        elif p.suffix in _ERLANG_EXTS:
+            paths.append(p)
+        else:
+            print(f"Skipped (not *.erl or *.hrl): {p}", file=sys.stderr)
+    return paths
+
+
+def main():
+    args = sys.argv[1:]
+    inplace = '--inplace' in args
+    if inplace:
+        args.remove('--inplace')
+    else:
+        inplace = '-i' in args
+        if inplace:
+            args.remove('-i')
+
+    for flag in ('--nowrap', '-nw'):
+        if flag in args:
+            args.remove(flag)
+            width = 0
+            break
+    else:
+        width = 80
+        if '-w' in args:
+            idx = args.index('-w')
+            if idx + 1 >= len(args):
+                print('error: -w requires a WIDTH argument', file=sys.stderr)
+                sys.exit(1)
+            try:
+                width = int(args[idx + 1])
+            except ValueError:
+                print(f'error: invalid width "{args[idx + 1]}"', file=sys.stderr)
+                sys.exit(1)
+            args = args[:idx] + args[idx + 2:]
+
+    if not args:
+        print(__doc__, file=sys.stderr)
+        sys.exit(1)
+
+    paths = expand_paths(args)
+
+    for p in paths:
+        result = convert(p.read_text(), width=width)
+        if inplace:
+            p.write_text(result)
+            print(f"Updated: {p}", file=sys.stderr)
+        else:
+            sys.stdout.write(result)
+
+
+if __name__ == '__main__':
+    main()

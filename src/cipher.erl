@@ -36,7 +36,7 @@ decrypt_base64(EncryptedBase64, KeyBase64) when is_binary(EncryptedBase64) ->
 make_key_base64(PlainKey) when is_list(PlainKey); is_binary(PlainKey) ->
   base64:encode(crypto:hash(sha256, PlainKey)).
 
-%% @doc Decode PGP public key
+-doc "Decode PGP public key".
 -spec gpg_key_decode(string()|binary()) -> [public_key:pem_entry()].
 gpg_key_decode(File) when is_list(File) ->
   {ok, B} = file:read_file(File),

@@ -1,18 +1,4 @@
 %%------------------------------------------------------------------------------
-%% @doc Throttle given rate over a number of seconds.
-%%
-%% Implementation uses time spacing reservation algorithm where each
-%% allocation of samples reserves a fraction of space in the throttling
-%% window. The reservation gets freed as the time goes by.  No more than
-%% the `Rate' number of samples are allowed to fit in the milliseconds `Window'.
-%%
-%% This is an Erlang implementation of the throttling algorithm from the utxx
-%% library found at this URL:
-%% [https://github.com/saleyn/utxx/blob/master/include/utxx/rate_throttler.hpp]
-%%
-%% @author Serge Aleynikov <saleyn at gmail dot com>
-%% @end
-%%------------------------------------------------------------------------------
 %% Copyright (c) 2011 Serge Aleynikov
 %%
 %% Permission is hereby granted, free of charge, to any person
@@ -35,6 +21,20 @@
 %% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%------------------------------------------------------------------------------
 -module(throttle).
+-moduledoc """
+Throttle given rate over a number of seconds.
+
+Implementation uses time spacing reservation algorithm where each allocation of
+samples reserves a fraction of space in the throttling window. The reservation
+gets freed as the time goes by.  No more than the `Rate` number of samples are
+allowed to fit in the milliseconds `Window`.
+
+This is an Erlang implementation of the throttling algorithm from the utxx
+library found at this URL:
+[https://github.com/saleyn/utxx/blob/master/include/utxx/rate_throttler.hpp]
+
+Author: Serge Aleynikov <saleyn at gmail dot com>
+""".
 -export([new/1, new/2, new/3, available/1, available/2, used/1, used/2]).
 -export([next_timeout/1, call/2, call/3, call/4, call/5]).
 -export([now/0, reset/1, reset/2, add/1, add/2, add/3, curr_rps/1, curr_rps/2]).
@@ -51,14 +51,15 @@
 -type throttle() :: #throttle{}.
 -type time()     :: non_neg_integer().
 
+-doc """
+`retries`     - number of retries. `retry_delay` - delay in milliseconds between
+successive retries. `blocking`    - instructs to block the call if throttled.
+""".
 -type throttle_opts() :: #{
   retries     => integer(),
   retry_delay => integer(),
   blocking    => boolean()
 }.
-%% `retries'     - number of retries.
-%% `retry_delay' - delay in milliseconds between successive retries.
-%% `blocking'    - instructs to block the call if throttled.
 
 -type throttle_result() ::
   {ok, any()} | {error, throttled | {Reason::any(), StackTrace::list()}}.
@@ -67,7 +68,7 @@
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
-%% @doc Create a new throttle given the `Rate' per second.
+-doc "Create a new throttle given the `Rate` per second.".
 -spec new(non_neg_integer()) -> throttle().
 new(Rate) ->
   new(Rate, 1000).
@@ -77,8 +78,10 @@ new(Rate) ->
 new(Rate, Window) ->
   new(Rate, Window, now()).
 
-%% @doc Create a new throttle given the `Rate' per `Window' milliseconds.
-%%      `Now' is expressesed in microseconds since epoch using `now()'.
+-doc """
+Create a new throttle given the `Rate` per `Window` milliseconds. `Now` is
+expressesed in microseconds since epoch using `now()`.
+""".
 -spec new(non_neg_integer(), non_neg_integer(), time()) -> throttle().
 new(Rate, Window, Now) when is_integer(Rate), is_integer(Window), is_integer(Now) ->
   Win  = Window * 1000,
@@ -89,64 +92,66 @@ new(Rate, Window, Now) when is_integer(Rate), is_integer(Window), is_integer(Now
 reset(#throttle{} = T) ->
   reset(T, now()).
 
-%% @doc Reset the throttle request counter
+-doc "Reset the throttle request counter".
 reset(#throttle{} = T, Now) when is_integer(Now) ->
   T#throttle{next_ts = Now}.
 
-%% @doc Call the lambda `F', ensuring that it's not called more
-%% frequently than the throttle would allow.
-%%
-%% Example:
-%% <code>
-%% 1> T = throttle:new(10, 1000).
-%% 2> lists:foldl(fun(_,{T1,A}) ->
-%%      {T2,R} = throttle:call(T1, fun() -> http:get("google.com") end),
-%%      {T2, [R|A]}
-%%    end, {T,[]}, lists:seq(1, 100)).
-%% </code>
+-doc """
+Call the lambda `F`, ensuring that it's not called more frequently than the
+throttle would allow.
+
+Example:
+<code>
+1> T = throttle:new(10, 1000). 2> lists:foldl(fun(_,{T1,A}) -> {T2,R} =
+throttle:call(T1, fun() -> http:get("google.com") end), {T2, [R|A]} end, {T,[]},
+lists:seq(1, 100)). </code>
+""".
 call(T, F) ->
   call2(T, F, #{}, now()).
 
-%% @doc Call the lambda `F', ensuring that it's not called more
-%% often then the throttle would allow. `Opts' are a map of options.
-%% When `{retries, R}' option is given and `R' is greater than 0, the
-%% throttler will call the function `F()' up to `R' times if the `F()'
-%% raises an exception.  The delay between retries is controlled by
-%% the `{retry_delay, D}' options, expressed in milliseconds (default: `1')
-%% between successive executions of `F()'.
-%% If `F()' still raises an exception after the R's retry, that exception
-%% would be reraised and it would be the responsibility of the caller
-%% to handle it.
+-doc """
+Call the lambda `F`, ensuring that it's not called more often then the throttle
+would allow. `Opts` are a map of options. When `{retries, R}` option is given
+and `R` is greater than 0, the throttler will call the function `F()` up to `R`
+times if the `F()` raises an exception.  The delay between retries is controlled
+by the `{retry_delay, D}` options, expressed in milliseconds (default: `1`)
+between successive executions of `F()`. If `F()` still raises an exception after
+the R's retry, that exception would be reraised and it would be the
+responsibility of the caller to handle it.
+""".
 -spec call(#throttle{}, fun(() -> any()), throttle_opts()) ->
   {#throttle{}, throttle_result()}.
 call(#throttle{} = T, F, Opts) when is_function(F, 0), is_map(Opts) ->
   call2(T, F, Opts, now()).
 
-%% @doc Call M,F,A, ensuring that it's not called more frequently than the
-%% throttle would allow.
-%%
-%% Example:
-%% <code>
-%% 1> T = throttle:new(10, 1000).
-%% 2> lists:foldl(fun(_,{T1,A}) ->
-%%      {T2,R} = throttle:call(T1, http, get, ["google.com"]),
-%%      {T2, [R|A]}
-%%    end, {T,[]}, lists:seq(1, 100)).
-%% </code>
+-doc """
+Call M,F,A, ensuring that it's not called more frequently than the throttle
+would allow.
+
+Example:
+<code>
+1> T = throttle:new(10, 1000). 2> lists:foldl(fun(_,{T1,A}) -> {T2,R} =
+throttle:call(T1, http, get, ["google.com"]), {T2, [R|A]} end, {T,[]},
+lists:seq(1, 100)). </code>
+""".
 call(T, M,F,A) when is_atom(M), is_atom(F), is_list(A) ->
   call(T, M,F,A, #{}, now());
 call(T, F, Opts, Now) when is_function(F, 0), is_map(Opts), is_integer(Now) ->
   call2(T, F, Opts, Now).
 
-%% @doc Call M,F,A, ensuring that it's not called more frequently than the
-%% throttle would allow.
+-doc """
+Call M,F,A, ensuring that it's not called more frequently than the throttle
+would allow.
+""".
 call(T, M,F,A, Now) when is_integer(Now) ->
   call(T, M,F,A, #{}, Now);
 call(T, M,F,A, Opts) when is_map(Opts) ->
   call(T, M,F,A, Opts, now()).
 
-%% @doc Call M,F,A, ensuring that it's not called more frequently than the
-%% throttle would allow.
+-doc """
+Call M,F,A, ensuring that it's not called more frequently than the throttle
+would allow.
+""".
 -spec call(#throttle{}, atom(), atom(), [any()], non_neg_integer(), throttle_opts()) ->
   {#throttle{}, throttle_result()}.
 call(#throttle{} = T, M,F,A, Opts, Now) when is_atom(M), is_atom(F), is_list(A) ->
@@ -181,17 +186,18 @@ call3(T, F, Now, Block, Retries, DelayMS) ->
       call3(T, F, now(), Block, Retries, DelayMS)
   end.
 
-%% @doc Add one sample to the throttle
+-doc "Add one sample to the throttle".
 add(T)          -> add(T, 1).
 
-%% @doc Add `Samples' to the throttle
+-doc "Add `Samples` to the throttle".
 add(T, Samples) -> add(T, Samples, now()).
 
-%% @doc Add `Samples' to the throtlle.
-%% Return `{FitSamples, State}', where `FitSamples' are the number of samples
-%% that fit in the throttling window. 0 means that the throttler is fully
-%% congested, and more time needs to elapse before the throttles gets reset
-%% to accept more samples.
+-doc """
+Add `Samples` to the throtlle. Return `{FitSamples, State}`, where `FitSamples`
+are the number of samples that fit in the throttling window. 0 means that the
+throttler is fully congested, and more time needs to elapse before the throttles
+gets reset to accept more samples.
+""".
 -spec add(throttle(), integer(), time()) -> {integer(), throttle()}.
 add(#throttle{rate = 0}, Samples, _Now) ->
   Samples;
@@ -212,19 +218,21 @@ add(#throttle{next_ts = TS, step = Step, window = Win} = T, Samples, Now) ->
 %% @see available/2
 available(T) -> available(T, now()).
 
-%% @doc Return the number of available samples given `Now' current time.
+-doc "Return the number of available samples given `Now` current time.".
 available(#throttle{rate=0}=T,_Now) -> T#throttle.window;
 available(#throttle{}      =T, Now) -> calc_available(T, Now).
 
 %% @see used/2
 used(T) -> used(T, now()).
 
-%% @doc Return the number of used samples given `a_now' current time.
+-doc "Return the number of used samples given `a_now` current time.".
 used(#throttle{rate = 0},     _Now) -> 0;
 used(#throttle{rate = R} = T,  Now) -> R-calc_available(T, Now).
 
-%% @doc Return the number of milliseconds to wait until the throttling
-%% threshold is satisfied to fit another sample.
+-doc """
+Return the number of milliseconds to wait until the throttling threshold is
+satisfied to fit another sample.
+""".
 next_timeout(T) -> next_timeout(T, now()).
 next_timeout(#throttle{next_ts = TS, step = Step, window = Win}, Now) ->
   NextTS    = TS     + Step,
@@ -238,7 +246,7 @@ next_timeout(#throttle{next_ts = TS, step = Step, window = Win}, Now) ->
 %% @see curr_rps/2
 curr_rps(T) -> curr_rps(T, now()).
 
-%% @doc Return currently used rate per second.
+-doc "Return currently used rate per second.".
 curr_rps(#throttle{rate=0},   _Now) -> 0;
 curr_rps(#throttle{rate=R}=T,  Now) ->
   (R-calc_available(T, Now))*1000000/T#throttle.window.

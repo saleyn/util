@@ -1,35 +1,36 @@
 %%% vim:ts=2:sw=2:et
 %%%-----------------------------------------------------------------------------
-%%% @doc Parse XML into a hierarchical Erlang term
-%%% ```
-%%% % Example xml:
-%%%
-%%%  <?xml version="1.0" encoding="UTF-8" ?>
-%%%  <root id="1">
-%%%    <ele id="2"/>
-%%%    <ele id="3">vvv\nxxx\n</ele>
-%%%  </root>
-%%%
-%%%
-%%% # Usage example
-%%% 1> xmltree:file(L).
-%%% {root,[{id,<<"1">>}],
-%%%      [{ele,[{id,<<"2">>}],[]},
-%%%       {ele,[{id,<<"3">>}],<<"vvv\nxxx\n">>}]}
-%%%
-%%% 2> Rules = {root, [{id,integer}], [{ele, [{id,integer}], string}]},
-%%% 2> xmltree:string(L, Rules).
-%%% {root,[{id,1}],
-%%%    [{ele,[{id,2}],[]},{ele,[{id,3}],"vvv\nxxx\n"}]}
-%%% '''
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%-----------------------------------------------------------------------------
 %%% Date:   2015-12-10
 %%%-----------------------------------------------------------------------------
 %%% Copyright (c) 2015 Serge Aleynikov
 %%%-----------------------------------------------------------------------------
 -module(xmltree).
+-moduledoc """
+Parse XML into a hierarchical Erlang term
+```
+% Example xml:
+
+ <?xml version="1.0" encoding="UTF-8" ?>
+ <root id="1">
+   <ele id="2"/>
+   <ele id="3">vvv\nxxx\n</ele>
+ </root>
+
+
+# Usage example
+1> xmltree:file(L).
+{root,[{id,<<"1">>}],
+     [{ele,[{id,<<"2">>}],[]},
+      {ele,[{id,<<"3">>}],<<"vvv\nxxx\n">>}]}
+
+2> Rules = {root, [{id,integer}], [{ele, [{id,integer}], string}]},
+2> xmltree:string(L, Rules).
+{root,[{id,1}],
+   [{ele,[{id,2}],[]},{ele,[{id,3}],"vvv\nxxx\n"}]}
+```
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 -export([file/1, file/2, string/1, string/2, xml/1, xml/2]).
 
 -include_lib("xmerl/include/xmerl.hrl").

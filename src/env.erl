@@ -1,12 +1,13 @@
 %%%----------------------------------------------------------------------------
-%%% @doc Environment utils
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @copyright 2012 Serge Aleynikov
-%%% @end
-%%%----------------------------------------------------------------------------
 %%% Created: 2012-09-21
 %%%----------------------------------------------------------------------------
 -module(env).
+-moduledoc """
+Environment utils
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+Copyright: 2012 Serge Aleynikov
+""".
 -author('saleyn@gmail.com').
 
 %% API
@@ -36,15 +37,16 @@ subst_env_path(OsPath, Bindings) when is_list(Bindings) ->
     replace_env_vars(OsPath, Bindings).
 
 %%------------------------------------------------------------------------
-%% @doc Perform replacement of environment variable values in the OsPath.
-%% ```
-%% Example:
-%%   env:replace_env_vars("~/app")       -> "/home/cuser/app"
-%%   env:replace_env_vars("${HOME}/app") -> "/home/cuser/app"
-%%   env:replace_env_vars("$USER/app")   -> "cuser/app"
-%% '''
-%% @see os:getenv/1
-%% @end
+-doc """
+Perform replacement of environment variable values in the OsPath.
+```
+Example:
+  env:replace_env_vars("~/app")       -> "/home/cuser/app"
+  env:replace_env_vars("${HOME}/app") -> "/home/cuser/app"
+  env:replace_env_vars("$USER/app")   -> "cuser/app"
+```
+See: `os:getenv/1`.
+""".
 %%------------------------------------------------------------------------
 -spec replace_env_vars(list() | binary()) -> list() | binary().
 replace_env_vars(OsPath) ->
@@ -52,19 +54,19 @@ replace_env_vars(OsPath) ->
 
 
 %%------------------------------------------------------------------------
-%% @doc Perform replacement of environment variable values in the OsPath.
-%%      This function also allows to provide a list of `Bindings' that
-%%      override the environment (they are checked before environment
-%%      variables are looked up).
-%% ```
-%% Example:
-%%   env:replace_env_vars("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
-%%   env:replace_env_vars("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
-%%   env:replace_env_vars("$A/",  [{a, "/aaa"}]) -> "/aaa/"
-%%   env:replace_env_vars("${A}/",[{a, "/aaa"}]) -> "/aaa/"
-%% '''
-%% @see os:getenv/1
-%% @end
+-doc """
+Perform replacement of environment variable values in the OsPath. This function
+also allows to provide a list of `Bindings` that override the environment (they
+are checked before environment variables are looked up).
+```
+Example:
+  env:replace_env_vars("~/",   [{"HOME", "/home/cu"}]) -> "/home/cu/"
+  env:replace_env_vars("~/",   [{home,   "/home/cu"}]) -> "/home/cu/"
+  env:replace_env_vars("$A/",  [{a, "/aaa"}]) -> "/aaa/"
+  env:replace_env_vars("${A}/",[{a, "/aaa"}]) -> "/aaa/"
+```
+See: `os:getenv/1`.
+""".
 %%------------------------------------------------------------------------
 -spec replace_env_vars(list() | binary(), [{atom() | string(), string()}]) ->
     list() | binary().
@@ -72,8 +74,7 @@ replace_env_vars(OsPath, Bindings) when is_list(Bindings) ->
     element(2, env_subst(OsPath, Bindings)).
 
 %%-----------------------------------------------------------------------------
-%% @doc Get application configuration
-%% @end
+-doc "Get application configuration".
 %%-----------------------------------------------------------------------------
 -spec get_env(atom(), atom(), any()) -> any().
 get_env(App, Key, Default) ->

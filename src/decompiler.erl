@@ -1,14 +1,4 @@
 %%%------------------------------------------------------------------------
-%%% @doc Module and function decompiler
-%%%
-%%% In order to use decompiler, make sure to include `syntax_tools'
-%%% application in dependencies.
-%%%
-%%% See also https://github.com/hrzndhrn/beam_file
-%%%
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%------------------------------------------------------------------------
 %%% Copyright (c) 2009 Serge Aleynikov
 %%%
 %%% Permission is hereby granted, free of charge, to any person
@@ -31,16 +21,26 @@
 %%% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%%------------------------------------------------------------------------
 -module(decompiler).
+-moduledoc """
+Module and function decompiler
+
+In order to use decompiler, make sure to include `syntax_tools` application in
+dependencies.
+
+See also https://github.com/hrzndhrn/beam_file
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 -author('saleyn@gmail.com').
 
 -export([run/1, run/2, fun_src/1, fun_src/2]).
 
-%% @doc Decompile a beam file
+-doc "Decompile a beam file".
 -spec run(string()|binary()) -> ok | {error, any()}.
 run(BeamFName) ->
     run(BeamFName, []).
 
-%% @doc Decompile a beam file or module and optionally save it to disk
+-doc "Decompile a beam file or module and optionally save it to disk".
 -spec run(string()|binary()|atom(), [verbose | erl | ast]) -> ok | {error, any()}.
 run(Module, Options) when is_atom(Module) ->
     case code:which(Module) of
@@ -76,11 +76,11 @@ run(BeamFName, Options) when is_list(BeamFName); is_binary(BeamFName) ->
         Error
     end.
 
-%% @doc Decompile a function to its source text
+-doc "Decompile a function to its source text".
 fun_src(Fun) when is_function(Fun) ->
     fun_src(Fun, []).
 
-%% @doc Decompile a function to its source text
+-doc "Decompile a function to its source text".
 -spec fun_src(function(), Options :: [verbose | ast]) -> string().
 fun_src(Fun, Options) when is_function(Fun), is_list(Options) ->
     {module, Mod} = erlang:fun_info(Fun, module),

@@ -1,13 +1,5 @@
 %%% vim:ts=2:sw=2:et
 %%%------------------------------------------------------------------------
-%%% @doc Implements miscelaneous string functions
-%%%
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @copyright 2006 Serge Aleynikov
-%%% @end
-%%% Some implementation authored by Evan Miller:
-%%% http://www.evanmiller.org/joy-of-erlang.html
-%%%------------------------------------------------------------------------
 %%% Created 2005-09-25
 %%%------------------------------------------------------------------------
 %%% format_number/3,4, format_price/1,2,3 functions are taken from
@@ -15,6 +7,15 @@
 %%% Copyright (c) 2019, Sergei Semichev <chessvegas@chessvegas.com>
 %%%------------------------------------------------------------------------
 -module(stringx).
+-moduledoc """
+Implements miscelaneous string functions
+
+Some implementation authored by Evan Miller: http://www.evanmiller.org/joy-of-
+erlang.html
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+Copyright: 2006 Serge Aleynikov
+""".
 -author('saleyn@gmail.com').
 
 %% External API
@@ -80,28 +81,22 @@
 %%%------------------------------------------------------------------------
 
 %%-------------------------------------------------------------------------
-%% @doc Convert words in a string to capitalize first letter of each word.
-%% @end
+-doc "Convert words in a string to capitalize first letter of each word.".
 %%-------------------------------------------------------------------------
 -spec titlecase(string()) -> string().
 titlecase(S) when is_list(S) ->
   titlecase(S, []).
 
 %%-------------------------------------------------------------------------
-%% @doc Wrap words list in a string to multiple lines that fit the margin
-%% There are two uses of this function:
-%% First:
-%% <code>
-%% 1> stringx:wordwrap("abc efg exdf"], 8, "\n").
-%% "abc efg\nexdf"
-%% </code>
-%% Second:
-%% <code>
-%% 1> stringx:wordwrap(["abc", "efg", "exdf"], 8, ",").
-%% ["abc,efg,","exdf"]
-%% </code>
-%% The second use is deprecated. Use `wrap_words/3' instead.
-%% @end
+-doc """
+Wrap words list in a string to multiple lines that fit the margin There are two
+uses of this function: First:
+<code>
+1> stringx:wordwrap("abc efg exdf"], 8, "\n"). "abc efg\nexdf" </code> Second:
+<code>
+1> stringx:wordwrap(["abc", "efg", "exdf"], 8, ","). ["abc,efg,","exdf"] </code>
+The second use is deprecated. Use `wrap_words/3` instead.
+""".
 %%-------------------------------------------------------------------------
 -spec wordwrap(string()|binary(), integer()) -> string()|binary().
 wordwrap([W|_] = S, Margin) when is_list(W) ->
@@ -120,13 +115,12 @@ wordwrap(Words, Margin, Delim) ->
   wrap_words(Words, Margin, Delim).
 
 %%-------------------------------------------------------------------------
-%% @doc Wrap words list in a string to multiple lines that fit the margin
-%% Example:
-%% <code>
-%% 1> stringx:wrap_words(["abc", "efg", "exdf"], 8, ",").
-%% ["abc,efg,","exdf"]
-%% </code>
-%% @end
+-doc """
+Wrap words list in a string to multiple lines that fit the margin Example:
+<code>
+1> stringx:wrap_words(["abc", "efg", "exdf"], 8, ","). ["abc,efg,","exdf"]
+</code>
+""".
 %%-------------------------------------------------------------------------
 -spec wrap_words([Word], integer(), Word) -> [Word]
         when Word :: string()|binary().
@@ -135,18 +129,14 @@ wrap_words([W|_] = Words, Margin, Delim) when is_list(W); is_binary(W) ->
   maybe_to_binary(is_binary(W), wrap(Words, [[]], Margin, 0, WD, length(WD))).
 
 %%-------------------------------------------------------------------------
-%% @doc Pretty print list of maps to list.
-%% @see pretty_table/3.
-%% @end
+-doc "Pretty print list of maps to list. See: `pretty_table/3.`.".
 %%-------------------------------------------------------------------------
 -spec pretty_table([map()]) -> list().
 pretty_table([Map|_] = LofMaps0) when is_map(Map) ->
   pretty_table(lists:sort(maps:keys(Map)), LofMaps0, #opts{}).
 
 %%-------------------------------------------------------------------------
-%% @doc Pretty print table of lists/tuples/maps to list.
-%% @see pretty_table/3.
-%% @end
+-doc "Pretty print table of lists/tuples/maps to list. See: `pretty_table/3.`.".
 %%-------------------------------------------------------------------------
 -spec pretty_table([binary()|string()|atom()],
                    [Row :: tuple()|list()|map()]) -> list().
@@ -163,69 +153,50 @@ pretty_table(HeaderRowKeys, Rows, #opts{} = Opts) ->
   pretty_table1(HeaderRowKeys, Rows, Opts).
 
 %%-------------------------------------------------------------------------
-%% @doc Pretty print table of lists/tuples/maps to list.
-%% The following options control formatting behavior:
-%% <dl>
-%% <dt>header</dt>
-%%      <dd>When true (default), output header row</dd>
-%% <dt>number_pad</dt>
-%%      <dd>Leading padding character used for numbers</dd>
-%% <dt>th_dir</dt>
-%%      <dd>Table header row padding direction (both|leading|trailing)</dd>
-%% <dt>td_dir</dt>
-%%      <dd>Table row padding direction (both|leading|trailing)</dd>
-%% <dt>td_start</dt>
-%%      <dd>Don't print columns less than this (e.g. use 2 for records)</dd>
-%% <dt>td_exclulde</dt>
-%%      <dd>List of column ID's (starting with 1) or names to exclude</dd>
-%% <dt>td_pad</dt>
-%%      <dd>A map containing column padding directions
-%%      `#{Col::integer() => both|leading|trailing'.</dd>
-%% <dt>td_sep</dt>
-%%      <dd>Column separator (default `" | "')</dd>
-%% <dt>tr_sep</dt>
-%%      <dd>Row separator (default `"-"')</dd>
-%% <dt>tr_sep_td</dt>
-%%      <dd>Column delimiter used in separating rows (`"+"')</dd>
-%% <dt>prefix</dt>
-%%      <dd>Prepend each row with this string</dd>
-%% <dt>td_formats</dt>
-%%      <dd>A tuple containing column formats. Each value is either
-%%          a format string passed to `io_lib:format/2' or a function taking
-%%          either one argument
-%%          `fun(Value) -> {number|string, FormattedValue::string()}'
-%%          or three arguments
-%%          `fun(Key,Value,Row::tuple()|map()) -> {number|string, FormattedValue::string()}'.
-%%          This three argument function can perform calculation of the field
-%%          value based on values of other fields in the `Row'.
-%%      </dd>
-%% <dt>unicode</dt>
-%%      <dd>Use unicode outline characters</dd>
-%% <dt>outline</dt>
-%%      <dd>Draw top, left and line box outline (by default only the bottom one is drawn).
-%%          Values:
-%%          <ul>
-%%          <li>`none' - on outline box</li>
-%%          <li>`full' - outline box on all 4 sides</li>
-%%          <li>`[top, left, bottom, right]' - outline box on given sides</li>
-%%          </ul>
-%%      </dd>
-%% </dl>
-%% Example:
-%% ```
-%% 1> stringx:pretty_print_table(
-%%      {a,b,c,d}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}, {abc, 100.0, xx}],
-%%      #opts{td_dir=both, td_exclude=[d], td_formats=
-%%          {undefined, fun(V) when is_integer(V) -> {number, integer_to_list(V)};
-%%                         (V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])}
-%%                      end, "~w"}}).
-%%  a   |     b     |   c
-%% -----+-----------+-------
-%%  a   |        10 |  ccc
-%% bxxx | 200.00123 | 'Done'
-%% -----+-----------+-------
-%% '''
-%% @end
+-doc """
+Pretty print table of lists/tuples/maps to list. The following options control
+formatting behavior:
+
+- `header` — When true (default), output header row
+- `number_pad` — Leading padding character used for numbers
+- `th_dir` — Table header row padding direction (both|leading|trailing)
+- `td_dir` — Table row padding direction (both|leading|trailing)
+- `td_start` — Don't print columns less than this (e.g. use 2 for records)
+- `td_exclulde` — List of column ID's (starting with 1) or names to exclude
+- `td_pad` — A map containing column padding directions `#{Col::integer() =>
+  both|leading|trailing`.
+- `td_sep` — Column separator (default `" | "`)
+- `tr_sep` — Row separator (default `"-"`)
+- `tr_sep_td` — Column delimiter used in separating rows (`"+"`)
+- `prefix` — Prepend each row with this string
+- `td_formats` — A tuple containing column formats. Each value is either a
+  format string passed to `io_lib:format/2` or a function taking either one
+  argument `fun(Value) -> {number|string, FormattedValue::string()}` or three
+  arguments `fun(Key,Value,Row::tuple()|map()) -> {number|string,
+  FormattedValue::string()}`. This three argument function can perform
+  calculation of the field value based on values of other fields in the `Row`.
+- `unicode` — Use unicode outline characters
+- `outline` — Draw top, left and line box outline (by default only the bottom
+  one is drawn). Values:
+  - `none` - on outline box
+  - `full` - outline box on all 4 sides
+  - `[top, left, bottom, right]` - outline box on given sides
+
+Example:
+```
+1> stringx:pretty_print_table(
+{a,b,c,d}, [{a, 10, ccc}, {bxxx, 200.00123, 'Done'}, {abc, 100.0, xx}],
+#opts{td_dir=both, td_exclude=[d], td_formats=
+{undefined, fun(V) when is_integer(V) -> {number, integer_to_list(V)};
+(V) when is_float(V)   -> {number, float_to_list(V, [{decimals, 5}])}
+end, "~w"}}).
+a   |     b     |   c
+-----+-----------+-------
+a   |        10 |  ccc
+bxxx | 200.00123 | 'Done'
+-----+-----------+-------
+```
+""".
 %%-------------------------------------------------------------------------
 -spec pretty_print_table([map()]) -> ok.
 pretty_print_table([Map|_] = LofMaps0) when is_map(Map) ->
@@ -458,31 +429,24 @@ align_rows(Rows) ->
   align_rows(Rows, []).
 
 %%-------------------------------------------------------------------------
-%% @doc Align rows of terms by stringifying them to uniform column width.
-%%      If some row doesn't need to be aligned, pass its value as a binary.
-%% `Options' can be:
-%%
-%% `Rows' is a list. All rows must have the same arity except if a row is
-%%  a binary.
-%% `Options' contain:
-%% <dl>
-%% <dt>{pad, Direction}</dt>
-%%     <dd>Column padding direction, where `Direction' is one of `leading',
-%%         `trailing', `{Position::integer(), leading|trailing|none}',
-%%         `{last, leading|trailing|none}'</dd>
-%% <dt>{type, binary|charlist}</dt>
-%%     <dd>Return columns in the result rows as binaries or charlists
-%%     (default)</dd>
-%% <dt>{return, tuple|list}</dt>
-%%     <dd>Return result rows as lists or tuples</dd>
-%% <dt>{prefix, string()}</dt>
-%%     <dd>Prefix first item in each row with this string</dd>
-%% <dt>{ignore_empty, boolean()}</dt>
-%%     <dd>Don't pad trailing empty columns if this option is true</dd>
-%% <dt>{exclude, [integer()]}</dt>
-%%     <dd>Exclude given column numbers</dd>
-%% </dl>
-%% @end
+-doc """
+Align rows of terms by stringifying them to uniform column width. If some row
+doesn't need to be aligned, pass its value as a binary. `Options` can be:
+
+`Rows` is a list. All rows must have the same arity except if a row is a binary.
+`Options` contain:
+
+- `{pad, Direction}` — Column padding direction, where `Direction` is one of
+  `leading`, `trailing`, `{Position::integer(), leading|trailing|none}`, `{last,
+  leading|trailing|none}`
+- `{type, binary|charlist}` — Return columns in the result rows as binaries or
+  charlists (default)
+- `{return, tuple|list}` — Return result rows as lists or tuples
+- `{prefix, string()}` — Prefix first item in each row with this string
+- `{ignore_empty, boolean()}` — Don't pad trailing empty columns if this option
+  is true
+- `{exclude, [integer()]}` — Exclude given column numbers
+""".
 %%-------------------------------------------------------------------------
 -spec align_rows(
         Rows    :: [tuple()|binary()|list()],
@@ -755,15 +719,19 @@ guess_type(V)     when is_integer(V)   -> number;
 guess_type(V)     when is_float(V)     -> number;
 guess_type(_)                          -> string.
 
-%% @doc Convert format and arguments to binary/list shortening .
-%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2'
+-doc """
+Convert format and arguments to binary/list shortening . This function can be
+used by Elixir, which is missing the equivalent of `io_lib.format/2`
+""".
 -spec format(binary()|string(), list()) -> binary()|string().
 format(Fmt, Args) when is_list(Args) ->
   Res = io_lib:format(Fmt, Args),
   format1(Res).
 
-%% @doc Convert format and arguments to binary/list shortening .
-%% This function can be used by Elixir, which is missing the equivalent of `io_lib.format/2'
+-doc """
+Convert format and arguments to binary/list shortening . This function can be
+used by Elixir, which is missing the equivalent of `io_lib.format/2`
+""".
 -spec format_binary(binary()|string(), list()) -> binary().
 format_binary(Fmt, Args) when is_binary(Fmt) or is_list(Fmt) ->
   iolist_to_binary(format(Fmt, Args)).
@@ -780,10 +748,10 @@ format_integer(Integer) ->
 format_integer(Integer, Opts) when is_integer(Integer), is_map(Opts) ->
   do_format_number(Integer, 0, Opts).
 
-%% @doc
-%% The same as uef_format:format_number/4 with #{} as the forth argument.
-%% @see format_number/4
-%% @end
+-doc """
+The same as uef_format:format_number/4 with #{} as the forth argument. See:
+`format_number/4`.
+""".
 -spec format_number(number(), precision(), decimals()) -> formatted_number().
 format_number(N, Precision, Decimals) when (is_float(N) orelse is_integer(N))
                                          ,  is_integer(Precision)
@@ -792,12 +760,11 @@ format_number(N, Precision, Decimals) when (is_float(N) orelse is_integer(N))
 format_number(N, Precision, Opts) when is_map(Opts) ->
   format_number(N, Precision, Precision, Opts).
 
-%% @doc
-%% Formats Number by adding thousands separator between each set of 3
-%% digits to the left of the decimal point, substituting Decimals for
-%% the decimal point, and rounding to the specified Precision.
-%% Returns a binary value.
-%% @end
+-doc """
+Formats Number by adding thousands separator between each set of 3 digits to the
+left of the decimal point, substituting Decimals for the decimal point, and
+rounding to the specified Precision. Returns a binary value.
+""".
 -spec format_number(number(), precision(), decimals(), format_number_opts()) ->
         formatted_number().
 format_number(Number, Precision, Decimals, Opts) when is_integer(Number) ->
@@ -810,23 +777,22 @@ format_number(Number, Precision, Decimals, Opts) when is_float(Number) ->
 	Rounded = round_number(Number, Precision2), % round to Precision2 before formatting
 	do_format_number(Rounded, Decimals, Opts).
 
-%% @doc
-%% Formats Number in price-like style.
-%% Returns a binary containing FormattedPrice formatted with a precision
-%% of 2 and decimal digits of 2. The same as format_price/2 with a precision
-%% of 2 as the second argument. See uef_format:format_price/2 docs.
-%% @end
+-doc """
+Formats Number in price-like style. Returns a binary containing FormattedPrice
+formatted with a precision of 2 and decimal digits of 2. The same as
+format_price/2 with a precision of 2 as the second argument. See
+uef_format:format_price/2 docs.
+""".
 -spec format_price(Number:: number()) -> FormattedPrice :: formatted_number().
 format_price(Price) ->
 	format_price(Price, ?DEFAULT_PRICE_PRECISION).
 
-%% @doc
-%% Formats Number in price-like style.
-%% Returns a binary containing FormattedPrice formatted with a specified
-%% precision as the second argument and decimal digits of 2.
-%% The same as uef_format:format_price/3 with #{} as the third argument.
-%% @see format_price/3
-%% @end
+-doc """
+Formats Number in price-like style. Returns a binary containing FormattedPrice
+formatted with a specified precision as the second argument and decimal digits
+of 2. The same as uef_format:format_price/3 with #{} as the third argument. See:
+`format_price/3`.
+""".
 -spec format_price(Number::number(), Precision::precision()) -> formatted_number().
 format_price(Price, Precision) ->
 	format_price(Price, Precision, #{}).
@@ -835,16 +801,15 @@ format_price(Price, Precision) ->
 -spec format_price(Number::number(), Precision::precision(),
         CcySymbol_OR_Options::format_number_opts() | ccy_sym()) ->
           FormattedPrice::formatted_number().
-%% @doc
-%% Formats Number in price-like style.
-%% Returns a binary containing FormattedPrice formatted with a specified
-%% precision as the second argument, decimal digits of 2,
-%% and with ccy symbol (or options) as the third argument.
-%% If CcySymbol_OR_Options is a map the functions works as format_number/4
-%% with decimal digits of 2 as the third argument and with options as the forth one.
-%% If CcySymbol_OR_Options is a binary or a string, the corresponding
-%% ccy symbol is added to the left.
-%% @end
+-doc """
+Formats Number in price-like style. Returns a binary containing FormattedPrice
+formatted with a specified precision as the second argument, decimal digits of
+2, and with ccy symbol (or options) as the third argument. If
+CcySymbol_OR_Options is a map the functions works as format_number/4 with
+decimal digits of 2 as the third argument and with options as the forth one. If
+CcySymbol_OR_Options is a binary or a string, the corresponding ccy symbol is
+added to the left.
+""".
 format_price(Price, Precision, Opts) when is_map(Opts) ->
 	format_number(Price, Precision, ?DEFAULT_PRICE_DECIMALS, Opts);
 format_price(Price, Precision, CurSymbol) when is_binary(CurSymbol) orelse is_list(CurSymbol) ->
@@ -854,12 +819,12 @@ format_price(Price, Precision, Opts) ->
 
 %% round_price/1
 -spec round_price(Number :: number()) -> float().
-%% @doc Rounds the number to the precision of 2.
+-doc "Rounds the number to the precision of 2.".
 round_price(Price) -> round_number(Price, 2).
 
 %% round_number/2
 -spec round_number(Number :: number(), Precision :: integer()) -> float().
-%% @doc Rounds the number to the specified precision.
+-doc "Rounds the number to the specified precision.".
 round_number(Number, Precision) ->
 	P = math:pow(10, Precision),
 	erlang:round(Number * P) / P.
@@ -991,17 +956,17 @@ binary_join([Head|Tail], Sep) ->
 		<<Acc/binary, Sep/binary, Value/binary>>
 	end, Head, Tail).
 
-%% @doc Parse a given CSV file.
+-doc "Parse a given CSV file.".
 -spec parse_csv(string()) -> [[string()]].
 parse_csv(File) when is_list(File) ->
   csv:parse(File).
 
-%% @doc Parse a given CSV file.
+-doc "Parse a given CSV file.".
 -spec parse_csv(string(), [fix_lengths | {open, Opts::list()}]) -> [[string()]].
 parse_csv(File, Opts) when is_list(File), is_list(Opts) ->
   csv:parse(File, Opts).
 
-%% @doc Split a list into batches of N items
+-doc "Split a list into batches of N items".
 -spec batch_split(integer(), list()) -> [list()].
 batch_split(N, L) when is_integer(N), is_list(L) ->
   batch_split(N, N, L, [], []).

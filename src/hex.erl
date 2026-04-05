@@ -1,9 +1,5 @@
 %%% vim:ts=4:sw=4:et
 %%%-----------------------------------------------------------------------------
-%%% @doc    Hexadecimal conversion functions
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%-----------------------------------------------------------------------------
 %%% Date:   2015-12-10
 %%%-----------------------------------------------------------------------------
 %%% Copyright (c) 2015 Serge Aleynikov
@@ -28,6 +24,11 @@
 %%% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%%-----------------------------------------------------------------------------
 -module(hex).
+-moduledoc """
+Hexadecimal conversion functions
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 -author('saleyn@gmail.com').
 
 -export([to_hex/1, to_bin/1, to_int/1]).
@@ -41,32 +42,32 @@
 %%% External API
 %%%-----------------------------------------------------------------------------
 
-%% @doc Convert an iolist to a hex string.
+-doc "Convert an iolist to a hex string.".
 -spec to_hex(integer()|iolist())  -> binary().
 to_hex(0)                           -> <<"0">>;
 to_hex(I) when is_integer(I), I > 0 -> to_hex_int(I, []);
 to_hex(L) when is_list(L)           -> to_hex_bin(iolist_to_binary(L));
 to_hex(B) when is_binary(B)         -> to_hex_bin(B).
 
-%% @doc Convert a hex string to binary.
+-doc "Convert a hex string to binary.".
 -spec to_bin(string()) -> binary().
 to_bin(Bin) when is_binary(Bin) ->
     << <<((dehex(A) bsl 4) bor dehex(B))>> || <<A,B>> <= Bin >>;
 to_bin(L) when is_list(L) ->
     iolist_to_binary(to_bin2(L)).
 
-%% @doc Convert a hex string/binary to integer.
+-doc "Convert a hex string/binary to integer.".
 -spec to_int(string()|binary()) -> integer().
 to_int(S) when is_list(S)       -> erlang:list_to_integer  (S, 16);
 to_int(B) when is_binary(B)     -> erlang:binary_to_integer(B, 16).
 
-%% @doc Convert a hex digit in range [$0..$9,$a..$f,$A..$F] to integer.
+-doc "Convert a hex digit in range [$0..$9,$a..$f,$A..$F] to integer.".
 -spec dehex(char()) -> integer().
 dehex(C) when C >= $0, C =< $9 -> C - $0;
 dehex(C) when C >= $a, C =< $f -> C - ($a - 10);
 dehex(C) when C >= $A, C =< $F -> C - ($A - 10).
 
-%% @doc Convert an integer to a hex digit in range [0..15].
+-doc "Convert an integer to a hex digit in range [0..15].".
 -spec hex(integer()) -> char().
 hex(C) when C >= 0, C =< 9 -> C + $0;
 hex(C) when C =< 15        -> C + ($a - 10).

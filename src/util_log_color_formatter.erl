@@ -1,40 +1,31 @@
-%% @doc
-%% Implementation of coloring handler for the Erlang's logger.
-%% See [https://github.com/hauleth/logger_colorful].
-%%
-%% == Options ==
-%%
-%% <ul>
-%%      <li>`formatter' - parent formatter which will be used for message
-%%      formatting</li>
-%%      <li>`colors' - map of `logger:log_level()' and colors in form atom
-%%      describing color name, or 2-ary or 3-ary tuple with 1 or 2 modifiers for
-%%      the color</li>
-%% </ul>
-%%
-%% Available colors:
-%%
-%% <ul>
-%%      <li>`black'</li>
-%%      <li>`red'</li>
-%%      <li>`green'</li>
-%%      <li>`yellow'</li>
-%%      <li>`blue'</li>
-%%      <li>`magenta'</li>
-%%      <li>`cyan'</li>
-%%      <li>`white'</li>
-%% </ul>
-%%
-%% Available modifiers:
-%%
-%% <ul>
-%%      <li>`fg' - set foreground color</li>
-%%      <li>`bg' - set background color</li>
-%%      <li>`bright' - use bright color</li>
-%% </ul>
-%%
-%% @end
 -module(util_log_color_formatter).
+-moduledoc """
+Implementation of coloring handler for the Erlang's logger. See
+[https://github.com/hauleth/logger_colorful].
+
+== Options ==
+
+- `formatter` - parent formatter which will be used for message
+     formatting
+- `colors` - map of `logger:log_level()` and colors in form atom
+
+Available colors:
+
+- `black`
+- `red`
+- `green`
+- `yellow`
+- `blue`
+- `magenta`
+- `cyan`
+- `white`
+
+Available modifiers:
+
+- `fg` - set foreground color
+- `bg` - set background color
+- `bright` - use bright color
+""".
 
 -define(RESET, "\e[m").
 -define(CLREOL, "\e[K").

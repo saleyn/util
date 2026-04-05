@@ -1,9 +1,10 @@
-%% @doc Guard in
-%% @author Michael Uvarov (freeakk@gmail.com)
-%% Source:  https://github.com/mad-cocktail/gin
-%% License: MIT
 
 -module(gin).
+-moduledoc """
+Guard in Source:  https://github.com/mad-cocktail/gin License: MIT
+
+Author: Michael Uvarov (freeakk@gmail.com)
+""".
 -author('freeakk@gmail.com').
 
 -export([parse_transform/2]).
@@ -29,11 +30,13 @@ in_transform(Op) ->
         end.
 
 
-%% @doc Replace `in(X, List)' with `(X =:= E1) andalso (X =:= E2)' 
-%%      when `List' is `[E1, E2]' and `Op' is `=:='.
-%%
-%%      The caller checks, that the function name is valid.
-%%      `in' can be any function, for example, `in2' is valid too.
+-doc """
+Replace `in(X, List)` with `(X =:= E1) andalso (X =:= E2)` when `List` is `[E1,
+E2]` and `Op` is `=:=`.
+
+The caller checks, that the function name is valid. `in` can be any function,
+for example, `in2` is valid too.
+""".
 -spec in_transform(Op, Node) -> Node when
     Op :: '==' | '=:=',
     Node :: erl_syntax_lib:syntaxTree().
@@ -73,13 +76,14 @@ in_transform(Op, Node) ->
 %% Beetween
 %% ==================================================================
 
-%% @doc Transforms `beetween(Subject, Start, To)'.
-%% Subject is a term, but usually it is a number.
-%% `From' and `To' can be wrapped with the `open(_)' call.
-%% It meand, that this value is not inluded in the interval.
-%%
-%% `beetween(X, F, T)' is replaced with `((X =< F) andalso (X >= T))'.
-%% `beetween(X, open(F), T)' is replaced with `((X < F) andalso (X >= T))'.
+-doc """
+Transforms `beetween(Subject, Start, To)`. Subject is a term, but usually it is
+a number. `From` and `To` can be wrapped with the `open(_)` call. It meand, that
+this value is not inluded in the interval.
+
+`beetween(X, F, T)` is replaced with `((X =< F) andalso (X >= T))`. `beetween(X,
+open(F), T)` is replaced with `((X < F) andalso (X >= T))`.
+""".
 beetween_transform(Node) ->
     Pos = erl_syntax:get_pos(Node),
     %% Call it fore all new nodes.
@@ -97,7 +101,7 @@ beetween_transform(Node) ->
     erl_syntax:revert(GuardAST).
 
 
-%% @doc Returns an operator name.
+-doc "Returns an operator name.".
 -spec less(IsExcluded) -> Op when
     IsExcluded :: boolean(), 
     Op :: atom().
@@ -113,12 +117,12 @@ less(false) -> '=<'.
 greater(true)  -> '>';
 greater(false) -> '>='.
 
-%% @doc Return true, if `Node' is wrapped by `open(_)'.
+-doc "Return true, if `Node` is wrapped by `open(_)`.".
 is_open(Node) ->
     is_local_function(open, 1, Node).
 
 
-%% @doc Convert the call of `open(Body)' to `Body'.
+-doc "Convert the call of `open(Body)` to `Body`.".
 clean_open(Node) ->
     case is_open(Node) of
         true ->  hd(erl_syntax:application_arguments(Node));
@@ -141,7 +145,7 @@ local_function(FunName, FunArity, TransFun) ->
             end
         end.
 
-%% @doc Return `true', `Node' is a function call of the `FunName/FunArity' function.
+-doc "Return `true`, `Node` is a function call of the `FunName/FunArity` function.".
 is_local_function(FunName, FunArity, Node) -> 
     erl_syntax:type(Node) =:= application
         andalso always(Op = erl_syntax:application_operator(Node))
@@ -152,6 +156,6 @@ is_local_function(FunName, FunArity, Node) ->
 always(_) -> true.
 
 
-%% @doc Return arity of the called function inside `Node'.
+-doc "Return arity of the called function inside `Node`.".
 application_arity(Node) ->
     length(erl_syntax:application_arguments(Node)).

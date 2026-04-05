@@ -13,20 +13,22 @@
 %% Portions created by Corelatus are Copyright 2003, Corelatus
 %% AB. All Rights Reserved.''
 %%
-%% @doc Module to print out terms for logging. Limits by length rather than depth.
-%%
-%% The resulting string may be slightly larger than the limit; the intention
-%% is to provide predictable CPU and memory consumption for formatting
-%% terms, not produce precise string lengths.
-%%
-%% Typical use:
-%%
-%%   trunc_io:print(Term, 500).
-%%
-%% Source license: Erlang Public License.
-%% Original author: Matthias Lang, `matthias@corelatus.se'
 
 -module(trunc_io).
+-moduledoc """
+Module to print out terms for logging. Limits by length rather than depth.
+
+The resulting string may be slightly larger than the limit; the intention is to
+provide predictable CPU and memory consumption for formatting terms, not produce
+precise string lengths.
+
+Typical use:
+
+trunc_io:print(Term, 500).
+
+Source license: Erlang Public License. Original author: Matthias Lang,
+`matthias@corelatus.se`
+""".
 -author('matthias@corelatus.se').
 %% And thanks to Chris Newcombe for a bug fix 
 -export([print/2, fprint/2, safe/2]).               % interface functions
@@ -34,22 +36,21 @@
 -version("$Id: trunc_io.erl,v 1.11 2009-02-23 12:01:06 matthias Exp $").
 
 
-%% @doc Returns an flattened list containing the ASCII representation of the given
-%% term.
+-doc "Returns an flattened list containing the ASCII representation of the given term.".
 -spec fprint(term(), pos_integer()) -> string().
 fprint(T, Max) -> 
     {L, _} = print(T, Max),
     lists:flatten(L).
 
-%% @doc Same as print, but never crashes. 
-%%
-%% This is a tradeoff. Print might conceivably crash if it's asked to
-%% print something it doesn't understand, for example some new data
-%% type in a future version of Erlang. If print crashes, we fall back
-%% to io_lib to format the term, but then the formatting is
-%% depth-limited instead of length limited, so you might run out
-%% memory printing it. Out of the frying pan and into the fire.
-%% 
+-doc """
+Same as print, but never crashes.
+
+This is a tradeoff. Print might conceivably crash if it's asked to print
+something it doesn't understand, for example some new data type in a future
+version of Erlang. If print crashes, we fall back to io_lib to format the term,
+but then the formatting is depth-limited instead of length limited, so you might
+run out memory printing it. Out of the frying pan and into the fire.
+""".
 -spec safe(term(), pos_integer()) -> {string(), pos_integer()} | {string()}.
 safe(What, Len) ->
     case catch print(What, Len) of
@@ -57,18 +58,16 @@ safe(What, Len) ->
 	_ -> {"unable to print" ++ io_lib:write(What, 99)}
     end.	     
 
-%% @doc Returns {List, Length}
+-doc "Returns {List, Length}".
 -spec print(term(), pos_integer()) -> {iolist(), pos_integer()}.
 print(_, Max) when Max < 0 -> {"...", 3};
 print(Tuple, Max) when is_tuple(Tuple) -> 
     {TC, Len} = tuple_contents(Tuple, Max-2),
     {[${, TC, $}], Len + 2};
 
-%% @doc We assume atoms, floats, funs, integers, PIDs, ports and refs never need 
-%% to be truncated. This isn't strictly true, someone could make an 
-%% arbitrarily long bignum. Let's assume that won't happen unless someone
-%% is being malicious.
-%%
+%% We assume atoms, floats, funs, integers, PIDs, ports and refs never need to be
+%% truncated. This isn't strictly true, someone could make an arbitrarily long
+%% bignum. Let's assume that won't happen unless someone is being malicious.
 print(Atom, _Max) when is_atom(Atom) ->
     L = atom_to_list(Atom),
     {L, length(L)};

@@ -1,13 +1,14 @@
 %%% vim:ts=4:sw=4:et
 %%%----------------------------------------------------------------------------
-%%% @doc Profiling functions
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @copyright 2015 Serge Aleynikov
-%%% @end
-%%%----------------------------------------------------------------------------
 %%% Created: 2015-05-13
 %%%----------------------------------------------------------------------------
 -module(prof).
+-moduledoc """
+Profiling functions
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+Copyright: 2015 Serge Aleynikov
+""".
 -author('saleyn@gmail.com').
 
 %% API
@@ -19,17 +20,17 @@
 %%%----------------------------------------------------------------------------
 
 %%-----------------------------------------------------------------------------
-%% @doc Begin profiling a list of pids
-%% @end
+-doc "Begin profiling a list of pids".
 %%-----------------------------------------------------------------------------
 -spec start([pid() | atom()]) -> ok.
 start(Pids) when is_list(Pids) ->
     fprof:trace([start, {procs, Pids}]).
 
 %%-----------------------------------------------------------------------------
-%% @doc Finish profiling a list of pids and save results to a file called
-%%      `"fprof.analysis"'.
-%% @end
+-doc """
+Finish profiling a list of pids and save results to a file called
+`"fprof.analysis"`.
+""".
 %%-----------------------------------------------------------------------------
 -spec stop() -> ok.
 stop() ->
@@ -39,8 +40,9 @@ stop() ->
     fprof:stop().
 
 %%-----------------------------------------------------------------------------
-%% @doc Run a function analysis and save it to `"fprof-apply.analysis"'.
-%% @end
+-doc """
+Run a function analysis and save it to `"fprof-apply.analysis"`.
+""".
 %%-----------------------------------------------------------------------------
 apply(Fun, Args) when is_list(Args) ->
     fprof:apply(Fun, Args),
@@ -49,8 +51,9 @@ apply(Fun, Args) when is_list(Args) ->
     fprof:stop().
 
 %%-----------------------------------------------------------------------------
-%% @doc Run a function analysis and save it to `"fprof-apply.analysis"'.
-%% @end
+-doc """
+Run a function analysis and save it to `"fprof-apply.analysis"`.
+""".
 %%-----------------------------------------------------------------------------
 apply(M, F, Args) when is_atom(M), is_atom(F), is_list(Args) ->
     fprof:apply(M, F, Args),

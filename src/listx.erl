@@ -1,8 +1,4 @@
 %%%-----------------------------------------------------------------------------
-%%% @doc Miscelaneous list functions
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%-----------------------------------------------------------------------------
 %%% Copyright (c) 2015 Serge Aleynikov
 %%%
 %%% Permission is hereby granted, free of charge, to any person
@@ -25,6 +21,11 @@
 %%% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%%-----------------------------------------------------------------------------
 -module(listx).
+-moduledoc """
+Miscelaneous list functions
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 
 -export([group/2, copy_tuple_except/5, sum/1, sum/2, zip_record/2]).
 
@@ -36,7 +37,7 @@
 %%% API
 %%%-----------------------------------------------------------------------------
 
-%% @doc Group elements in the `List' by element at position `Pos'.
+-doc "Group elements in the `List` by element at position `Pos`.".
 -spec group(Pos::integer(), List::[tuple()]) -> [{any(), tuple()}].
 group(Pos, List) when is_integer(Pos), is_list(List) ->
     lists:foldl(fun(T, A) when is_tuple(T), tuple_size(T) >= Pos ->
@@ -47,13 +48,14 @@ group(Pos, List) when is_integer(Pos), is_list(List) ->
         A#{Key => [TT | Old]}
     end, #{}, List).
 
-%% @doc Add every positional element of each tuple in the list.
-%% E.g. `sum([{1,2}, {3,4}, {5,6}]) -> {9,12}.'
+-doc """
+Add every positional element of each tuple in the list. E.g. `sum([{1,2}, {3,4},
+{5,6}]) -> {9,12}.`
+""".
 sum(ListOfTuples = [H|_]) when is_tuple(H) ->
 	suml(ListOfTuples, erlang:make_tuple(tuple_size(H), 0)).
 
-%% @doc Add every positional element of two tuples.
-%% E.g. `sum({1,2}, {3,4}) -> {3,6}.'
+-doc "Add every positional element of two tuples. E.g. `sum({1,2}, {3,4}) -> {3,6}.`".
 sum(Tuple1, Tuple2) when tuple_size(Tuple1) =:= tuple_size(Tuple2) ->
     sum(1, tuple_size(Tuple1)+1, Tuple1, Tuple2).
 
@@ -61,8 +63,7 @@ sum(Tuple1, Tuple2) when tuple_size(Tuple1) =:= tuple_size(Tuple2) ->
 %%% Internal functions
 %%%-----------------------------------------------------------------------------
 
-%% @doc Copy every element of tuple TS to tuple TT ignoring the item at
-%%      Ignore position
+-doc "Copy every element of tuple TS to tuple TT ignoring the item at Ignore position".
 copy_tuple_except(_Ignore, I, N,_TS, TT) when I > N -> TT;
 copy_tuple_except(I, I, N, TS, TT) -> copy_tuple_except(I, I+1, N, TS, TT);
 copy_tuple_except(Ignore, I, N, TS, TT) when Ignore > I ->
@@ -78,8 +79,10 @@ suml([], Acc) ->
 sum(N,N,_,Acc) -> Acc;
 sum(I,N,H,Acc) -> sum(I+1,N,H,setelement(I, Acc, element(I, H) + element(I, Acc))).
 
-%% @doc Convert a record/tuple to a list of `{Name,Value}' pairs, where `Name'
-%%      is a field name taken from the `Fields' list. 
+-doc """
+Convert a record/tuple to a list of `{Name,Value}` pairs, where `Name` is a
+field name taken from the `Fields` list.
+""".
 -spec zip_record(list(), tuple()) -> list().
 zip_record(Fields, State) when is_list(Fields), tuple_size(State) =:= length(Fields)+1 ->
     Vals = tl(tuple_to_list(State)),

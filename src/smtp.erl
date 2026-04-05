@@ -1,40 +1,39 @@
 %%%------------------------------------------------------------------------
-%%% @doc SMTP mail client.  This module can sent emails to one or more
-%%%      recipients, using primary/backup SMTP servers.  Messages can
-%%%      contain attachments.
-%%%
-%%% ```
-%%% Example:
-%%%     % Send a message to two recipients with a file attachment using
-%%%     % SSL protocol at mail server "mail.bevemyr.com":
-%%%     smtp:send(ssl, "Alex <jb@bevemyr.com>",
-%%%               ["katrin@bevemyr.com","jb@bevemyr.com"],
-%%%               "Test Subject", "My Message",
-%%%               [{server, "mail.bevemyr.com"},
-%%%                {username, "alex"}, {password, "secret"},
-%%%                {attachments, ["file1.txt"]}]).
-%%%
-%%%     % Send a message to a recipient with a file attachment given custom
-%%%     % MIME type using localhost mail server
-%%%     smtp:send(tcp, "jb@bevemyr.com",
-%%%               ["katrin@bevemyr.com"], "Test Subject", "My Message",
-%%%               [{server, "mail.bevemyr.com"},
-%%%                {username, "alex"}, {password, "secret"},
-%%%                {attachments, [{"file1.bin","application/custom_MIME"}]}]).
-%%%
-%%%     % Send a message to two recipients with an attachment given as list
-%%%     smtp:send(tcp, "jb@bevemyr.com",
-%%%               ["katrin@bevemyr.com","jb@bevemyr.com"],
-%%%               "Test Subject", "My Message",
-%%%               [{"file1.txt","text/plain","Attachment past as list"}]).
-%%% '''
-%%%
-%%% @author  Johan Bevemyr, Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%------------------------------------------------------------------------
 %%% Created 02/24/2004 Johan Bevemyr
 %%%------------------------------------------------------------------------
 -module(smtp).
+-moduledoc """
+SMTP mail client.  This module can sent emails to one or more recipients, using
+primary/backup SMTP servers.  Messages can contain attachments.
+
+```
+Example:
+    % Send a message to two recipients with a file attachment using
+    % SSL protocol at mail server "mail.bevemyr.com":
+    smtp:send(ssl, "Alex <jb@bevemyr.com>",
+              ["katrin@bevemyr.com","jb@bevemyr.com"],
+              "Test Subject", "My Message",
+              [{server, "mail.bevemyr.com"},
+               {username, "alex"}, {password, "secret"},
+               {attachments, ["file1.txt"]}]).
+
+    % Send a message to a recipient with a file attachment given custom
+    % MIME type using localhost mail server
+    smtp:send(tcp, "jb@bevemyr.com",
+              ["katrin@bevemyr.com"], "Test Subject", "My Message",
+              [{server, "mail.bevemyr.com"},
+               {username, "alex"}, {password, "secret"},
+               {attachments, [{"file1.bin","application/custom_MIME"}]}]).
+
+    % Send a message to two recipients with an attachment given as list
+    smtp:send(tcp, "jb@bevemyr.com",
+              ["katrin@bevemyr.com","jb@bevemyr.com"],
+              "Test Subject", "My Message",
+              [{"file1.txt","text/plain","Attachment past as list"}]).
+```
+
+Author: Johan Bevemyr, Serge Aleynikov <saleyn@gmail.com>
+""".
 -author('jb@son.bevemyr.com').
 -author('saleyn@gmail.com').
 
@@ -42,9 +41,23 @@
 
 -include_lib("kernel/include/inet.hrl").
 
+-doc "Protocol type.".
 -type proto() :: tcp | ssl.
-%% Protocol type.
 
+-doc """
+SNMP Options
+
+- Server - server to connect to (no MX lookup)
+- Relay  - domain to do MX lookup of list of servers
+- Port   - optional port number (ssl def: 465; tcp def: 25)
+- Auth   - controls mandatory / optional authentication
+- Tls    - controls enabling of TLS protocol
+- Domain - name of the domain to include in the HELO handshake
+- Timeout - timeout to use (default 10000)
+- Verbose - controls debugging printout
+- Attachments - list of files to attach
+- SSLOpts - additional SSL options if using SSL protocol
+""".
 -type smtp_options() :: [
           {server, Server::string()}
         | {relay, Relay::string()}
@@ -61,25 +74,13 @@
              Filename::string() |
              {Filename::string(), ContentType::string()} |
              {Filename::string(), ContentType::string(), Data::list()}]}].
-%% SNMP Options
-%%     <ul>
-%%      <li>Server - server to connect to (no MX lookup)</li>
-%%      <li>Relay  - domain to do MX lookup of list of servers</li>
-%%      <li>Port   - optional port number (ssl def: 465; tcp def: 25)</li>
-%%      <li>Auth   - controls mandatory / optional authentication</li>
-%%      <li>Tls    - controls enabling of TLS protocol</li>
-%%      <li>Domain - name of the domain to include in the HELO handshake</li>
-%%      <li>Timeout - timeout to use (default 10000)</li>
-%%      <li>Verbose - controls debugging printout</li>
-%%      <li>Attachments - list of files to attach</li>
-%%      <li>SSLOpts - additional SSL options if using SSL protocol</li>
-%%     </ul>
 
 %%-------------------------------------------------------------------------
-%% @doc Send a message to a list of `To' receipients using `localhost'.
-%%      Error is thrown if unable to send a message.
-%%      Use inet:format_error/1 to decode the Reason if it is an atom.
-%% @end
+-doc """
+Send a message to a list of `To` receipients using `localhost`. Error is thrown
+if unable to send a message. Use inet:format_error/1 to decode the Reason if it
+is an atom.
+""".
 %%-------------------------------------------------------------------------
 -spec send(Proto :: proto(), From :: string() | binary(),
             To :: string() | binary(), Subj :: string() | binary(),
@@ -88,11 +89,11 @@ send(Proto, From, To, Subject, Message) ->
     send(Proto, From, To, Subject, Message, []).
 
 %%-------------------------------------------------------------------------
-%% @doc Send a message to a list of recipients by connecting to an SMTP
-%%      server Server.  The message can contain attachments in the
-%%      Attachments list.  See examples on the top of this page.
-%%      Error is thrown if unable to send a message.
-%% @end
+-doc """
+Send a message to a list of recipients by connecting to an SMTP server Server.
+The message can contain attachments in the Attachments list.  See examples on
+the top of this page. Error is thrown if unable to send a message.
+""".
 %%-------------------------------------------------------------------------
 -spec send(Proto :: proto(), From :: string() | binary(),
             To :: string() | binary(), Subj :: string() | binary(),
@@ -119,8 +120,7 @@ send(Proto, From, To, Subj, Msg, Opts)
 
 
 %%-------------------------------------------------------------------------
-%% @doc Get domain that this host belongs to.
-%% @end
+-doc "Get domain that this host belongs to.".
 %%-------------------------------------------------------------------------
 -spec domain() -> binary().
 domain() ->

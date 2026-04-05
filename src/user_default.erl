@@ -2,17 +2,6 @@
 %%%------------------------------------------------------------------------
 %%% File: $Id$
 %%%------------------------------------------------------------------------
-%%% @doc This is an extension of the shell commands
-%%%      to do all the work!  Either place this file in the
-%%%      path accessible to Erlang (via ERL_LIBS) or
-%%%      add this line to the ~/.erlang file:
-%%%      ``code:load_abs(os:getenv("HOME") ++ "/.erlang/user_default").''
-%%%
-%%% @author  Serge Aleynikov <saleyn@gmail.com>
-%%% @version $Revision$
-%%%          $Date$
-%%% @end
-%%%------------------------------------------------------------------------
 %%% $URL$
 %%%------------------------------------------------------------------------
 %%% ``The contents of this file are subject to the Erlang Public License,
@@ -31,6 +20,16 @@
 %%% AB. All Rights Reserved.''
 %%%------------------------------------------------------------------------
 -module(user_default).
+-moduledoc """
+This is an extension of the shell commands to do all the work!  Either place
+this file in the path accessible to Erlang (via ERL_LIBS) or add this line to
+the ~/.erlang file: ``code:load_abs(os:getenv("HOME") ++
+"/.erlang/user_default").`'
+
+$Date$
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 -author('saleyn@gmail.com').
 
 -export([help/0, saveh/1, debug/0, dbgtc/1, dbgon/1, dbgon/2,
@@ -120,17 +119,17 @@ dbgdel(Module, Fun) ->
 dbgoff() ->
   dbg:stop().
 
-%% @doc Term printer
+-doc "Term printer".
 p(Term) ->
   io:format("~p\n", [Term]).
 
-%% @doc Load all changed modules on all visible nodes
+-doc "Load all changed modules on all visible nodes".
 
 nl() ->
   [io:format("Network loading ~p -> ~p~n", [M, c:nl(M)]) || M <- c:mm()],
   ok.
 
-%% @doc Save command history to file
+-doc "Save command history to file".
 saveh(File) ->
   {ok, Io} = file:open(File, [write, read, delayed_write]),
   GetHist = fun() ->

@@ -1,18 +1,16 @@
 %%%------------------------------------------------------------------------
 %%% File: $Id$
 %%%------------------------------------------------------------------------
-%%% @doc Parallel map and multicall.
-%%%
-%%% @author  Serge Aleynikov <saleyn@gmail.com> (multicall)
-%%%          Luke Gorries (http://lukego.livejournal.com) (pmap)
-%%% @version $Rev$
-%%%          $Date: 2008/07/02 03:29:58 $
-%%% @end
-%%%
-%%%------------------------------------------------------------------------
 %%% Created: 2008/02/11 10:07:15
 %%%------------------------------------------------------------------------
 -module(pmap).
+-moduledoc """
+Parallel map and multicall.
+
+Luke Gorries (http://lukego.livejournal.com) (pmap) $Date: 2008/07/02 03:29:58 $
+
+Author: Serge Aleynikov <saleyn@gmail.com> (multicall)
+""".
 -author('saleyn@gmail.com').
 -id    ("$Id$").
 
@@ -23,19 +21,20 @@
 -endif.
 
 %%-------------------------------------------------------------------------
-%% @doc Evaluate the `MultiArgs' list by calling `F' on each argument in
-%%      the list concurrently.
-%% @see pmap/3
-%% @end
+-doc """
+Evaluate the `MultiArgs` list by calling `F` on each argument in the list
+concurrently. See: `pmap/3`.
+""".
 %%-------------------------------------------------------------------------
 -spec pmap(fun(() -> term()), [Args::term()]) -> [Reply::term()].
 pmap(F, List) ->
     pmap(F, List, infinity).
 
 %%-------------------------------------------------------------------------
-%% @doc Evaluate the `MultiArgs' list by calling `F' on each argument in
-%%      the list concurrently.  Same as pmap/2 but has a `Timeout' option.
-%% @end
+-doc """
+Evaluate the `MultiArgs` list by calling `F` on each argument in the list
+concurrently.  Same as pmap/2 but has a `Timeout` option.
+""".
 %%-------------------------------------------------------------------------
 -spec pmap(fun((term()) -> term()), Args::[term()], integer()|infinity) -> [Reply::term()].
 pmap(F, List, Timeout) ->
@@ -59,13 +58,12 @@ wait_result(Ref, {Pid,MonRef}, Timeout) ->
     end.
 
 %%-------------------------------------------------------------------------
-%% @doc Send messages to pids and wait for replies.
-%%      Each Pid would get a message in the form:
-%%      `{{FromPid, Ref}, Msg}' and would have to reply with:
-%%      `FromPid ! {{self(), Ref}, Reply}'. The function aggregates all 
-%%      replies into `Success' and `Error' lists. The error list is in the 
-%%      form: `{Pid, ErrorReason}'.
-%% @end
+-doc """
+Send messages to pids and wait for replies. Each Pid would get a message in the
+form: `{{FromPid, Ref}, Msg}` and would have to reply with: `FromPid ! {{self(),
+Ref}, Reply}`. The function aggregates all replies into `Success` and `Error`
+lists. The error list is in the form: `{Pid, ErrorReason}`.
+""".
 %%-------------------------------------------------------------------------
 -spec multicall([{pid(), term()}], Timeout::timeout()) -> {[OkReply::term()], [ErrorReply::term()]}.
 multicall([], _Timeout) ->
@@ -130,8 +128,7 @@ gather_results(Set, Replies, Errors, Monitors, Timeout) ->
     end.
 
 %%-------------------------------------------------------------------------
-%% @doc Send a reply back to sender.
-%% @end
+-doc "Send a reply back to sender.".
 %%-------------------------------------------------------------------------
 -spec reply({pid(), reference()}, Reply::term()) -> ok.
 reply({FromPid, Ref}, Msg) ->

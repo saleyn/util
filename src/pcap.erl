@@ -1,8 +1,4 @@
 %%%------------------------------------------------------------------------
-%%% @doc PCAP file reader/writer.
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @end
-%%%------------------------------------------------------------------------
 %%% Copyright (c) 2010 Serge Aleynikov
 %%%
 %%% Permission is hereby granted, free of charge, to any person
@@ -25,6 +21,11 @@
 %%% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%%------------------------------------------------------------------------
 -module(pcap).
+-moduledoc """
+PCAP file reader/writer.
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+""".
 
 -export([
       write/2, replay/1, replay/2, replay/5

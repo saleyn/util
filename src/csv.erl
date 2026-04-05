@@ -1,19 +1,57 @@
 %%% vim:ts=2:sw=2:et
 %%%-----------------------------------------------------------------------------
-%%% @doc CSV file parsing functions
-%%%
-%%% @author Serge Aleynikov <saleyn@gmail.com>
-%%% @copyright 2021 Serge Aleynikov
-%%% @end
-%%%-----------------------------------------------------------------------------
 %%% Created 2021-06-01
 %%%-----------------------------------------------------------------------------
 -module(csv).
+-moduledoc """
+CSV file parsing functions
+
+Author: Serge Aleynikov <saleyn@gmail.com>
+Copyright: 2021 Serge Aleynikov
+""".
 -author('saleyn@gmail.com').
 
 -export([parse/1, parse/2, parse_line/1]).
 -export([max_field_lengths/2, guess_data_types/2, guess_data_type/1, load_to_mysql/4]).
 
+-doc """
+Options for loading data to a database.
+
+- `{load_type, Type}` — Type of loading to perform. `recreate` will replace the
+  table by atomically dropping the old one, creating/loading the new one, and
+  replacing the table. `replace` will do an insert by using `REPLACE INTO`
+  statement. `ignore_dups` will use `INSERT IGNORE INTO` statement to ignore
+  records with duplicate keys. `update_dups` will do an `INSERT INTO` and `ON
+  DUPLICATE KEY UPDATE`, so that the old records are updated and the new ones
+  are inserted.
+- `{create_table, Allow}` — Allow to create a table if it doesn't exist
+- `{col_types, Map}` — Types of data for all or some columens. The Map is in the
+  format: `ColName::binary() => ColInfo`, where ColInfo is `ColType | {ColType,
+  ColLen::integer()}`, and `ColType` is: `date | datetime | integer | float |
+  blob | number`.
+- `{transforms, Map}` — Value transformation function for columns. The Map is in
+  the format: `ColName::binary() => fun((Value::term()) -> term())`.
+- `{batch_size, Size}` — Number of records per SQL insert/update/replace call
+- `{blob_size, Size}` — Threshold in number of bytes at which a VARCHAR field is
+  defined as BLOB
+- `{save_create_sql_to_file, Filename::string()}` — Save CREATE TABLE sql
+  statement to a file
+- `guess_types` — When specified, the function will try to guess the type of
+  data in columns instead of treating all data as string fields. The possible
+  data typed guessed: integer, float, date, datetime, number, string
+- `{guess_limit_rows, Limit}` — Limit the number of rows for guessing the column
+  data types
+- `{max_nulls_pcnt, Percent}` — A percentage threshold of permissible NULLs in a
+  column (0-100), above which the column data type is forced to be treated as
+  `string`
+- `{primary_key, Fields}` — Names of primary key fields in the created table
+- `{indexes, Indexes}` — Indexes to create
+- `{drop_temp_table, boolean()}` — When true (default), temp table is dropped.
+- `{encoding, Encoding}` — The name of the encoding to use for storing data. For
+  the list of permissible values [see this
+  link](https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html)
+- `verbose` — Print additional details to stdout
+""".
 -type load_options() ::
   [{load_type,        recreate|replace|ignore_dups|update_dups}|
    {col_types,        #{binary() => ColType::atom() | {ColType::atom(), ColLen::integer()}}}|
@@ -31,56 +69,24 @@
    {drop_temp_table,  boolean()}|
    {encoding,    string()|atom()}|
    {verbose,     boolean()|integer()}].
-%% Options for loading data to a database.
-%% <dl>
-%% <dt>{load_type, Type}</dt>
-%%   <dd>Type of loading to perform. `recreate' will replace the table by atomically
-%%       dropping the old one, creating/loading the new one, and replacing the table.
-%%       `replace' will do an insert by using `REPLACE INTO' statement. `ignore_dups'
-%%       will use `INSERT IGNORE INTO' statement to ignore records with duplicate keys.
-%%       `update_dups' will do an `INSERT INTO' and `ON DUPLICATE KEY UPDATE', so that
-%%       the old records are updated and the new ones are inserted.</dd>
-%% <dt>{create_table, Allow}</dt>
-%%   <dd>Allow to create a table if it doesn't exist</dd>
-%% <dt>{col_types, Map}</dt>
-%%   <dd>Types of data for all or some columens. The Map is in the format:
-%%       `ColName::binary() => ColInfo', where
-%%       ColInfo is `ColType | {ColType, ColLen::integer()}', and `ColType' is:
-%%       `date | datetime | integer | float | blob | number'.
-%%       </dd>
-%% <dt>{transforms, Map}</dt>
-%%   <dd>Value transformation function for columns. The Map is in the format:
-%%       `ColName::binary() => fun((Value::term()) -> term())'.</dd>
-%% <dt>{batch_size, Size}</dt>
-%%   <dd>Number of records per SQL insert/update/replace call</dd>
-%% <dt>{blob_size, Size}</dt>
-%%   <dd>Threshold in number of bytes at which a VARCHAR field is defined as BLOB</dd>
-%% <dt>{save_create_sql_to_file, Filename::string()}</dt>
-%%   <dd>Save CREATE TABLE sql statement to a file</dd>
-%% <dt>guess_types</dt>
-%%   <dd>When specified, the function will try to guess the type of data in columns
-%%       instead of treating all data as string fields. The possible data typed guessed:
-%%       integer, float, date, datetime, number, string</dd>
-%% <dt>{guess_limit_rows, Limit}</dt>
-%%   <dd>Limit the number of rows for guessing the column data types</dd>
-%% <dt>{max_nulls_pcnt, Percent}</dt>
-%%   <dd>A percentage threshold of permissible NULLs in a column (0-100), above which
-%%       the column data type is forced to be treated as `string'</dd>
-%% <dt>{primary_key, Fields}</dt>
-%%   <dd>Names of primary key fields in the created table</dd>
-%% <dt>{indexes, Indexes}</dt>
-%%   <dd>Indexes to create</dd>
-%% <dt>{drop_temp_table, boolean()}</dt>
-%%   <dd>When true (default), temp table is dropped.</dd>
-%% <dt>{encoding, Encoding}</dt>
-%%   <dd>The name of the encoding to use for storing data. For the list of permissible
-%%       values [see this
-%%       link](https://dev.mysql.com/doc/refman/8.0/en/charset-unicode-sets.html)</dd>
-%% <dt>verbose</dt>
-%%   <dd>Print additional details to stdout</dd>
-%% </dl>
 -export_type([load_options/0]).
 
+-doc """
+CSV Parsing Options.
+
+- `fix_lengths` — if a record has a column count greater than what's found in
+  the header row, those extra columns will be dropped, and if a row has fewer
+  columns, empty columns will be added.
+- `binary` — Return fields as binaries (default)
+- `list` — Return fields as lists
+- `{open, list()}` — Options given to file:open/2
+- `{columns, Names}` — Return data only in given columns
+- `{converters, [{Col, fun((ColName, Value) -> NewValue)| {rex, RegEx,
+  Replace}]}` — Data format converter. If `Col` is `all`, the same converting
+  function is used for all columns. If the converter is a `{rex, RegEx,
+  Replace}` then the regular expression replacement will be run on a value in
+  the requested column.
+""".
 -type parse_options() ::
   [fix_lengths            |
    binary                 |
@@ -90,36 +96,18 @@
    {converters, [{binary()|string()|all, fun((binary(), binary()) -> binary())|
                                          {rex, binary(), binary()}}]}
   ].
-%% CSV Parsing Options.
-%% <dl>
-%%   <dt>fix_lengths</dt><dd>if a record has a column count
-%%       greater than what's found in the header row, those extra columns will be
-%%       dropped, and if a row has fewer columns, empty columns will be added.</dd>
-%%   <dt>binary</dt><dd>Return fields as binaries (default)</dd>
-%%   <dt>list</dt><dd>Return fields as lists</dd>
-%%   <dt>{open, list()}</dt><dd>Options given to file:open/2</dd>
-%%   <dt>{columns, Names}</dt><dd>Return data only in given columns</dd>
-%%   <dt>{converters, [{Col, fun((ColName, Value) -> NewValue)|
-%%                           {rex, RegEx, Replace}]}</dt>
-%%     <dd>Data format converter.
-%%       If `Col' is `all', the same converting function is used for all
-%%       columns. If the converter is a `{rex, RegEx, Replace}' then
-%%       the regular expression replacement will be run on a value in the
-%%       requested column.</dd>
-%% </dl>
 -export_type([parse_options/0]).
 
 %%------------------------------------------------------------------------------
 %% CSV parsing
 %%------------------------------------------------------------------------------
-%% @doc Parse a CSV file using default options.
+-doc "Parse a CSV file using default options.".
 -spec parse(string()) -> [[binary()]].
 parse(File) when is_list(File); is_binary(File) ->
   parse(File, []).
 
 %%------------------------------------------------------------------------------
-%% @doc Parse a given CSV file.
-%% @end
+-doc "Parse a given CSV file.".
 %%------------------------------------------------------------------------------
 -spec parse(binary()|string(), parse_options()) -> [[string()]].
 parse(File, Opts) when is_binary(File) ->
@@ -248,7 +236,7 @@ trim_eol(N, Line) when N < byte_size(Line) ->
 trim_eol(N, Line) ->
   byte_size(Line) - N.
 
-%% @doc Parse a CSV line
+-doc "Parse a CSV line".
 -spec parse_line(binary()) -> list().
 parse_line(Line) ->
   parse_line(1, Line).
@@ -320,9 +308,10 @@ fix_length(HLen, DLen, Data) when HLen > DLen ->
   Data ++ RR.
 
 %%------------------------------------------------------------------------------
-%% @doc Get max field lengths for a list obtained by parsing a CSV file with
-%%      `parse_csv_file(File,[fix_lengths])'.
-%% @end
+-doc """
+Get max field lengths for a list obtained by parsing a CSV file with
+`parse_csv_file(File,[fix_lengths])`.
+""".
 %%------------------------------------------------------------------------------
 -spec max_field_lengths(HasHeaderRow::boolean(), Rows::[Fields::list()]) -> [Len::integer()].
 max_field_lengths(true = _HasHeaders, [_Headers | Rows ] = _CSV) ->
@@ -344,13 +333,13 @@ max_field_lengths(false = _HasHeaders, CsvRows) ->
   MLens(CsvL, []).
 
 %%------------------------------------------------------------------------------
-%% @doc Guess data types of fields in the given CSV list of rows obtained by
-%%      parsing a CSV file with `parse(File,[fix_lengths])'.
-%%      The function returns a list of tuples `{Type, MaxFieldLen, NumOfNulls}',
-%%      where the `Type' is a field type, `MaxFieldLen' is the max length of
-%%      data in this column, and `NumOfNulls' is the number of rows with empty
-%%      values in this column.
-%% @end
+-doc """
+Guess data types of fields in the given CSV list of rows obtained by parsing a
+CSV file with `parse(File,[fix_lengths])`. The function returns a list of tuples
+`{Type, MaxFieldLen, NumOfNulls}`, where the `Type` is a field type,
+`MaxFieldLen` is the max length of data in this column, and `NumOfNulls` is the
+number of rows with empty values in this column.
+""".
 %%------------------------------------------------------------------------------
 -spec guess_data_types(HasHeaderRow::boolean(), Rows::[Fields::[binary()]]) ->
         {Type::string|integer|number|float|date|datetime,
@@ -437,28 +426,21 @@ scan_mlt2([], Acc) ->
   Acc.
 
 %%------------------------------------------------------------------------------
-%% @doc Load CSV data from a `File' to a `MySQL' database.
-%% `Tab' is the name of a table where to load data.  `MySqlPid' is the pid of a
-%% MySQL database connection returned by `mysql:start_link/1'.
-%% The data in the table is replaced according to `{import_type, Type}':
-%% <ul>
-%% <li>`recreate' - The table is entirely replaced with the data from file.
-%% The data from the file is loaded atomically - i.e. either
-%% the whole file loading succeeds or fails.  This is accomplished by first
-%% loading data to a temporary table, and then using the database's ACID
-%% properties to replace the target table with the temporary table.</li>
-%% <li>`replace'     - Use "REPLACE INTO" instead of "INSERT INTO" existing
-%% table</li>
-%% <li>`ignore_dups' - The insert in the existing table is performed and the
-%% records with duplicate keys are ignored</li>
-%% <li>`update_dups' - The insert in the existing table is performed and the
-%% records with duplicate keys are updated</li>
-%% <li>`upsert'      - The insert/update in the existing table is performed
-%% without creating a temporary table</li>
-%% </ul>
-%%
-%% NOTE: this function requires [https://github.com/mysql-otp/mysql-otp.git]
-%% @end
+-doc """
+Load CSV data from a `File` to a `MySQL` database. `Tab` is the name of a table
+where to load data.  `MySqlPid` is the pid of a MySQL database connection
+returned by `mysql:start_link/1`. The data in the table is replaced according to
+`{import_type, Type}`:
+
+- `recreate` - The table is entirely replaced with the data from file.
+- `replace`     - Use "REPLACE INTO" instead of "INSERT INTO" existing
+table
+- `ignore_dups` - The insert in the existing table is performed and the
+- `update_dups` - The insert in the existing table is performed and the
+- `upsert` - The insert/update in the existing table is performed
+
+NOTE: this function requires [https://github.com/mysql-otp/mysql-otp.git]
+""".
 %%------------------------------------------------------------------------------
 -spec load_to_mysql(File::string(), Tab::string(),
                     MySqlPid::pid(), Opts::load_options()) ->
@@ -883,7 +865,7 @@ cleanup_header([C|T]) when (C >= $a andalso C =< $z);
 cleanup_header([_|T])  -> cleanup_header(T);
 cleanup_header([])     -> [].
 
-%% @doc Guess the type of data by its value
+-doc "Guess the type of data by its value".
 -spec guess_data_type(binary()) ->
   {null | date | datetime | integer | float | string, term(), string()}.
 guess_data_type(S) ->

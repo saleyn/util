@@ -1,14 +1,4 @@
 %%------------------------------------------------------------------------------
-%% @doc Map with TTL key/value eviction.
-%%
-%% An insert of a Key/Value pair in the map will store the timestamp of the
-%% maybe_add.  Additionally a queue of maybe_adds is maintained by this container,
-%% which is checked on each insert and the expired Key/Value pairs are
-%% evicted from the map.
-%%
-%% @author Serge Aleynikov <saleyn at gmail dot com>
-%% @end
-%%------------------------------------------------------------------------------
 %% Copyright (c) 2011 Serge Aleynikov
 %%
 %% Permission is hereby granted, free of charge, to any person
@@ -31,6 +21,16 @@
 %% SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 %%------------------------------------------------------------------------------
 -module(ttl_map).
+-moduledoc """
+Map with TTL key/value eviction.
+
+An insert of a Key/Value pair in the map will store the timestamp of the
+maybe_add.  Additionally a queue of maybe_adds is maintained by this container,
+which is checked on each insert and the expired Key/Value pairs are evicted from
+the map.
+
+Author: Serge Aleynikov <saleyn at gmail dot com>
+""".
 -author('saleyn@gmail.com').
 
 -export([new/1, new/2, try_add/4, size/1, evict/2, evict/3, now/0]).
@@ -45,16 +45,17 @@
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
-%% @doc Create a new map with a given TTL time for inserted items
+-doc "Create a new map with a given TTL time for inserted items".
 new(TTL) ->
   new(TTL, #{}).
 
-%% @doc Create a new map with a given TTL time for inserted items.
-%% `Opts' is a list of options:
-%% <dl>
-%% <dt>name</dt><dd>The name of the ETS table (defaults to `undefined')</dd>
-%% <dt>access</dt><dd>The access level of the ETS table (defaults to `private')</dd>
-%% </dl>
+-doc """
+Create a new map with a given TTL time for inserted items. `Opts` is a list of
+options:
+
+- `name` — The name of the ETS table (defaults to `undefined`)
+- `access` — The access level of the ETS table (defaults to `private`)
+""".
 new(TTL, Opts) when is_integer(TTL), is_map(Opts) ->
   Name = maps:get(name,   Opts, undefined),
   ACL  = maps:get(access, Opts, private),
@@ -65,10 +66,11 @@ new(TTL, Opts) when is_integer(TTL), is_map(Opts) ->
     end,
   #ttl_map{ets = ets:new(Name, EtsOpts), q = queue:new(), ttl = TTL}.
 
-%% @doc Try to add a `Key/Value' pair to the map.
-%% If more than TTL time elapsed since the last insert of the `Key' or the
-%% `Key' is not found in the map, the value is inserted, otherwise no insertion 
-%% is made.
+-doc """
+Try to add a `Key/Value` pair to the map. If more than TTL time elapsed since
+the last insert of the `Key` or the `Key` is not found in the map, the value is
+inserted, otherwise no insertion is made.
+""".
 -spec try_add(ttl_map(), any(), any(), non_neg_integer()) -> {ttl_map(), Inserted::boolean()}.
 try_add(TTLMap = #ttl_map{ets = ETS, q = Q}, Key, Value, Now) when is_integer(Now) ->
   TTLMap1 = evict(TTLMap, Now),  %% Evict stale entries from the ETS
@@ -80,7 +82,7 @@ try_add(TTLMap = #ttl_map{ets = ETS, q = Q}, Key, Value, Now) when is_integer(No
       {TTLMap1, false}
   end.
 
-%% @doc Evict stale items from the map given the current timestamp `Now'.
+-doc "Evict stale items from the map given the current timestamp `Now`.".
 -spec evict(ttl_map(), non_neg_integer()) -> ttl_map().
 evict(TTLMap = #ttl_map{ets = ETS, q = Q, ttl = TTL}, Now) ->
   Threshold = Now - TTL,
@@ -91,7 +93,10 @@ evict(TTLMap = #ttl_map{ets = ETS, q = Q, ttl = TTL}, Now) ->
     {Q2, _} -> TTLMap#ttl_map{q = Q2}
   end.
 
-%% @doc Evict stale items (up to the `Limit') from the map given the current timestamp `Now'.
+-doc """
+Evict stale items (up to the `Limit`) from the map given the current timestamp
+`Now`.
+""".
 -spec evict(ttl_map(), non_neg_integer(), non_neg_integer()) -> ttl_map().
 evict(TTLMap = #ttl_map{ets = ETS, q = Q, ttl = TTL}, Now, Limit) ->
   Threshold = Now - TTL,
@@ -101,12 +106,12 @@ evict(TTLMap = #ttl_map{ets = ETS, q = Q, ttl = TTL}, Now, Limit) ->
     {Q2, _} -> TTLMap#ttl_map{q = Q2}
   end.
 
-%% @doc Get the number of items in the map.
+-doc "Get the number of items in the map.".
 -spec size(ttl_map()) -> non_neg_integer().
 size(#ttl_map{ets = ETS}) ->
   ets:info(ETS, size).
 
-%% @doc Get the current timestamp in microseconds since Unix epoch.
+-doc "Get the current timestamp in microseconds since Unix epoch.".
 -spec now() -> non_neg_integer().
 now() ->
   erlang:system_time(microsecond).
