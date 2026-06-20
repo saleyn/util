@@ -91,10 +91,13 @@ titlecase(S) when is_list(S) ->
 -doc """
 Wrap words list in a string to multiple lines that fit the margin There are two
 uses of this function: First:
-<code>
-1> stringx:wordwrap("abc efg exdf"], 8, "\n"). "abc efg\nexdf" </code> Second:
-<code>
-1> stringx:wordwrap(["abc", "efg", "exdf"], 8, ","). ["abc,efg,","exdf"] </code>
+```
+1> stringx:wordwrap("abc efg exdf"], 8, "\n"). "abc efg\nexdf"
+```
+Second:
+```
+1> stringx:wordwrap(["abc", "efg", "exdf"], 8, ","). ["abc,efg,","exdf"]
+```
 The second use is deprecated. Use `wrap_words/3` instead.
 """.
 %%-------------------------------------------------------------------------

@@ -23,8 +23,8 @@
 -moduledoc """
 This is an extension of the shell commands to do all the work!  Either place
 this file in the path accessible to Erlang (via ERL_LIBS) or add this line to
-the ~/.erlang file: ``code:load_abs(os:getenv("HOME") ++
-"/.erlang/user_default").`'
+the ~/.erlang file: `code:load_abs(os:getenv("HOME") ++
+"/.erlang/user_default").`
 
 $Date$
 

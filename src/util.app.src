@@ -6,5 +6,5 @@
               {applications,[kernel,stdlib]},
               {env,[]},
               {maintainers,["Serge Aleynikov"]},
-              {licenses,["BSD"]},
+              {licenses,["BSD-2-Clause"]},
               {links,[{"Github","https://github.com/saleyn/util"}]}]}.

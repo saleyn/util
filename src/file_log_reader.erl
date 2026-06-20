@@ -51,8 +51,8 @@ Details:
 - `pos` — Start reading from this position (default: 0)
 - `end_pos` — Read until this position and stop. If provided and file position
   reaches `end_pos`, the consumer() callback given to the reader will be called
-  as: ``Consumer({`$end_of_file', Filename::string(), Result}, Pos::integer(),
-  State)'' where `Result` is `ok` or `{error|exit|exception, Error::any(),
+  as: `Consumer({'$end_of_file', Filename::string(), Result}, Pos::integer(),
+  State)` where `Result` is `ok` or `{error|exit|exception, Error::any(),
   StackTrace}` if an error occured.
 - `max_size` — Maximum chunk size to read from file in a single pass (default:
   32M).
@@ -71,7 +71,7 @@ Details:
   - `{skip, Tail, State}` — disregard input and continue parsing `Tail` without
     calling `Consumer` callback
 - `pstate` — Initial value of the parser state or a functor `fun((File::string()
-  Consumer::consumer(), Options::options()) -> PState::any())'
+  Consumer::consumer(), Options::options()) -> PState::any())`
 - `pstate_update` — Update function of the parser state. Called when the user
   invokes `update_pstate/3`
 """.

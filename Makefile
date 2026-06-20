@@ -73,5 +73,5 @@ bump-version:
 		git commit -am "Bump $${APP} version to $${NEW}"; \
 	fi
 
-.PHONY: test
+.PHONY: test doc
 .SUFFIX:

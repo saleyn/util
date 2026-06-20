@@ -43,7 +43,11 @@ Additional template formatting atoms:
 - `LEVEL` — same as 'level' but is printed in upper case.
 - `modline` — prints 'Module:Line' to the log.
 - `regpid` — prints:
-` of the process or its pid if the process is not registered
+  - `*` — if the registered name of the caller's pid matches caller's module
+    name.
+  - `RegisteredName` — of the calling process if it is registered under a
+    different name.
+  - the pid of the process if it is not registered.
 """.
 
 -export([format/2]).

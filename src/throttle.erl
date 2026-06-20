@@ -101,10 +101,11 @@ Call the lambda `F`, ensuring that it's not called more frequently than the
 throttle would allow.
 
 Example:
-<code>
+```
 1> T = throttle:new(10, 1000). 2> lists:foldl(fun(_,{T1,A}) -> {T2,R} =
 throttle:call(T1, fun() -> http:get("google.com") end), {T2, [R|A]} end, {T,[]},
-lists:seq(1, 100)). </code>
+lists:seq(1, 100)).
+```
 """.
 call(T, F) ->
   call2(T, F, #{}, now()).
@@ -129,10 +130,11 @@ Call M,F,A, ensuring that it's not called more frequently than the throttle
 would allow.
 
 Example:
-<code>
+```
 1> T = throttle:new(10, 1000). 2> lists:foldl(fun(_,{T1,A}) -> {T2,R} =
 throttle:call(T1, http, get, ["google.com"]), {T2, [R|A]} end, {T,[]},
-lists:seq(1, 100)). </code>
+lists:seq(1, 100)).
+```
 """.
 call(T, M,F,A) when is_atom(M), is_atom(F), is_list(A) ->
   call(T, M,F,A, #{}, now());

@@ -1,7 +1,8 @@
 -module(restrict_remsh_mod).
 -moduledoc """
-Sample restricted remote shell module disabling `c:q/0` and `init:stop/{0,1}`
-commands. The shell introduces a replacement command to stop remote node:
+Sample restricted remote shell module disabling `q/0` (from the `c` module) and
+`init:stop/{0,1}` commands. The shell introduces a replacement command to stop
+remote node:
 `remote_node_stop/1` equivalent to `init:stop/1`.
 
 To activate restricted shell, run the server node like this: `erl -sname
