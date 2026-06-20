@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        otp: ['27', '28']
+        otp: [27, 28, 29]
 
     container:
       image: erlang:${{ matrix.otp }}
