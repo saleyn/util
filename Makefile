@@ -55,21 +55,22 @@ build-aux/docs-addon.mk:
 	git co master build-aux/docs-addon.mk
 
 bump-version:
-	@FILE=$$(ls -1 src/*.app.src | head -n1); \
-	CURRENT=$$(grep -m1 '{vsn,' $$FILE | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/'); \
+	@APP_FILE=$$(ls -1 src/*.app.src | head -n1); \
+	APP=$$(grep -m1 '{application,' $$APP_FILE | sed -nE '/\{application,/s/[^,]+,\s*([a-z-]+).*/\1/p'); \
+	CURRENT=$$(grep -m1 '{vsn,' $$APP_FILE | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/'); \
 	MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
 	MINOR=$$(echo $$CURRENT | cut -d. -f2); \
 	PATCH=$$(echo $$CURRENT | cut -d. -f3); \
 	NEW=$$(echo "$${MAJOR}.$${MINOR}.$$((PATCH + 1))" | tr -d '\n'); \
 	echo "Bumping version from $${CURRENT} to $${NEW}"; \
-	sed -i "s/{vsn, \"$${CURRENT}\"}/{vsn, \"$${NEW}\"}/" $$FILE; \
+	sed -i -E 's/(\{vsn,\s*"[^"0-9]*)[^"]+"\s*\}/\1'$${NEW}'"}/' $$APP_FILE; \
 	echo "Changed: {vsn, \"$${CURRENT}\"} -> {vsn, \"$${NEW}\"}"; \
-	sed -i 's/\({:\?glazer,[[:space:]]*"~>\)[^"]*/\1 '"$${MAJOR}.$${MINOR}"'/' README.md; \
+	sed -i -E 's/(\{:?'$$APP',\s*"[^"0-9]*)[0-9]+\.[0-9]+/\1'$$MAJOR.$$MINOR'/' README.md; \
 	echo ""; \
 	read -p "Commit this change? [Y/n] " -n 1 -r || true; \
 	echo ""; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]] || [[ -z $$REPLY ]]; then \
-		git commit -am "Bump version to $${NEW}"; \
+		git commit -am "Bump $${APP} version to $${NEW}"; \
 	fi
 
 .PHONY: test

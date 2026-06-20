@@ -103,7 +103,7 @@ get_data(P, Fun, D, Ref, Timeout) ->
         {P, {data, D1}} when is_function(Fun, 2) ->
             get_data(P, Fun, Fun(data, {D1, D}), Ref, Timeout);
         {P, eof} ->
-            catch port_close(P),
+            try port_close(P) catch _:_ -> ok end,
 			flush_until_down(P, Ref),
             receive
                 {P, {exit_status, 0}} when is_function(Fun, 2) ->

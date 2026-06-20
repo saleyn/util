@@ -168,17 +168,17 @@ time_it(F) ->
   end.
 
 call(1, X, F, Time1) ->
-  Res = (catch F()),
+  Res = try F() catch C:E -> {C, E} end,
   return(X, Res, Time1, erlang:system_time(microsecond));
 call(N, X, F, Time1) ->
-  (catch F()),
+  try F() catch _:_ -> ok end,
   call(N-1, X, F, Time1).
 
 call(1, X, M, F, A, Time1) ->
-  Res = (catch apply(M, F, A)),
+  Res = try apply(M, F, A) catch C:E -> {C, E} end,
   return(X, Res, Time1, erlang:system_time(microsecond));
 call(N, X, M, F, A, Time1) ->
-  catch apply(M, F, A),
+  try apply(M, F, A) catch _:_ -> ok end,
   call(N-1, X, M, F, A, Time1).
 
 return(N, Res, Time1, Time2) ->

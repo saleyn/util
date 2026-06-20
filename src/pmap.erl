@@ -132,7 +132,7 @@ gather_results(Set, Replies, Errors, Monitors, Timeout) ->
 %%-------------------------------------------------------------------------
 -spec reply({pid(), reference()}, Reply::term()) -> ok.
 reply({FromPid, Ref}, Msg) ->
-    catch FromPid ! {{self(), Ref}, Msg},
+    try FromPid ! {{self(), Ref}, Msg} catch _:_ -> ok end,
     ok.
 
 %%%------------------------------------------------------------------------

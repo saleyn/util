@@ -146,14 +146,14 @@ local_function(FunName, FunArity, TransFun) ->
         end.
 
 -doc "Return `true`, `Node` is a function call of the `FunName/FunArity` function.".
-is_local_function(FunName, FunArity, Node) -> 
+is_local_function(FunName, FunArity, Node) ->
     erl_syntax:type(Node) =:= application
-        andalso always(Op = erl_syntax:application_operator(Node))
-        andalso erl_syntax:type(Op) =:= atom
-        andalso erl_syntax:atom_value(Op) =:= FunName
+        andalso begin
+            Op = erl_syntax:application_operator(Node),
+            erl_syntax:type(Op) =:= atom
+                andalso erl_syntax:atom_value(Op) =:= FunName
+        end
         andalso application_arity(Node) =:= FunArity.
-
-always(_) -> true.
 
 
 -doc "Return arity of the called function inside `Node`.".

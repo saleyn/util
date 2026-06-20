@@ -24,9 +24,9 @@ Rules.
 '(\\\^.|\\.|[^'])*' :
 			%% Strip quotes.
 			S = lists:sublist(TokenChars, 2, TokenLen - 2),
-			case catch list_to_atom(string_gen(S)) of
-			    {'EXIT',_} -> {error,"illegal atom " ++ TokenChars};
+			try list_to_atom(string_gen(S)) of
 			    Atom -> {token,{atom,TokenLine,Atom}}
+			catch _:_ -> {error,"illegal atom " ++ TokenChars}
 			end.
 ({U}|_){A}*	:	{token,{var,TokenLine,list_to_atom(TokenChars)}}.
 "(\\\^.|\\.|[^"])*" :

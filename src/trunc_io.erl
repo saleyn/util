@@ -53,10 +53,10 @@ run out memory printing it. Out of the frying pan and into the fire.
 """.
 -spec safe(term(), pos_integer()) -> {string(), pos_integer()} | {string()}.
 safe(What, Len) ->
-    case catch print(What, Len) of
+    case try print(What, Len) catch C:E -> {C, E} end of
 	{L, Used} when is_list(L) -> {L, Used};
 	_ -> {"unable to print" ++ io_lib:write(What, 99)}
-    end.	     
+    end.
 
 -doc "Returns {List, Length}".
 -spec print(term(), pos_integer()) -> {iolist(), pos_integer()}.
@@ -185,9 +185,8 @@ test(Mod, Func) ->
 	end,
 
     G = fun(A) ->
-		case catch F(A) of
-		    {'EXIT', _} -> exit({failed, A});
-		    _ -> ok
+		try F(A)
+		catch _:_ -> exit({failed, A})
 		end
 	end,
     

@@ -6,12 +6,21 @@
 
 ## Installation
 
-- Add dependency in `rebar.config`:
+**Erlang:** add dependency in `rebar.config`:
 ```erlang
 {deps,
  [% ...
-  {util, "~> 1.0"}
+  {util, "~> 1.3"}
  ]}.
+```
+
+**Elixir:** add dependency in `mix.exs`:
+```elixir
+def deps do
+  [
+    {:util, "~> 1.3"}
+  ]
+end
 ```
 
 ## Content
@@ -66,7 +75,7 @@ Also in your `rebar.config` add:
 {edoc_opts, [{overview,        "build-aux/overview.edoc"},
              {stylesheet_file, "build-aux/edoc.css"},
              {title,           "Project title used by rebar and also inserted as title to the index.html"},
-             {keywords,        "HTML meta keywords (comma-delimited) for search engine crawlers"}, 
+             {keywords,        "HTML meta keywords (comma-delimited) for search engine crawlers"},
              ...]}.
 ```
 NOTE: the `keywords` option is not specific to `EDoc` but used by the HTML reformatting make
